@@ -1,122 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_midi_command/flutter_midi_command.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() => runApp(const MidiTestApp());
+
+class MidiTestApp extends StatefulWidget {
+  const MidiTestApp({super.key});
+  @override
+  State<MidiTestApp> createState() => _MidiTestAppState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _MidiTestAppState extends State<MidiTestApp> {
+  final MidiCommand _midi = MidiCommand();
+  List<MidiDevice> _devices = [];
+  List<String> _log = [];
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+  void initState() {
+    super.initState();
+    _scanDevices();
+    _listenToMidi();
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  Future<void> _scanDevices() async {
+    final devices = await _midi.devices;
+    setState(() => _devices = devices ?? []);
+  }
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  void _listenToMidi() {
+    _midi.onMidiDataReceived?.listen((packet) {
+      final d = packet.data;
+      if (d.length < 3) return;
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+      final isNoteOn = (d[0] & 0xF0) == 0x90 && d[2] > 0;
+      if (!isNoteOn) return;
 
-  final String title;
+      final pitch = d[1];
+      final noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+      final name = noteNames[pitch % 12];
+      final octave = (pitch ~/ 12) - 1;
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      setState(() {
+        _log.insert(0, '🎹 $name$octave  (pitch: $pitch)');
+        if (_log.length > 20) _log.removeLast();
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: const Text('MIDI Test')),
+        body: Column(
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            // Devices détectés
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: _devices.isEmpty
+                  ? const Text('Aucun device MIDI détecté',
+                      style: TextStyle(color: Colors.red))
+                  : Column(
+                      children: _devices
+                          .map((d) => ListTile(
+                                leading: const Icon(Icons.piano, color: Colors.green),
+                                title: Text(d.name),
+                                subtitle: Text(d.id),
+                                trailing: ElevatedButton(
+                                  onPressed: () => _midi.connectToDevice(d),
+                                  child: const Text('Connecter'),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+            ),
+
+            const Divider(),
+
+            // Log des notes reçues
+            Expanded(
+              child: _log.isEmpty
+                  ? const Center(child: Text('Joue une note...'))
+                  : ListView.builder(
+                      itemCount: _log.length,
+                      itemBuilder: (_, i) => ListTile(
+                        title: Text(_log[i],
+                            style: const TextStyle(fontFamily: 'monospace')),
+                      ),
+                    ),
+            ),
+
+            // Bouton refresh
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: ElevatedButton.icon(
+                onPressed: _scanDevices,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Scanner les devices'),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _midi.dispose();
+    super.dispose();
   }
 }
