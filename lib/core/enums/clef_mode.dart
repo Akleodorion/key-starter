@@ -1,0 +1,1 @@
+enum ClefMode { treble, bass }

@@ -1,0 +1,1 @@
+enum NoteLanguage { fr, en }
