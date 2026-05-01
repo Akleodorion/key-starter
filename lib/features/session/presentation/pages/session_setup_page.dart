@@ -91,7 +91,7 @@ class SessionSetupPage extends ConsumerWidget {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -99,12 +99,12 @@ class SessionSetupPage extends ConsumerWidget {
                       diatonicStep: diatonicStep,
                       clef: state.clef,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     ClefSegmentedControl(
                       value: state.clef,
                       onChanged: notifier.setClef,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     NoteRangeWidget(
                       clef: state.clef,
                       minStep: state.minStep,
@@ -113,12 +113,12 @@ class SessionSetupPage extends ConsumerWidget {
                       onMinChanged: notifier.setMinStep,
                       onMaxChanged: notifier.setMaxStep,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     SessionNotesSlider(
                       value: state.totalNotes,
                       onChanged: notifier.setTotalNotes,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     NoteDisplayPicker(
                       value: state.noteLanguage,
                       onChanged: notifier.setNoteLanguage,

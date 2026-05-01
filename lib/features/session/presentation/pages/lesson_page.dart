@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_language.dart';
 import 'package:key_starter/core/providers/midi_note_provider.dart';
+import 'package:key_starter/core/widgets/staff_widget.dart';
 import 'package:key_starter/features/note_recognition/domain/entities/note.dart';
 import 'package:key_starter/features/session/domain/entities/session.dart';
 import 'package:key_starter/features/session/domain/entities/session_result.dart';
@@ -213,10 +214,15 @@ class _LessonPageState extends ConsumerState<LessonPage> {
                               ),
                             ),
                           ),
-                        Container(
+                        StaffWidget(
+                          clef: widget.session.clef,
+                          diatonicStep: _currentStep,
+                          state: switch (_answer) {
+                            _Answer.correct => NoteState.correct,
+                            _Answer.wrong => NoteState.wrong,
+                            _Answer.none => NoteState.idle,
+                          },
                           height: 100,
-                          color: Colors.orange.withValues(alpha: 0.3),
-                          child: const Center(child: Text('Portée')),
                         ),
                       ],
                     ),
