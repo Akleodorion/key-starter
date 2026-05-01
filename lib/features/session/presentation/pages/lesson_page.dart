@@ -1,24 +1,27 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_language.dart';
+import 'package:key_starter/core/providers/midi_note_provider.dart';
 import 'package:key_starter/features/note_recognition/domain/entities/note.dart';
 import 'package:key_starter/features/session/domain/entities/session.dart';
 
 enum _Answer { none, correct, wrong }
 
-class LessonPage extends StatefulWidget {
+class LessonPage extends ConsumerStatefulWidget {
   final Session session;
 
   const LessonPage({super.key, required this.session});
 
   @override
-  State<LessonPage> createState() => _LessonPageState();
+  ConsumerState<LessonPage> createState() => _LessonPageState();
 }
 
-class _LessonPageState extends State<LessonPage> {
+class _LessonPageState extends ConsumerState<LessonPage> {
   static const _namesEn = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
   static const _namesFr = ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+  static const _semitones = [0, 2, 4, 5, 7, 9, 11];
 
   final _random = Random();
 
@@ -44,6 +47,12 @@ class _LessonPageState extends State<LessonPage> {
     final min = _noteToStep(widget.session.minNote);
     final max = _noteToStep(widget.session.maxNote);
     return min + _random.nextInt(max - min + 1);
+  }
+
+  int _stepToMidi(int step) {
+    final noteIndex = ((step % 7) + 7) % 7;
+    final octave = 4 + (step - noteIndex) ~/ 7;
+    return (octave + 1) * 12 + _semitones[noteIndex];
   }
 
   String _stepToLabel(int step) {
@@ -89,6 +98,16 @@ class _LessonPageState extends State<LessonPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<int>>(midiNoteOnProvider, (_, next) {
+      next.whenData((midiNumber) {
+        if (midiNumber == _stepToMidi(_currentStep)) {
+          _onCorrect();
+        } else {
+          _onWrong();
+        }
+      });
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAF9F7),
       body: SafeArea(

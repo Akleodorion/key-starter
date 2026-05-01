@@ -9,6 +9,7 @@ import 'package:key_starter/core/widgets/note_display_picker.dart';
 import 'package:key_starter/core/widgets/note_range_widget.dart';
 import 'package:key_starter/core/widgets/session_notes_slider.dart';
 import 'package:key_starter/core/widgets/staff_widget.dart';
+import 'package:key_starter/core/providers/midi_connection_provider.dart';
 import 'package:key_starter/features/session/presentation/pages/lesson_page.dart';
 import 'package:key_starter/features/session/presentation/providers/session_setup_notifier.dart';
 import 'package:key_starter/features/session/presentation/providers/session_setup_state.dart';
@@ -57,11 +58,37 @@ class SessionSetupPage extends ConsumerWidget {
     final notifier = ref.read(sessionSetupNotifierProvider.notifier);
     final diatonicStep = _bottomStep[state.clef]! + 4;
 
+    final midiConnected = ref.watch(midiConnectedProvider).asData?.value ?? false;
+
     return Scaffold(
       backgroundColor: AppColors.ivory,
       body: SafeArea(
         child: Column(
           children: [
+            // ── MIDI status bar ───────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: midiConnected ? AppColors.ok : AppColors.inkMute,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    midiConnected ? 'Clavier connecté' : 'Aucun clavier connecté',
+                    style: AppTextStyles.ui(
+                      size: 13,
+                      color: midiConnected ? AppColors.ok : AppColors.inkMute,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
