@@ -21,7 +21,7 @@ class SessionNotesSlider extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('NOTES', style: AppTextStyles.eyebrow()),
+        Text('DURÉE DE LA SESSION', style: AppTextStyles.eyebrow()),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -30,7 +30,7 @@ class SessionNotesSlider extends StatelessWidget {
                 value: value.toDouble(),
                 min: _min.toDouble(),
                 max: _max.toDouble(),
-                divisions: _divisions,
+                // divisions: _divisions,
                 onChanged: (v) => onChanged(v.round()),
               ),
             ),

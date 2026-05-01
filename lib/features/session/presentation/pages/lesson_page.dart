@@ -42,7 +42,7 @@ class _LessonPageState extends ConsumerState<LessonPage> {
   int _bestStreak = 0;
   _Answer _answer = _Answer.none;
   late int _currentStep;
-  late DateTime _noteShownAt;
+  DateTime? _noteShownAt;
 
   int get _total => widget.session.totalNotes;
 
@@ -50,7 +50,6 @@ class _LessonPageState extends ConsumerState<LessonPage> {
   void initState() {
     super.initState();
     _currentStep = _pickStep();
-    _noteShownAt = DateTime.now();
     _midiSub = MidiCommand().onMidiDataReceived?.listen((packet) {
       if (packet.data.length >= 3 &&
           (packet.data[0] & 0xF0) == 0x90 &&
@@ -96,8 +95,9 @@ class _LessonPageState extends ConsumerState<LessonPage> {
 
   void _onCorrect() {
     if (_answer != _Answer.none) return;
-    final ms = DateTime.now().difference(_noteShownAt).inMilliseconds;
-    _responseTimes.add(ms);
+    if (_noteShownAt != null) {
+      _responseTimes.add(DateTime.now().difference(_noteShownAt!).inMilliseconds);
+    }
     _currentStreak++;
     if (_currentStreak > _bestStreak) _bestStreak = _currentStreak;
     setState(() {
@@ -109,8 +109,9 @@ class _LessonPageState extends ConsumerState<LessonPage> {
 
   void _onWrong() {
     if (_answer != _Answer.none) return;
-    final ms = DateTime.now().difference(_noteShownAt).inMilliseconds;
-    _responseTimes.add(ms);
+    if (_noteShownAt != null) {
+      _responseTimes.add(DateTime.now().difference(_noteShownAt!).inMilliseconds);
+    }
     _currentStreak = 0;
     setState(() => _answer = _Answer.wrong);
     Future.delayed(const Duration(milliseconds: 25), _advance);
@@ -168,31 +169,26 @@ class _LessonPageState extends ConsumerState<LessonPage> {
           children: [
             // ── Top bar ──────────────────────────────────────────────────────
             Container(
-              color: Colors.blue.withValues(alpha: 0.25),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: Container(
+                    child: SizedBox(
                       width: 40,
                       height: 40,
-                      color: Colors.blue.withValues(alpha: 0.4),
                       child: const Icon(Icons.close),
                     ),
                   ),
-                  const Spacer(),
-                  Container(
+                  SizedBox(
                     width: 60,
                     height: 36,
-                    color: Colors.blue.withValues(alpha: 0.4),
                     child: Center(child: Text('$_currentIndex / $_total')),
                   ),
-                  const Spacer(),
-                  Container(
+                  SizedBox(
                     width: 60,
                     height: 36,
-                    color: Colors.green.withValues(alpha: 0.4),
                     child: Center(child: Text('✓ $_correctCount')),
                   ),
                 ],
@@ -201,39 +197,44 @@ class _LessonPageState extends ConsumerState<LessonPage> {
 
             // ── Center — note display ─────────────────────────────────────────
             Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    color: _centerColor,
-                    width: double.infinity,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (widget.session.showNoteName)
-                          Container(
-                            color: Colors.yellow.withValues(alpha: 0.5),
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Center(
-                              child: Text(
-                                _stepToLabel(_currentStep),
-                                style: const TextStyle(fontSize: 56),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  color: const Color.fromARGB(179, 247, 241, 229),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: double.infinity,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (widget.session.showNoteName)
+                              Container(
+                                padding: const EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: Text(
+                                    _stepToLabel(_currentStep),
+                                    style: const TextStyle(fontSize: 56),
+                                  ),
+                                ),
                               ),
+                            SizedBox(height: 24,),
+                            StaffWidget(
+                              clef: widget.session.clef,
+                              diatonicStep: _currentStep,
+                              state: switch (_answer) {
+                                _Answer.correct => NoteState.correct,
+                                _Answer.wrong => NoteState.wrong,
+                                _Answer.none => NoteState.idle,
+                              },
+                              height: 100,
                             ),
-                          ),
-                        StaffWidget(
-                          clef: widget.session.clef,
-                          diatonicStep: _currentStep,
-                          state: switch (_answer) {
-                            _Answer.correct => NoteState.correct,
-                            _Answer.wrong => NoteState.wrong,
-                            _Answer.none => NoteState.idle,
-                          },
-                          height: 100,
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -245,31 +246,14 @@ class _LessonPageState extends ConsumerState<LessonPage> {
               children: [
                 const Text('Joue la note sur ton clavier'),
                 Container(
-                  color: Colors.purple.withValues(alpha: 0.2),
                   padding: const EdgeInsets.all(16),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: _onCorrect,
-                          child: Container(
-                            height: 56,
-                            color: Colors.green.withValues(alpha: 0.4),
-                            child: const Center(child: Text('✓ Bonne réponse')),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: _onWrong,
-                          child: Container(
-                            height: 56,
-                            color: Colors.red.withValues(alpha: 0.4),
-                            child: const Center(child: Text('✗ Mauvaise réponse')),
-                          ),
-                        ),
-                      ),
+                      ElevatedButton(onPressed: _onCorrect, child: Text('test ✓', style: TextStyle(color: Colors.green),)),
+                      const SizedBox(width: 16),
+                      ElevatedButton(onPressed: _onWrong, child: Text('test ✗', style: TextStyle(color: Colors.red),)),
+
                     ],
                   ),
                 ),
