@@ -88,29 +88,34 @@ class LessonPage extends StatelessWidget {
             ),
 
             // ── Bottom — answer buttons ───────────────────────────────────────
-            Container(
-              color: Colors.purple.withValues(alpha: 0.2),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: List.generate(
-                      2,
-                      (i) => Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
-                          child: Container(
-                            height: 56,
-                            color: Colors.purple.withValues(alpha: 0.4),
-                            child: Center(child: Text('Bouton ${i + 1}')),
+            Column(
+              children: [
+                Text('Joue la note sur ton clavier'),
+                Container(
+                  color: Colors.purple.withValues(alpha: 0.2),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: List.generate(
+                          2,
+                          (i) => Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
+                              child: Container(
+                                height: 56,
+                                color: Colors.purple.withValues(alpha: 0.4),
+                                child: Center(child: Text('Bouton ${i + 1}')),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
