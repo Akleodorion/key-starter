@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_language.dart';
-import 'package:key_starter/core/providers/midi_note_provider.dart';
 import 'package:key_starter/core/widgets/staff_widget.dart';
 import 'package:key_starter/features/note_recognition/domain/entities/note.dart';
 import 'package:key_starter/features/session/domain/entities/session.dart';
@@ -33,6 +34,7 @@ class _LessonPageState extends ConsumerState<LessonPage> {
 
   final _random = Random();
   final List<int> _responseTimes = [];
+  StreamSubscription<MidiPacket>? _midiSub;
 
   int _currentIndex = 0;
   int _correctCount = 0;
@@ -49,6 +51,23 @@ class _LessonPageState extends ConsumerState<LessonPage> {
     super.initState();
     _currentStep = _pickStep();
     _noteShownAt = DateTime.now();
+    _midiSub = MidiCommand().onMidiDataReceived?.listen((packet) {
+      if (packet.data.length >= 3 &&
+          (packet.data[0] & 0xF0) == 0x90 &&
+          packet.data[2] > 0) {
+        if (packet.data[1] == _stepToMidi(_currentStep)) {
+          _onCorrect();
+        } else {
+          _onWrong();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _midiSub?.cancel();
+    super.dispose();
   }
 
   int _noteToStep(Note note) {
@@ -142,16 +161,6 @@ class _LessonPageState extends ConsumerState<LessonPage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<int>>(midiNoteOnProvider, (_, next) {
-      next.whenData((midiNumber) {
-        if (midiNumber == _stepToMidi(_currentStep)) {
-          _onCorrect();
-        } else {
-          _onWrong();
-        }
-      });
-    });
-
     return Scaffold(
       backgroundColor: const Color(0xFFFAF9F7),
       body: SafeArea(
