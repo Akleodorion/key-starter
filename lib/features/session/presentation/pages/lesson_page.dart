@@ -9,14 +9,80 @@ class LessonPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
+      backgroundColor: const Color(0xFFFAF9F7),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Top bar ──────────────────────────────────────────────────────
+            Container(
+              color: Colors.blue.withValues(alpha: 0.25),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  // Back button
+                  Container(
+                    width: 40,
+                    height: 40,
+                    color: Colors.blue.withValues(alpha: 0.4),
+                    child: const Icon(Icons.close),
+                  ),
+                  const Spacer(),
+                  // Note counter
+                  Container(
+                    width: 60,
+                    height: 36,
+                    color: Colors.blue.withValues(alpha: 0.4),
+                    child: const Center(child: Text('0 / 20')),
+                  ),
+                  const Spacer(),
+                  // Correct counter
+                  Container(
+                    width: 60,
+                    height: 36,
+                    color: Colors.green.withValues(alpha: 0.4),
+                    child: const Center(child: Text('✓ 0')),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Center — note display ─────────────────────────────────────────
+            Expanded(
+              child: Container(
+                color: Colors.orange.withValues(alpha: 0.15),
+                child: const Center(
+                  child: Text('Note à afficher'),
+                ),
+              ),
+            ),
+
+            // ── Bottom — answer buttons ───────────────────────────────────────
+            Container(
+              color: Colors.purple.withValues(alpha: 0.2),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: List.generate(
+                      2,
+                      (i) => Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
+                          child: Container(
+                            height: 56,
+                            color: Colors.purple.withValues(alpha: 0.4),
+                            child: Center(child: Text('Bouton ${i + 1}')),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ),
-      body: const Center(
-        child: Text('Leçon — en construction'),
       ),
     );
   }
