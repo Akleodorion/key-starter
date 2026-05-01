@@ -21,9 +21,12 @@ class SessionSetupPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<SessionSetupState>(sessionSetupNotifierProvider, (_, next) {
       if (next is SessionSetupCreated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => LessonPage(session: next.session)),
-        );
+        Navigator.of(context)
+            .push(MaterialPageRoute(
+              builder: (_) => LessonPage(session: next.session),
+            ))
+            .then((_) =>
+                ref.read(sessionSetupNotifierProvider.notifier).resetToReady());
       }
     });
 

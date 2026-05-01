@@ -27,6 +27,8 @@ class SessionSetupNotifier extends Notifier<SessionSetupState> {
   static const _semitones = [0, 2, 4, 5, 7, 9, 11];
   static const _names = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
+  SessionSetupLoaded? _lastLoaded;
+
   @override
   SessionSetupState build() {
     _loadLastParams();
@@ -99,9 +101,14 @@ class SessionSetupNotifier extends Notifier<SessionSetupState> {
     state = s.copyWith(noteLanguage: () => lang);
   }
 
+  void resetToReady() {
+    if (_lastLoaded != null) state = _lastLoaded!;
+  }
+
   Future<void> startSession() async {
     final s = state;
     if (s is! SessionSetupLoaded) return;
+    _lastLoaded = s;
     state = const SessionSetupLoading();
 
     final params = CreateSessionParams(
