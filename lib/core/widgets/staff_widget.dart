@@ -75,10 +75,10 @@ class _StaffPainter extends CustomPainter {
 
     // ── Glyphe de clef ────────────────────────────────────────────────────────
     final glyph = clef == ClefMode.treble ? '𝄞' : '𝄢';
-    final fontSize = clef == ClefMode.treble ? lineGap * 6 : lineGap * 4;
+    final fontSize = clef == ClefMode.treble ? lineGap * 9 : lineGap * 5;
     final glyphY = clef == ClefMode.treble
-        ? staffTop + lineGap * 2 + fontSize * 0.40
-        : staffTop + lineGap + fontSize * 0.78;
+        ? staffTop + lineGap * 4 + fontSize * 0.38
+        : staffTop + lineGap + fontSize * 0.76;
 
     final tp = TextPainter(
       text: TextSpan(
