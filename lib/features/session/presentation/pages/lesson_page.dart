@@ -51,10 +51,38 @@ class LessonPage extends StatelessWidget {
 
             // ── Center — note display ─────────────────────────────────────────
             Expanded(
-              child: Container(
-                color: Colors.orange.withValues(alpha: 0.15),
-                child: const Center(
-                  child: Text('Note à afficher'),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Container(
+                    color: Colors.orange.withValues(alpha: 0.12),
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Note name (conditionally shown)
+                        if (session.showNoteName)
+                          Container(
+                            color: Colors.yellow.withValues(alpha: 0.5),
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: const Center(
+                              child: Text(
+                                'Sol 3',
+                                style: TextStyle(fontSize: 56),
+                              ),
+                            ),
+                          ),
+
+                        // Staff placeholder
+                        Container(
+                          height: 100,
+                          color: Colors.orange.withValues(alpha: 0.3),
+                          child: const Center(child: Text('Portée')),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
