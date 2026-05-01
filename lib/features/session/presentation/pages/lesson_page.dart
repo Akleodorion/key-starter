@@ -20,11 +20,14 @@ class LessonPage extends StatelessWidget {
               child: Row(
                 children: [
                   // Back button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.blue.withValues(alpha: 0.4),
-                    child: const Icon(Icons.close),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      color: Colors.blue.withValues(alpha: 0.4),
+                      child: const Icon(Icons.close),
+                    ),
                   ),
                   const Spacer(),
                   // Note counter
