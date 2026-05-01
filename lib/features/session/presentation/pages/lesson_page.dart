@@ -6,8 +6,15 @@ import 'package:key_starter/core/enums/note_language.dart';
 import 'package:key_starter/core/providers/midi_note_provider.dart';
 import 'package:key_starter/features/note_recognition/domain/entities/note.dart';
 import 'package:key_starter/features/session/domain/entities/session.dart';
+import 'package:key_starter/features/session/domain/entities/session_result.dart';
+import 'package:key_starter/features/session/domain/usecases/complete_session_usecase.dart';
+import 'package:key_starter/features/session/presentation/pages/results_page.dart';
+import 'package:key_starter/injection_container.dart';
 
 enum _Answer { none, correct, wrong }
+
+final _completeSessionUseCaseProvider =
+    Provider<CompleteSessionUseCase>((_) => sl<CompleteSessionUseCase>());
 
 class LessonPage extends ConsumerStatefulWidget {
   final Session session;
@@ -24,11 +31,15 @@ class _LessonPageState extends ConsumerState<LessonPage> {
   static const _semitones = [0, 2, 4, 5, 7, 9, 11];
 
   final _random = Random();
+  final List<int> _responseTimes = [];
 
   int _currentIndex = 0;
   int _correctCount = 0;
+  int _currentStreak = 0;
+  int _bestStreak = 0;
   _Answer _answer = _Answer.none;
   late int _currentStep;
+  late DateTime _noteShownAt;
 
   int get _total => widget.session.totalNotes;
 
@@ -36,6 +47,7 @@ class _LessonPageState extends ConsumerState<LessonPage> {
   void initState() {
     super.initState();
     _currentStep = _pickStep();
+    _noteShownAt = DateTime.now();
   }
 
   int _noteToStep(Note note) {
@@ -64,6 +76,10 @@ class _LessonPageState extends ConsumerState<LessonPage> {
 
   void _onCorrect() {
     if (_answer != _Answer.none) return;
+    final ms = DateTime.now().difference(_noteShownAt).inMilliseconds;
+    _responseTimes.add(ms);
+    _currentStreak++;
+    if (_currentStreak > _bestStreak) _bestStreak = _currentStreak;
     setState(() {
       _answer = _Answer.correct;
       _correctCount++;
@@ -73,6 +89,9 @@ class _LessonPageState extends ConsumerState<LessonPage> {
 
   void _onWrong() {
     if (_answer != _Answer.none) return;
+    final ms = DateTime.now().difference(_noteShownAt).inMilliseconds;
+    _responseTimes.add(ms);
+    _currentStreak = 0;
     setState(() => _answer = _Answer.wrong);
     Future.delayed(const Duration(milliseconds: 25), _advance);
   }
@@ -81,13 +100,37 @@ class _LessonPageState extends ConsumerState<LessonPage> {
     if (!mounted) return;
     _currentIndex++;
     if (_currentIndex >= _total) {
-      Navigator.of(context).pop();
+      _endSession();
       return;
     }
     setState(() {
       _answer = _Answer.none;
       _currentStep = _pickStep();
+      _noteShownAt = DateTime.now();
     });
+  }
+
+  void _endSession() {
+    final avgMs = _responseTimes.isEmpty
+        ? 0
+        : _responseTimes.reduce((a, b) => a + b) ~/ _responseTimes.length;
+
+    final result = SessionResult(
+      correctCount: _correctCount,
+      totalNotes: _total,
+      durationSec: DateTime.now().difference(widget.session.startedAt).inSeconds,
+      bestStreak: _bestStreak,
+      avgResponseMs: avgMs,
+    );
+
+    ref.read(_completeSessionUseCaseProvider)(
+      CompleteSessionParams(session: widget.session, result: result),
+    ).fold(
+      (_) => Navigator.of(context).pop(),
+      (completed) => Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => ResultsPage(session: completed)),
+      ),
+    );
   }
 
   Color get _centerColor => switch (_answer) {
