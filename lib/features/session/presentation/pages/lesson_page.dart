@@ -1,10 +1,91 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:key_starter/core/enums/note_language.dart';
+import 'package:key_starter/features/note_recognition/domain/entities/note.dart';
 import 'package:key_starter/features/session/domain/entities/session.dart';
 
-class LessonPage extends StatelessWidget {
+enum _Answer { none, correct, wrong }
+
+class LessonPage extends StatefulWidget {
   final Session session;
 
   const LessonPage({super.key, required this.session});
+
+  @override
+  State<LessonPage> createState() => _LessonPageState();
+}
+
+class _LessonPageState extends State<LessonPage> {
+  static const _namesEn = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  static const _namesFr = ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+
+  final _random = Random();
+
+  int _currentIndex = 0;
+  int _correctCount = 0;
+  _Answer _answer = _Answer.none;
+  late int _currentStep;
+
+  int get _total => widget.session.totalNotes;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentStep = _pickStep();
+  }
+
+  int _noteToStep(Note note) {
+    final i = _namesEn.indexOf(note.name);
+    return (note.octave - 4) * 7 + (i == -1 ? 0 : i);
+  }
+
+  int _pickStep() {
+    final min = _noteToStep(widget.session.minNote);
+    final max = _noteToStep(widget.session.maxNote);
+    return min + _random.nextInt(max - min + 1);
+  }
+
+  String _stepToLabel(int step) {
+    final noteIndex = ((step % 7) + 7) % 7;
+    final octave = 4 + (step - noteIndex) ~/ 7;
+    final names = widget.session.language == NoteLanguage.fr ? _namesFr : _namesEn;
+    return '${names[noteIndex]} $octave';
+  }
+
+  void _onCorrect() {
+    if (_answer != _Answer.none) return;
+    setState(() {
+      _answer = _Answer.correct;
+      _correctCount++;
+    });
+    Future.delayed(const Duration(milliseconds: 25), _advance);
+  }
+
+  void _onWrong() {
+    if (_answer != _Answer.none) return;
+    setState(() => _answer = _Answer.wrong);
+    Future.delayed(const Duration(milliseconds: 25), _advance);
+  }
+
+  void _advance() {
+    if (!mounted) return;
+    _currentIndex++;
+    if (_currentIndex >= _total) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() {
+      _answer = _Answer.none;
+      _currentStep = _pickStep();
+    });
+  }
+
+  Color get _centerColor => switch (_answer) {
+        _Answer.correct => Colors.green.withValues(alpha: 0.15),
+        _Answer.wrong   => Colors.red.withValues(alpha: 0.15),
+        _Answer.none    => Colors.orange.withValues(alpha: 0.12),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +100,6 @@ class LessonPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  // Back button
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     child: Container(
@@ -30,20 +110,18 @@ class LessonPage extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  // Note counter
                   Container(
                     width: 60,
                     height: 36,
                     color: Colors.blue.withValues(alpha: 0.4),
-                    child: const Center(child: Text('0 / 20')),
+                    child: Center(child: Text('$_currentIndex / $_total')),
                   ),
                   const Spacer(),
-                  // Correct counter
                   Container(
                     width: 60,
                     height: 36,
                     color: Colors.green.withValues(alpha: 0.4),
-                    child: const Center(child: Text('✓ 0')),
+                    child: Center(child: Text('✓ $_correctCount')),
                   ),
                 ],
               ),
@@ -54,27 +132,25 @@ class LessonPage extends StatelessWidget {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    color: Colors.orange.withValues(alpha: 0.12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    color: _centerColor,
                     width: double.infinity,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Note name (conditionally shown)
-                        if (session.showNoteName)
+                        if (widget.session.showNoteName)
                           Container(
                             color: Colors.yellow.withValues(alpha: 0.5),
                             padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: const Center(
+                            child: Center(
                               child: Text(
-                                'Sol 3',
-                                style: TextStyle(fontSize: 56),
+                                _stepToLabel(_currentStep),
+                                style: const TextStyle(fontSize: 56),
                               ),
                             ),
                           ),
-
-                        // Staff placeholder
                         Container(
                           height: 100,
                           color: Colors.orange.withValues(alpha: 0.3),
@@ -90,25 +166,30 @@ class LessonPage extends StatelessWidget {
             // ── Bottom — answer buttons ───────────────────────────────────────
             Column(
               children: [
-                Text('Joue la note sur ton clavier'),
+                const Text('Joue la note sur ton clavier'),
                 Container(
                   color: Colors.purple.withValues(alpha: 0.2),
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Row(
                     children: [
-                      Row(
-                        children: List.generate(
-                          2,
-                          (i) => Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(left: i == 0 ? 0 : 8),
-                              child: Container(
-                                height: 56,
-                                color: Colors.purple.withValues(alpha: 0.4),
-                                child: Center(child: Text('Bouton ${i + 1}')),
-                              ),
-                            ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _onCorrect,
+                          child: Container(
+                            height: 56,
+                            color: Colors.green.withValues(alpha: 0.4),
+                            child: const Center(child: Text('✓ Bonne réponse')),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _onWrong,
+                          child: Container(
+                            height: 56,
+                            color: Colors.red.withValues(alpha: 0.4),
+                            child: const Center(child: Text('✗ Mauvaise réponse')),
                           ),
                         ),
                       ),
