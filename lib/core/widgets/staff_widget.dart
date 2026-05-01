@@ -74,11 +74,14 @@ class _StaffPainter extends CustomPainter {
     }
 
     // ── Glyphe de clef ────────────────────────────────────────────────────────
+    // Bravura (SMuFL) : l'origine du glyphe est sur la ligne d'ancrage.
+    // Clef de Sol → ligne Sol = 2e ligne depuis le bas = staffTop + 3*lineGap.
+    // Clef de Fa  → ligne Fa  = 4e ligne depuis le bas = staffTop + lineGap.
     final glyph = clef == ClefMode.treble ? '𝄞' : '𝄢';
-    final fontSize = clef == ClefMode.treble ? lineGap * 9 : lineGap * 5;
-    final glyphY = clef == ClefMode.treble
-        ? staffTop + lineGap * 4 + fontSize * 0.38
-        : staffTop + lineGap + fontSize * 0.76;
+    final fontSize = clef == ClefMode.treble ? lineGap * 4 : lineGap * 3.5;
+    final anchorY = clef == ClefMode.treble
+        ? staffTop + lineGap * 3
+        : staffTop + lineGap;
 
     final tp = TextPainter(
       text: TextSpan(
@@ -86,13 +89,15 @@ class _StaffPainter extends CustomPainter {
         style: TextStyle(
           fontSize: fontSize,
           color: AppColors.ink,
-          fontFamily: 'serif',
+          fontFamily: 'Bravura',
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
-    tp.paint(canvas, Offset(22, glyphY - tp.height));
+    final baseline =
+        tp.computeDistanceToActualBaseline(TextBaseline.alphabetic);
+    tp.paint(canvas, Offset(22, anchorY - baseline));
 
     // ── Note (si présente) ────────────────────────────────────────────────────
     final step = diatonicStep;
