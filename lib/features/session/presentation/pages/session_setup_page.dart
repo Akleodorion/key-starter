@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
+import 'package:key_starter/core/enums/note_language.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 import 'package:key_starter/core/theme/app_text_styles.dart';
 import 'package:key_starter/core/widgets/clef_segmented_control.dart';
@@ -81,6 +82,7 @@ class SessionSetupPage extends ConsumerWidget {
                       clef: state.clef,
                       minStep: state.minStep,
                       maxStep: state.maxStep,
+                      language: state.noteLanguage ?? NoteLanguage.fr,
                       onMinChanged: notifier.setMinStep,
                       onMaxChanged: notifier.setMaxStep,
                     ),
