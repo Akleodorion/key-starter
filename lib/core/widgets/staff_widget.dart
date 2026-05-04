@@ -14,6 +14,7 @@ class StaffWidget extends StatelessWidget {
   final bool showLetterBelow;
   final NoteLanguage language;
   final double height;
+  final double? staffwidth;
 
   const StaffWidget({
     super.key,
@@ -23,13 +24,14 @@ class StaffWidget extends StatelessWidget {
     this.showLetterBelow = false,
     this.language = NoteLanguage.fr,
     this.height = 100,
+    this.staffwidth
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
-      width: double.infinity,
+      width: staffwidth ?? double.infinity,
       child: CustomPaint(
         painter: _StaffPainter(
           clef: clef,

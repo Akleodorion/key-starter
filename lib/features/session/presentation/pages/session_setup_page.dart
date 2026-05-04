@@ -24,11 +24,16 @@ class SessionSetupPage extends ConsumerWidget {
     ref.listen<SessionSetupState>(sessionSetupNotifierProvider, (_, next) {
       if (next is SessionSetupCreated) {
         Navigator.of(context)
-            .push(MaterialPageRoute(
-              builder: (_) => LessonPage(session: next.session),
-            ))
-            .then((_) =>
-                ref.read(sessionSetupNotifierProvider.notifier).resetToReady());
+            .push(
+              MaterialPageRoute(
+                builder: (_) => LessonPage(session: next.session),
+              ),
+            )
+            .then(
+              (_) => ref
+                  .read(sessionSetupNotifierProvider.notifier)
+                  .resetToReady(),
+            );
       }
     });
 
@@ -42,13 +47,11 @@ class SessionSetupPage extends ConsumerWidget {
     };
   }
 
-  Widget _buildLoading() => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+  Widget _buildLoading() =>
+      const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-  Widget _buildError(String message) => Scaffold(
-        body: Center(child: Text(message)),
-      );
+  Widget _buildError(String message) =>
+      Scaffold(body: Center(child: Text(message)));
 
   Widget _buildForm(
     BuildContext context,
@@ -58,7 +61,8 @@ class SessionSetupPage extends ConsumerWidget {
     final notifier = ref.read(sessionSetupNotifierProvider.notifier);
     final diatonicStep = _bottomStep[state.clef]! + 4;
 
-    final midiConnected = ref.watch(midiConnectedProvider).asData?.value ?? false;
+    final midiConnected =
+        ref.watch(midiConnectedProvider).asData?.value ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.ivory,
@@ -80,7 +84,9 @@ class SessionSetupPage extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    midiConnected ? 'Clavier connecté' : 'Aucun clavier connecté',
+                    midiConnected
+                        ? 'Clavier connecté'
+                        : 'Aucun clavier connecté',
                     style: AppTextStyles.ui(
                       size: 13,
                       color: midiConnected ? AppColors.ok : AppColors.inkMute,
@@ -95,9 +101,34 @@ class SessionSetupPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    StaffWidget(
-                      diatonicStep: diatonicStep,
-                      clef: state.clef,
+                    Container(
+                      color: Colors.amber,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            color: Colors.black26,
+                            child: Column(
+                              children: [
+                                Text("AUJOURD'HUI"),
+                                Text(
+                                  'Une session lecture',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          Container(
+                            color: Colors.black26,
+                            child: StaffWidget(
+                              diatonicStep: diatonicStep,
+                              clef: state.clef,
+                              staffwidth: 175,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ClefSegmentedControl(
