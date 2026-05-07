@@ -39,6 +39,7 @@ lib/
       presentation/
         pages/
         providers/    # notifier + provider file + state file
+        widgets/      # widgets specific to this feature's pages
   injection_container.dart
   main.dart
 test/               # mirrors lib/ structure
@@ -129,6 +130,17 @@ SessionRepositoryImpl({
 
 ### File Granularity
 Do **not** create a separate file for a single helper function. Co-locate small functions with the widget or class that owns them. Extract to a file only when the function is reused across multiple widgets.
+
+### Presentation Layer — Widget Decomposition
+Pages must not contain inline `_build*` methods or inline widget logic. Each distinct visual section becomes its own class in `features/<feature>/presentation/widgets/`:
+- `_buildLoading()` → `*LoadingView` (`StatelessWidget`)
+- `_buildError(message)` → `*ErrorView` (`StatelessWidget`)
+- `_buildForm(...)` → `*FormView` (`ConsumerWidget` if it reads providers)
+- Any named visual section (header, status bar, action button, …) → its own widget file
+
+The page class itself becomes a thin state router — typically just a `ref.listen` for side effects and a `switch` on the state.
+
+Widgets used by a single feature live in `features/<feature>/presentation/widgets/`. Widgets reused across features live in `core/widgets/`.
 
 ### Utility Classes
 Prefer direct getters over abstract-method-then-getter indirection. If a getter has no parameter variant, expose only the getter.
