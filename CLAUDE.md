@@ -142,6 +142,46 @@ The page class itself becomes a thin state router — typically just a `ref.list
 
 Widgets used by a single feature live in `features/<feature>/presentation/widgets/`. Widgets reused across features live in `core/widgets/`.
 
+### Abstract Widget Pattern (core/widgets/)
+Widgets in `core/widgets/` that need external data must **not** receive it as constructor parameters. Instead, define them as `abstract class … extends ConsumerWidget` with abstract methods for data and actions. Each feature then provides a concrete subclass that binds its own provider.
+
+```dart
+// core/widgets/my_widget.dart
+abstract class MyWidget extends ConsumerWidget {
+  const MyWidget({super.key});
+
+  SomeType value(WidgetRef ref);          // data
+  void onChanged(WidgetRef ref, SomeType v); // action
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = value(ref);
+    // UI only — no provider knowledge here
+  }
+}
+
+// features/<feature>/presentation/widgets/feature_my_widget.dart
+class FeatureMyWidget extends MyWidget {
+  const FeatureMyWidget({super.key});
+
+  @override
+  SomeType value(WidgetRef ref) {
+    final s = ref.watch(myProvider);
+    return s is MyLoadedState ? s.field : defaultValue;
+  }
+
+  @override
+  void onChanged(WidgetRef ref, SomeType v) =>
+      ref.read(myProvider.notifier).setField(v);
+}
+```
+
+**Usage:** `const FeatureMyWidget()` — zero arguments at the call site.
+
+**When to apply:** any `core/` widget that would otherwise receive ≥ 2 parameters that all come from the same provider. Widgets with a single generic parameter (e.g. `PrimaryButton(label, onPressed)`) stay parametric.
+
+**Feature-specific widgets** (already in `features/…/widgets/`) that need provider data can watch the provider directly in `build` without the abstract layer.
+
 ### Utility Classes
 Prefer direct getters over abstract-method-then-getter indirection. If a getter has no parameter variant, expose only the getter.
 
