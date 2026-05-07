@@ -9,11 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await initDependencies();
-  runApp(
-    const ProviderScope(
-      child: KeyStarterApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: KeyStarterApp()));
 }
 
 class KeyStarterApp extends StatelessWidget {
