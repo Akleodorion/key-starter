@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:key_starter/core/enums/clef_mode.dart';
-import 'package:key_starter/core/enums/note_language.dart';
-import 'package:key_starter/core/theme/app_colors.dart';
-import 'package:key_starter/core/theme/app_text_styles.dart';
-import 'package:key_starter/core/widgets/clef_segmented_control.dart';
-import 'package:key_starter/core/widgets/note_display_picker.dart';
-import 'package:key_starter/core/widgets/note_range_widget.dart';
-import 'package:key_starter/core/widgets/session_notes_slider.dart';
-import 'package:key_starter/core/widgets/staff_widget.dart';
-import 'package:key_starter/core/providers/midi_connection_provider.dart';
 import 'package:key_starter/features/session/presentation/pages/lesson_page.dart';
 import 'package:key_starter/features/session/presentation/providers/session_setup_notifier.dart';
 import 'package:key_starter/features/session/presentation/providers/session_setup_state.dart';
+import 'package:key_starter/features/session/presentation/widgets/session_setup_error_view.dart';
+import 'package:key_starter/features/session/presentation/widgets/session_setup_form_view.dart';
+import 'package:key_starter/features/session/presentation/widgets/session_setup_loading_view.dart';
 
+/// Point d'entrée de la configuration d'une session.
+///
+/// Ce widget est un routeur d'état pur : il délègue chaque état de
+/// [sessionSetupNotifierProvider] à un widget dédié et utilise [ref.listen]
+/// pour déclencher la navigation vers [LessonPage] en effet de bord
+/// (sans provoquer de rebuild). Au retour de [LessonPage], [resetToReady]
+/// remet le notifier en état [SessionSetupLoaded] pour permettre une
+/// nouvelle configuration.
 class SessionSetupPage extends ConsumerWidget {
   const SessionSetupPage({super.key});
-
-  static const _bottomStep = {ClefMode.treble: 2, ClefMode.bass: -10};
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,154 +36,14 @@ class SessionSetupPage extends ConsumerWidget {
       }
     });
 
-    final state = ref.watch(sessionSetupNotifierProvider);
-
-    return switch (state) {
-      SessionSetupInitial() || SessionSetupLoading() => _buildLoading(),
-      SessionSetupLoaded() => _buildForm(context, ref, state),
-      SessionSetupError() => _buildError(state.message),
-      SessionSetupCreated() => _buildLoading(),
-    };
-  }
-
-  Widget _buildLoading() =>
-      const Scaffold(body: Center(child: CircularProgressIndicator()));
-
-  Widget _buildError(String message) =>
-      Scaffold(body: Center(child: Text(message)));
-
-  Widget _buildForm(
-    BuildContext context,
-    WidgetRef ref,
-    SessionSetupLoaded state,
-  ) {
-    final notifier = ref.read(sessionSetupNotifierProvider.notifier);
-    final diatonicStep = _bottomStep[state.clef]! + 4;
-
-    final midiConnected =
-        ref.watch(midiConnectedProvider).asData?.value ?? false;
-
-    return Scaffold(
-      backgroundColor: AppColors.ivory,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── MIDI status bar ───────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: midiConnected ? AppColors.ok : AppColors.inkMute,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    midiConnected
-                        ? 'Clavier connecté'
-                        : 'Aucun clavier connecté',
-                    style: AppTextStyles.ui(
-                      size: 13,
-                      color: midiConnected ? AppColors.ok : AppColors.inkMute,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      color: Colors.amber,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            color: Colors.black26,
-                            child: Column(
-                              children: [
-                                Text("AUJOURD'HUI"),
-                                Text(
-                                  'Une session lecture',
-                                  style: TextStyle(fontSize: 18),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          Container(
-                            color: Colors.black26,
-                            child: StaffWidget(
-                              diatonicStep: diatonicStep,
-                              clef: state.clef,
-                              staffwidth: 175,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ClefSegmentedControl(
-                      value: state.clef,
-                      onChanged: notifier.setClef,
-                    ),
-                    const SizedBox(height: 12),
-                    NoteRangeWidget(
-                      clef: state.clef,
-                      minStep: state.minStep,
-                      maxStep: state.maxStep,
-                      language: state.noteLanguage ?? NoteLanguage.fr,
-                      onMinChanged: notifier.setMinStep,
-                      onMaxChanged: notifier.setMaxStep,
-                    ),
-                    const SizedBox(height: 12),
-                    SessionNotesSlider(
-                      value: state.totalNotes,
-                      onChanged: notifier.setTotalNotes,
-                    ),
-                    const SizedBox(height: 12),
-                    NoteDisplayPicker(
-                      value: state.noteLanguage,
-                      onChanged: notifier.setNoteLanguage,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: FilledButton(
-                  onPressed: () => notifier.startSession(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(
-                    'Commencer',
-                    style: AppTextStyles.ui(
-                      size: 16,
-                      weight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return switch (ref.watch(sessionSetupNotifierProvider)) {
+      SessionSetupInitial() ||
+      SessionSetupLoading() ||
+      SessionSetupCreated() => const SessionSetupLoadingView(),
+      final SessionSetupLoaded state => SessionSetupFormView(state: state),
+      SessionSetupError(:final message) => SessionSetupErrorView(
+        message: message,
       ),
-    );
+    };
   }
 }
