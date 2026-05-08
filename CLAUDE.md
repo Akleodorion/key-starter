@@ -109,6 +109,41 @@ Sealed state hierarchy per feature: `Initial`, `Loading`, `Loaded`, `Error` — 
 `Loaded` must expose a `copyWith`.  
 `NoParams` (if used): `List<Object?> get props => [];` — never `throw UnimplementedError()`.
 
+### Notifier / Provider Pattern (Riverpod 3.x)
+One `*_state.dart` + one `*_notifier.dart` per feature state.
+
+**Simple provider** (no arg):
+```dart
+final myProvider = NotifierProvider<MyNotifier, MyState>(MyNotifier.new);
+class MyNotifier extends Notifier<MyState> {
+  @override MyState build() { ... }
+}
+```
+
+**Family provider** (parameterized by an entity, e.g. `Session`):
+```dart
+final myProvider = NotifierProvider.autoDispose.family<MyNotifier, MyState, MyArg>(
+  (arg) => MyNotifier(arg),
+);
+class MyNotifier extends Notifier<MyState> {
+  final MyArg _arg;
+  MyNotifier(this._arg);
+  @override MyState build() {
+    ref.onDispose(() { /* cleanup */ });
+    return ...; // initial state using _arg
+  }
+}
+```
+
+Use `.autoDispose.family` when the state is tied to a page lifecycle (e.g. a session in progress). The `arg` is passed to the constructor — there is no `FamilyNotifier` base class in Riverpod 3.x.
+
+**Navigation side-effects** belong in the page via `ref.listen`, never in the notifier. The page becomes a thin state router:
+```dart
+ref.listen(myProvider(arg), (_, next) {
+  if (next is MyCompletedState) Navigator.of(context).pushReplacement(...);
+});
+```
+
 ### Use Cases
 One class per use case, single public `call()` method, depends only on the repository interface.  
 Use `Future<Either<Failure, T>>` only when the use case touches I/O (datasource, network). Pure in-memory logic stays sync `Either<Failure, T>`.
