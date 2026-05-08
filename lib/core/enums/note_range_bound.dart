@@ -1,0 +1,1 @@
+enum NoteRangeBound { min, max }
