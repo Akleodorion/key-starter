@@ -1,20 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_starter/core/enums/note_display_mode.dart';
 import 'package:key_starter/core/enums/note_language.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
-import 'package:key_starter/core/theme/app_text_styles.dart';
+import 'package:key_starter/core/widgets/note_display_option.dart';
 
-class NoteDisplayPicker extends StatelessWidget {
-  final NoteLanguage? value; // null = off
-  final ValueChanged<NoteLanguage?> onChanged;
+/// Sélecteur abstrait du mode d'affichage du nom des notes (OFF / Do / C).
+///
+/// Affiche trois options côte à côte correspondant aux valeurs de
+/// [NoteDisplayMode]. La conversion entre [NoteDisplayMode] et
+/// [NoteLanguage?] est gérée en interne — les sous-classes travaillent
+/// uniquement avec [NoteLanguage?] (null = pas d'affichage).
+///
+/// Les sous-classes fournissent la valeur courante et la réaction au
+/// changement en implémentant [value] et [onChanged].
+///
+/// ```dart
+/// class SessionNoteDisplayPicker extends NoteDisplayPicker {
+///   const SessionNoteDisplayPicker({super.key});
+///
+///   @override
+///   NoteLanguage? value(WidgetRef ref) {
+///     final state = ref.watch(sessionSetupNotifierProvider);
+///     return state is SessionSetupLoaded ? state.noteLanguage : null;
+///   }
+///
+///   @override
+///   void onChanged(WidgetRef ref, NoteLanguage? lang) =>
+///       ref.read(sessionSetupNotifierProvider.notifier).setNoteLanguage(lang);
+/// }
+/// ```
+///
+/// Voir aussi : [SessionNoteDisplayPicker]
+abstract class NoteDisplayPicker extends ConsumerWidget {
+  const NoteDisplayPicker({super.key});
 
-  const NoteDisplayPicker({
-    super.key,
-    required this.value,
-    required this.onChanged,
-  });
+  /// Langue courante sélectionnée ; null correspond à l'option OFF.
+  NoteLanguage? value(WidgetRef ref);
+
+  /// Appelé quand l'utilisateur choisit une option ; [lang] est null pour OFF.
+  void onChanged(WidgetRef ref, NoteLanguage? lang);
+
+  static NoteDisplayMode _toMode(NoteLanguage? lang) => switch (lang) {
+    null => NoteDisplayMode.off,
+    NoteLanguage.fr => NoteDisplayMode.fr,
+    NoteLanguage.en => NoteDisplayMode.en,
+  };
+
+  static NoteLanguage? _toLang(NoteDisplayMode mode) => switch (mode) {
+    NoteDisplayMode.off => null,
+    NoteDisplayMode.fr => NoteLanguage.fr,
+    NoteDisplayMode.en => NoteLanguage.en,
+  };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentMode = _toMode(value(ref));
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -22,58 +63,19 @@ class NoteDisplayPicker extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Row(
-        children: [
-          _Option(
-            label: 'OFF',
-            active: value == null,
-            onTap: () => onChanged(null),
-          ),
-          Container(width: 1, color: AppColors.lineStrong),
-          _Option(
-            label: 'Do',
-            active: value == NoteLanguage.fr,
-            onTap: () => onChanged(NoteLanguage.fr),
-          ),
-          Container(width: 1, color: AppColors.lineStrong),
-          _Option(
-            label: 'C',
-            active: value == NoteLanguage.en,
-            onTap: () => onChanged(NoteLanguage.en),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Option extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _Option({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          color: active ? AppColors.accent : AppColors.paper,
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: AppTextStyles.ui(size: 15, weight: FontWeight.w600).copyWith(
-              color: active ? Colors.white : AppColors.ink,
-            ),
-          ),
-        ),
+        children: NoteDisplayMode.values
+            .expand(
+              (mode) => [
+                if (mode != NoteDisplayMode.values.first)
+                  Container(width: 1, color: AppColors.lineStrong),
+                NoteDisplayOption(
+                  mode: mode,
+                  active: currentMode == mode,
+                  onSelect: (selected) => onChanged(ref, _toLang(selected)),
+                ),
+              ],
+            )
+            .toList(),
       ),
     );
   }
