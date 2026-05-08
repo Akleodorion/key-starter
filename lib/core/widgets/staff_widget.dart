@@ -26,7 +26,7 @@ import 'package:key_starter/core/theme/app_colors.dart';
 /// }
 /// ```
 ///
-/// Voir aussi : [LessonStaffWidget], [SessionStaffWidget]
+/// Voir aussi : [LessonStaffWidget], [StaffRangeWidget]
 abstract class StaffWidget extends ConsumerWidget {
   final double height;
   final double? staffwidth;

@@ -7,7 +7,6 @@ import 'package:key_starter/features/session/presentation/widgets/midi_status_ba
 import 'package:key_starter/features/session/presentation/widgets/session_clef_segmented_control.dart';
 import 'package:key_starter/features/session/presentation/widgets/session_note_display_picker.dart';
 import 'package:key_starter/features/session/presentation/widgets/session_note_range_widget.dart';
-import 'package:key_starter/features/session/presentation/widgets/session_setup_header.dart';
 import 'package:key_starter/features/session/presentation/widgets/session_total_notes_slider.dart';
 
 /// Layout de la page de configuration d'une session.
@@ -36,8 +35,6 @@ class SessionSetupLayout extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SessionSetupHeader(),
-                    SizedBox(height: 12),
                     SessionClefSegmentedControl(),
                     SizedBox(height: 12),
                     SessionNoteRangeWidget(),

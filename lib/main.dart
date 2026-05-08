@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_theme.dart';
 import 'package:key_starter/features/session/presentation/pages/session_setup_page.dart';
@@ -7,8 +6,7 @@ import 'package:key_starter/injection_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await initDependencies();
+await initDependencies();
   runApp(const ProviderScope(child: KeyStarterApp()));
 }
 
