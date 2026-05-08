@@ -4,7 +4,7 @@ import 'package:key_starter/features/session/presentation/pages/lesson_page.dart
 import 'package:key_starter/features/session/presentation/providers/session_setup_notifier.dart';
 import 'package:key_starter/features/session/presentation/providers/session_setup_state.dart';
 import 'package:key_starter/features/session/presentation/widgets/session_setup_error_view.dart';
-import 'package:key_starter/features/session/presentation/widgets/session_setup_form_view.dart';
+import 'package:key_starter/features/session/presentation/widgets/session_setup_layout.dart';
 import 'package:key_starter/features/session/presentation/widgets/session_setup_loading_view.dart';
 
 /// Point d'entrée de la configuration d'une session.
@@ -40,7 +40,7 @@ class SessionSetupPage extends ConsumerWidget {
       SessionSetupInitial() ||
       SessionSetupLoading() ||
       SessionSetupCreated() => const SessionSetupLoadingView(),
-      final SessionSetupLoaded state => SessionSetupFormView(state: state),
+      SessionSetupLoaded() => const SessionSetupLayout(),
       SessionSetupError(:final message) => SessionSetupErrorView(
         message: message,
       ),
