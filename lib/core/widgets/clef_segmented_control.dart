@@ -1,20 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
-import 'package:key_starter/core/theme/app_text_styles.dart';
+import 'package:key_starter/core/widgets/clef_option.dart';
 
-class ClefSegmentedControl extends StatelessWidget {
-  final ClefMode value;
-  final ValueChanged<ClefMode> onChanged;
+/// Contrôle segmenté permettant de choisir entre la clef de Sol et la clef de Fa.
+///
+/// Classe abstraite : l'UI est définie ici, mais la source de données et
+/// l'action sont fournis par la sous-classe via [value] et [onChanged].
+///
+/// Usage :
+/// ```dart
+/// class MyClefControl extends ClefSegmentedControl {
+///   const MyClefControl({super.key});
+///
+///   @override
+///   ClefMode value(WidgetRef ref) => ref.watch(myProvider).clef;
+///
+///   @override
+///   void onChanged(WidgetRef ref, ClefMode clef) =>
+///       ref.read(myProvider.notifier).setClef(clef);
+/// }
+/// ```
+///
+/// Voir aussi : [SessionClefSegmentedControl] pour l'implémentation liée
+/// à la page de configuration de session.
+abstract class ClefSegmentedControl extends ConsumerWidget {
+  const ClefSegmentedControl({super.key});
 
-  const ClefSegmentedControl({
-    super.key,
-    required this.value,
-    required this.onChanged,
-  });
+  /// Retourne la clef actuellement sélectionnée.
+  ClefMode value(WidgetRef ref);
+
+  /// Appelé quand l'utilisateur sélectionne une nouvelle clef.
+  void onChanged(WidgetRef ref, ClefMode clef);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentClef = value(ref);
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -23,68 +45,18 @@ class ClefSegmentedControl extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Row(
         children: [
-          _ClefOption(
-            glyph: '𝄞',
-            label: 'Sol',
-            active: value == ClefMode.treble,
-            onTap: () => onChanged(ClefMode.treble),
+          ClefOption(
+            clef: ClefMode.treble,
+            active: currentClef == ClefMode.treble,
+            onSelect: (clef) => onChanged(ref, clef),
           ),
           Container(width: 1, color: AppColors.lineStrong),
-          _ClefOption(
-            glyph: '𝄢',
-            label: 'Fa',
-            active: value == ClefMode.bass,
-            onTap: () => onChanged(ClefMode.bass),
+          ClefOption(
+            clef: ClefMode.bass,
+            active: currentClef == ClefMode.bass,
+            onSelect: (clef) => onChanged(ref, clef),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ClefOption extends StatelessWidget {
-  final String glyph;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _ClefOption({
-    required this.glyph,
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          color: active ? AppColors.accent : AppColors.paper,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                glyph,
-                style: AppTextStyles.display(size: 28).copyWith(
-                  color: active ? Colors.white : AppColors.ink,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label.toUpperCase(),
-                style: AppTextStyles.mono(
-                  size: 11,
-                  color: active ? Colors.white : AppColors.ink,
-                  letterSpacing: 0.08,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
