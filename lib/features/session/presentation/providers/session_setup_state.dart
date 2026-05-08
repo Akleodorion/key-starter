@@ -40,14 +40,13 @@ class SessionSetupLoaded extends SessionSetupState {
     int? maxStep,
     int? totalNotes,
     NoteLanguage? Function()? noteLanguage,
-  }) =>
-      SessionSetupLoaded(
-        clef: clef ?? this.clef,
-        minStep: minStep ?? this.minStep,
-        maxStep: maxStep ?? this.maxStep,
-        totalNotes: totalNotes ?? this.totalNotes,
-        noteLanguage: noteLanguage != null ? noteLanguage() : this.noteLanguage,
-      );
+  }) => SessionSetupLoaded(
+    clef: clef ?? this.clef,
+    minStep: minStep ?? this.minStep,
+    maxStep: maxStep ?? this.maxStep,
+    totalNotes: totalNotes ?? this.totalNotes,
+    noteLanguage: noteLanguage != null ? noteLanguage() : this.noteLanguage,
+  );
 
   @override
   List<Object?> get props => [clef, minStep, maxStep, totalNotes, noteLanguage];
