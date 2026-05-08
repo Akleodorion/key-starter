@@ -176,6 +176,8 @@ SessionRepositoryImpl({
 ### File Granularity
 Do **not** create a separate file for a single helper function. Co-locate small functions with the widget or class that owns them. Extract to a file only when the function is reused across multiple widgets.
 
+**One widget class per file.** Every `StatelessWidget`, `StatefulWidget`, `ConsumerWidget`, or `ConsumerStatefulWidget` must live in its own file, even if it is a small helper. Private helpers (`_MyHelper`) must be made public, given a descriptive name, and moved to a dedicated file. `CustomPainter` subclasses may stay in the same file as their widget.
+
 ### Presentation Layer — Widget Decomposition
 Pages must not contain inline `_build*` methods or inline widget logic. Each distinct visual section becomes its own class in `features/<feature>/presentation/widgets/`:
 - `_buildLoading()` → `*LoadingView` (`StatelessWidget`)
@@ -226,6 +228,21 @@ class FeatureMyWidget extends MyWidget {
 **When to apply:** any `core/` widget that would otherwise receive ≥ 2 parameters that all come from the same provider. Widgets with a single generic parameter (e.g. `PrimaryButton(label, onPressed)`) stay parametric.
 
 **Feature-specific widgets** (already in `features/…/widgets/`) that need provider data can watch the provider directly in `build` without the abstract layer.
+
+### Documentation
+Document **abstract classes** (`core/widgets/`, use cases, repositories) with a class-level doc comment that covers:
+1. What the class does
+2. The contract it imposes (what the subclass must provide)
+3. A minimal usage example showing a concrete subclass
+4. A `Voir aussi :` / `See also:` reference to at least one real implementation
+
+Abstract method docs: one line each — what the method returns or does, not how.
+
+Concrete subclasses (feature widgets, repository impls) need only a single line pointing to the abstract class they implement, e.g. `/// Implémentation de [ClefSegmentedControl] liée à [sessionSetupNotifierProvider].`
+
+Do **not** document:
+- Obvious getters, constructors, or `build` overrides
+- Private helpers
 
 ### Utility Classes
 Prefer direct getters over abstract-method-then-getter indirection. If a getter has no parameter variant, expose only the getter.

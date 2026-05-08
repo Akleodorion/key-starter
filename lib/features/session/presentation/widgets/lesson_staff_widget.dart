@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
+import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/widgets/staff_widget.dart';
 import 'package:key_starter/features/session/domain/entities/session.dart';
 import 'package:key_starter/features/session/presentation/providers/lesson_notifier.dart';
