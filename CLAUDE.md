@@ -79,6 +79,16 @@ Manages a practice session lifecycle (create → play → complete).
 
 ### Naming
 - All identifiers and file names in **English** (not French). String messages displayed to the user may be in French.
+- **No single-letter or abbreviated variable names.** Always use full, descriptive names, even for local variables. Prefer clarity over brevity:
+  ```dart
+  // wrong
+  final s = ref.watch(sessionSetupNotifierProvider);
+  final v = clef(ref);
+
+  // correct
+  final state = ref.watch(sessionSetupNotifierProvider);
+  final currentClef = clef(ref);
+  ```
 - `entities/` (plural) — never `entitie/`
 - `datasources/` — never `date_source`
 - `resource` — never `ressource`
