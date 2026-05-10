@@ -21,26 +21,51 @@ class ResultsStatsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final result = session.result!;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
+    final rows = [
+      ResultStatRow(
+        label: 'Durée',
+        value: _formatDuration(result.durationSec),
+        icon: Icons.timer_outlined,
+      ),
+      ResultStatRow(
+        label: 'Meilleure série',
+        value: '${result.bestStreak} consécutives',
+        icon: Icons.local_fire_department_outlined,
+      ),
+      ResultStatRow(
+        label: 'Temps de réponse moyen',
+        value: '${result.avgResponseMs} ms',
+        icon: Icons.speed_outlined,
+      ),
+    ];
+
+    if (isLandscape) {
+      return IntrinsicHeight(
+        child: Row(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0)
+                const VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: AppColors.line,
+                ),
+              Expanded(child: rows[i]),
+            ],
+          ],
+        ),
+      );
+    }
 
     return Column(
       children: [
-        ResultStatRow(
-          label: 'Durée',
-          value: _formatDuration(result.durationSec),
-          icon: Icons.timer_outlined,
-        ),
-        const Divider(height: 1, color: AppColors.line),
-        ResultStatRow(
-          label: 'Meilleure série',
-          value: '${result.bestStreak} consécutives',
-          icon: Icons.local_fire_department_outlined,
-        ),
-        const Divider(height: 1, color: AppColors.line),
-        ResultStatRow(
-          label: 'Temps de réponse moyen',
-          value: '${result.avgResponseMs} ms',
-          icon: Icons.speed_outlined,
-        ),
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const Divider(height: 1, color: AppColors.line),
+          rows[i],
+        ],
       ],
     );
   }

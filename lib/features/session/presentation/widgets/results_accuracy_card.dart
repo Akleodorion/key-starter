@@ -14,9 +14,11 @@ class ResultsAccuracyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final result = session.result!;
     final accuracy = (result.accuracy * 100).round();
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      padding: EdgeInsets.symmetric(vertical: isLandscape ? 24 : 32),
       decoration: BoxDecoration(
         color: accuracy >= 80 ? AppColors.okSoft : AppColors.errSoft,
         borderRadius: BorderRadius.circular(16),
@@ -26,14 +28,14 @@ class ResultsAccuracyCard extends StatelessWidget {
           Text(
             '$accuracy%',
             style: AppTextStyles.display(
-              size: 64,
+              size: isLandscape ? 24 : 32,
             ).copyWith(color: accuracy >= 80 ? AppColors.ok : AppColors.err),
           ),
           const SizedBox(height: 4),
           Text(
             '${result.correctCount} / ${result.totalNotes} notes correctes',
             style: AppTextStyles.ui(
-              size: 15,
+              size: isLandscape ? 12 : 15,
               color: accuracy >= 80 ? AppColors.ok : AppColors.err,
             ),
           ),

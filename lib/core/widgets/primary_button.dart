@@ -17,7 +17,6 @@ class PrimaryButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: SizedBox(
-        width: double.infinity,
         height: 54,
         child: FilledButton(
           onPressed: onPressed,

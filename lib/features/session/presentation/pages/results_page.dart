@@ -15,6 +15,9 @@ class ResultsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
     return Scaffold(
       backgroundColor: AppColors.ivory,
       body: SafeArea(
@@ -26,11 +29,14 @@ class ResultsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 16),
-                    Text('Résultats', style: AppTextStyles.display(size: 32)),
-                    const SizedBox(height: 32),
+                    SizedBox(height: isLandscape ? 4 : 16),
+                    Text(
+                      'Résultats',
+                      style: AppTextStyles.display(size: isLandscape ? 16 : 32),
+                    ),
+                    SizedBox(height: isLandscape ? 12 : 32),
                     ResultsAccuracyCard(session: session),
-                    const SizedBox(height: 24),
+                    SizedBox(height: isLandscape ? 8 : 24),
                     ResultsStatsList(session: session),
                   ],
                 ),

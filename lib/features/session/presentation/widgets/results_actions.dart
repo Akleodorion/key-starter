@@ -15,14 +15,14 @@ class ResultsActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-          child: SizedBox(
-            width: double.infinity,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
             height: 54,
-            child: OutlinedButton(
+            child: FilledButton(
               onPressed: () {
                 final fresh = Session(
                   id: const Uuid().v4(),
@@ -38,6 +38,27 @@ class ResultsActions extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => LessonPage(session: fresh)),
                 );
               },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                'Recommencer',
+                style: AppTextStyles.ui(
+                  size: 12,
+                  weight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            height: 54,
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.accent,
                 side: const BorderSide(color: AppColors.accent),
@@ -46,41 +67,17 @@ class ResultsActions extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'Recommencer',
+                'Retour session',
                 style: AppTextStyles.ui(
-                  size: 16,
+                  size: 12,
                   weight: FontWeight.w600,
                   color: AppColors.accent,
                 ),
               ),
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: Text(
-                'Nouvelle session',
-                style: AppTextStyles.ui(
-                  size: 16,
-                  weight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

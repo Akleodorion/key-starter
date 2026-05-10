@@ -28,23 +28,35 @@ class LessonNoteCard extends ConsumerWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               width: double.infinity,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (session.showNoteName)
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Center(
-                        child: Text(
-                          noteLabel(state.currentStep, session.language),
-                          style: const TextStyle(fontSize: 56),
+              child: Builder(
+                builder: (context) {
+                  final isLandscape =
+                      MediaQuery.orientationOf(context) ==
+                      Orientation.landscape;
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (session.showNoteName)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: isLandscape ? 8 : 24,
+                          ),
+                          child: Center(
+                            child: Text(
+                              noteLabel(state.currentStep, session.language),
+                              style: TextStyle(fontSize: isLandscape ? 32 : 56),
+                            ),
+                          ),
                         ),
+                      SizedBox(height: isLandscape ? 8 : 24),
+                      LessonStaffWidget(
+                        session: session,
+                        height: isLandscape ? 70 : 100,
                       ),
-                    ),
-                  const SizedBox(height: 24),
-                  LessonStaffWidget(session: session, height: 100),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),
