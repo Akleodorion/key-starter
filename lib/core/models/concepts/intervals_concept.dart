@@ -8,6 +8,7 @@ class IntervalsConcept extends Concept {
         title: 'Intervalles',
         description: 'Lire les intervalles',
         color: AppColors.intervalsFg,
+        tintColor: AppColors.intervalsTint,
         icon: Icons.straighten_rounded,
       );
 
