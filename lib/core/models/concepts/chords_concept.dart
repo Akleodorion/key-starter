@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:key_starter/core/models/concept.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 
-class NotesConcept extends Concept {
-  const NotesConcept()
+class ChordsConcept extends Concept {
+  const ChordsConcept()
     : super(
-        title: 'Notes',
-        description: 'Lire les notes',
-        color: AppColors.notesFg,
-        icon: Icons.music_note_rounded,
+        title: 'Accords',
+        description: 'Lire les accords',
+        color: AppColors.chordsFg,
+        icon: Icons.library_music_rounded,
       );
 
   @override
