@@ -16,7 +16,7 @@ class HomeTopBar extends StatelessWidget {
         AppBrand(),
         Row(
           mainAxisSize: MainAxisSize.min,
-          children: [MidiPill(), SizedBox(width: 8), PrimaryIconButton()],
+          children: [MidiPill(), SizedBox(width: 8), PrimaryIconButton(icon: Icons.tune_rounded)],
         ),
       ],
     );
