@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/theme/app_text_styles.dart';
 import 'package:key_starter/presentation/widgets/home_top_bar.dart';
 
 class HomePage extends StatelessWidget {
@@ -14,7 +15,11 @@ class HomePage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [const HomeTopBar()],
+            children: [
+              const HomeTopBar(),
+              const SizedBox(height: 32),
+              Text('Que veux tu travailler ?', style: AppTextStyles.display()),
+            ],
           ),
         ),
       ),
