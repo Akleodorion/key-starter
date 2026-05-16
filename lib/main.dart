@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_theme.dart';
-import 'package:key_starter/features/session/presentation/pages/session_setup_page.dart';
+import 'package:key_starter/features/home/presentation/pages/home_page.dart';
 import 'package:key_starter/injection_container.dart';
 
 void main() async {
@@ -19,7 +19,7 @@ class KeyStarterApp extends StatelessWidget {
       title: 'Key Starter',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: const SessionSetupPage(),
+      home: const HomePage(),
     );
   }
 }

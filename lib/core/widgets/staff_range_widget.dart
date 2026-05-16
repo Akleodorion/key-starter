@@ -61,7 +61,7 @@ class _StaffRangePainter extends CustomPainter {
 
     // ── 5 lignes ──────────────────────────────────────────────────────────────
     final linePaint = Paint()
-      ..color = AppColors.ink.withValues(alpha: 0.85)
+      ..color = AppColors.text.withValues(alpha: 0.85)
       ..strokeWidth = 1.1;
 
     for (var i = 0; i < 5; i++) {
@@ -81,7 +81,7 @@ class _StaffRangePainter extends CustomPainter {
         text: glyph,
         style: TextStyle(
           fontSize: fontSize,
-          color: AppColors.ink,
+          color: AppColors.text,
           fontFamily: 'Bravura',
         ),
       ),
@@ -95,9 +95,9 @@ class _StaffRangePainter extends CustomPainter {
     // ── Note min (accent) — note max (accentDeep) ─────────────────────────────
     const noteSpacing = 40.0;
     _paintNote(canvas, noteX - noteSpacing, yFor(minDiatonicStep), rx, ry,
-        lineGap, AppColors.accent, minDiatonicStep, bottomStep, yFor);
+        lineGap, AppColors.notesFg, minDiatonicStep, bottomStep, yFor);
     _paintNote(canvas, noteX + noteSpacing, yFor(maxDiatonicStep), rx, ry,
-        lineGap, AppColors.accentDeep, maxDiatonicStep, bottomStep, yFor);
+        lineGap, AppColors.notesFg, maxDiatonicStep, bottomStep, yFor);
   }
 
   void _paintNote(

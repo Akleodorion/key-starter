@@ -3,59 +3,41 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 
 abstract final class AppTextStyles {
-  // ── Display — Instrument Serif ─────────────────────────────────────────────
-  // Grands titres, notes musicales affichées, chiffres clés.
-
   static TextStyle display({
-    double size = 28,
-    Color color = AppColors.ink,
-    FontStyle style = FontStyle.normal,
+    double size = 44,
+    Color color = AppColors.text,
+    FontWeight weight = FontWeight.w600,
   }) =>
-      GoogleFonts.instrumentSerif(
+      GoogleFonts.onest(
         fontSize: size,
-        fontStyle: style,
+        fontWeight: weight,
         color: color,
-        letterSpacing: size * -0.02,
-        height: 1.05,
+        letterSpacing: size * -0.04,
+        height: 0.98,
       );
-
-  // ── UI — DM Sans ───────────────────────────────────────────────────────────
-  // Texte courant, boutons, labels de formulaire.
 
   static TextStyle ui({
     double size = 14,
     FontWeight weight = FontWeight.w400,
-    Color color = AppColors.ink,
+    Color color = AppColors.text,
   }) =>
-      GoogleFonts.dmSans(
+      GoogleFonts.onest(
         fontSize: size,
         fontWeight: weight,
         color: color,
         letterSpacing: size * -0.01,
       );
 
-  // ── Mono — DM Mono ─────────────────────────────────────────────────────────
-  // Stats, compteurs, labels techniques, indicateurs MIDI.
-
-  static TextStyle mono({
-    double size = 12,
-    FontWeight weight = FontWeight.w400,
-    Color color = AppColors.inkMute,
-    double letterSpacing = 0.06,
+  static TextStyle label({
+    double size = 11,
+    Color color = AppColors.text3,
+    FontWeight weight = FontWeight.w600,
+    double letterSpacing = 2.0,
   }) =>
-      GoogleFonts.dmMono(
+      GoogleFonts.onest(
         fontSize: size,
         fontWeight: weight,
         color: color,
-        letterSpacing: size * letterSpacing,
-      );
-
-  // ── Eyebrow — variante mono uppercase ─────────────────────────────────────
-  // Petits titres de section en majuscules (ex: "PORTÉE", "DURÉE").
-
-  static TextStyle eyebrow({Color color = AppColors.inkMute}) => mono(
-        size: 11,
-        color: color,
-        letterSpacing: 0.10,
+        letterSpacing: letterSpacing,
       );
 }

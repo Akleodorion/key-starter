@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gunzip -c \"/Users/christian/.claude/projects/-Users-christian-code-Akleodorion-key-starter/036e5393-8466-45fa-915d-e1ce7c5eae99/tool-results/webfetch-1778941387839-lzqyqm.bin\")",
+      "Bash(tar -xO key-app/project/hifi-primitives.jsx)",
+      "Bash(tar -xO key-app/project/home-minimal-v2.jsx)",
+      "Bash(tar -xO key-app/project/hifi-lesson.jsx)",
+      "Bash(xcrun simctl *)",
+      "Bash(xcodebuild -showsdks)",
+      "Bash(flutter devices *)"
+    ]
+  }
+}

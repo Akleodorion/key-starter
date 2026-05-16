@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/errors/failures.dart';
 import 'package:key_starter/features/note_recognition/domain/entities/note.dart';
 import 'package:key_starter/features/note_recognition/domain/usecases/recognize_note_usecase.dart';
-import 'package:key_starter/features/note_recognition/presentation/providers/note_recognition_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_recognition_provider.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_recognition_state.dart';
 import 'package:mockito/annotations.dart';

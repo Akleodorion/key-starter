@@ -98,7 +98,7 @@ class _StaffPainter extends CustomPainter {
 
     // ── 5 lignes ──────────────────────────────────────────────────────────────
     final linePaint = Paint()
-      ..color = AppColors.ink.withValues(alpha: 0.85)
+      ..color = AppColors.text.withValues(alpha: 0.85)
       ..strokeWidth = 1.1;
 
     for (var i = 0; i < 5; i++) {
@@ -123,7 +123,7 @@ class _StaffPainter extends CustomPainter {
         text: glyph,
         style: TextStyle(
           fontSize: fontSize,
-          color: AppColors.ink,
+          color: AppColors.text,
           fontFamily: 'Bravura',
         ),
       ),
@@ -138,9 +138,9 @@ class _StaffPainter extends CustomPainter {
     if (step == null) return;
 
     final noteColor = switch (state) {
-      NoteState.correct => AppColors.ok,
-      NoteState.wrong => AppColors.err,
-      NoteState.idle => AppColors.ink,
+      NoteState.correct => AppColors.stateGreen,
+      NoteState.wrong => AppColors.stateRed,
+      NoteState.idle => AppColors.text,
     };
     // La note est centrée horizontalement, décalée à droite de la clef.
     final noteX = size.width / 2 + 30;
