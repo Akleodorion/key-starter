@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
-import 'package:key_starter/features/home/presentation/widgets/home_top_bar.dart';
+import 'package:key_starter/presentation/widgets/home_top_bar.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -14,12 +14,7 @@ class HomePage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              HomeTopBar(
-                midiDeviceName: 'Minilogue',
-                onSettingsTap: () {},
-              ),
-            ],
+            children: [const HomeTopBar()],
           ),
         ),
       ),
