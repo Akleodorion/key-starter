@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/presentation/widgets/settings_section.dart';
 import 'package:key_starter/presentation/widgets/settings_top_bar.dart';
+import 'package:key_starter/presentation/widgets/solfege_section.dart';
 import 'package:key_starter/presentation/widgets/theme_section.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -22,6 +23,8 @@ class SettingsPage extends StatelessWidget {
               const SettingsTopBar(),
               const SizedBox(height: 32),
               const SettingsSection(section: ThemeSection()),
+              const SizedBox(height: 24),
+              const SettingsSection(section: SolfegeSection()),
             ],
           ),
         ),

@@ -23,7 +23,15 @@ class SettingsSection extends StatelessWidget {
             border: Border.all(color: colors.line),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(children: section.children),
+          child: Column(
+            children: [
+              for (int i = 0; i < section.children.length; i++) ...[
+                section.children[i],
+                if (i < section.children.length - 1)
+                  Divider(height: 1, thickness: 1, color: colors.line),
+              ],
+            ],
+          ),
         ),
       ],
     );

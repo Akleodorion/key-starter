@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/presentation/widgets/settings_row_label.dart';
 
-class SettingsToggleRow extends StatelessWidget {
-  final String label;
-  final String? description;
-  final bool value;
-  final ValueChanged<bool> onChanged;
+abstract class SettingsToggleRow extends ConsumerWidget {
+  const SettingsToggleRow({super.key});
 
-  const SettingsToggleRow({
-    super.key,
-    required this.label,
-    this.description,
-    required this.value,
-    required this.onChanged,
-  });
+  String get label;
+  String? get description => null;
+
+  bool value(WidgetRef ref);
+  void onChanged(WidgetRef ref, bool value);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           SettingsRowLabel(label: label, description: description),
           const SizedBox(width: 12),
-          Switch(value: value, onChanged: onChanged),
+          Switch(value: value(ref), onChanged: (v) => onChanged(ref, v)),
         ],
       ),
     );
