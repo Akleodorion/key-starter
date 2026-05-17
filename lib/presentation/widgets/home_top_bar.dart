@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/widgets/midi_pill.dart';
 import 'package:key_starter/core/widgets/primary_icon_button.dart';
+import 'package:key_starter/presentation/pages/settings_page.dart';
 import 'package:key_starter/presentation/widgets/app_brand.dart';
 
 /// Barre supérieure de l'accueil : logo + nom à gauche, MIDI pill +
@@ -10,13 +11,22 @@ class HomeTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        AppBrand(),
+        const AppBrand(),
         Row(
           mainAxisSize: MainAxisSize.min,
-          children: [MidiPill(), SizedBox(width: 8), PrimaryIconButton(icon: Icons.tune_rounded)],
+          children: [
+            const MidiPill(),
+            const SizedBox(width: 8),
+            PrimaryIconButton(
+              icon: Icons.tune_rounded,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              ),
+            ),
+          ],
         ),
       ],
     );
