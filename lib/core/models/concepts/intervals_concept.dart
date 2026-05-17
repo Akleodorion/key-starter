@@ -9,6 +9,7 @@ class IntervalsConcept extends Concept {
         description: 'Lire les intervalles',
         color: AppColors.intervalsFg,
         tintColor: AppColors.intervalsTint,
+        darkTintColor: const Color(0xFF0E3025),
         icon: Icons.straighten_rounded,
       );
 

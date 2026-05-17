@@ -9,6 +9,7 @@ class NotesConcept extends Concept {
         description: 'Lire les notes',
         color: AppColors.notesFg,
         tintColor: AppColors.notesTint,
+        darkTintColor: const Color(0xFF1C2550),
         icon: Icons.music_note_rounded,
       );
 

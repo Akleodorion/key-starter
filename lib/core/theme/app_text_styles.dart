@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:key_starter/core/theme/app_colors.dart';
 
 abstract final class AppTextStyles {
   static TextStyle display({
     double size = 44,
-    Color color = AppColors.text,
+    Color? color,
     FontWeight weight = FontWeight.w600,
   }) =>
       GoogleFonts.onest(
@@ -19,7 +18,7 @@ abstract final class AppTextStyles {
   static TextStyle ui({
     double size = 14,
     FontWeight weight = FontWeight.w400,
-    Color color = AppColors.text,
+    Color? color,
   }) =>
       GoogleFonts.onest(
         fontSize: size,
@@ -30,7 +29,7 @@ abstract final class AppTextStyles {
 
   static TextStyle label({
     double size = 11,
-    Color color = AppColors.text3,
+    Color? color,
     FontWeight weight = FontWeight.w600,
     double letterSpacing = 2.0,
   }) =>

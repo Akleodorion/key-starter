@@ -9,6 +9,7 @@ class ChordsConcept extends Concept {
         description: 'Lire les accords',
         color: AppColors.chordsFg,
         tintColor: AppColors.chordsTint,
+        darkTintColor: const Color(0xFF3A1C10),
         icon: Icons.library_music_rounded,
       );
 

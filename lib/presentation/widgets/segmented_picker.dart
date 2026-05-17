@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_text_styles.dart';
 
 class SegmentedPicker<T> extends StatelessWidget {
@@ -19,11 +19,12 @@ class SegmentedPicker<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColorTheme.of(context);
     final selectedIndex = options.indexWhere((opt) => opt.$1 == selected);
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bgInset,
+        color: colors.bgInset,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Stack(
@@ -37,7 +38,7 @@ class SegmentedPicker<T> extends StatelessWidget {
             width: _segmentWidth,
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(7),
                 boxShadow: [
                   BoxShadow(
@@ -69,7 +70,7 @@ class SegmentedPicker<T> extends StatelessWidget {
                           style: AppTextStyles.ui(
                             size: 13,
                             weight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            color: isSelected ? AppColors.text : AppColors.text2,
+                            color: isSelected ? colors.text : colors.text2,
                           ),
                           child: Text(label),
                         ),

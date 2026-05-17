@@ -6,6 +6,7 @@ abstract class Concept extends Equatable {
   final String description;
   final Color color;
   final Color tintColor;
+  final Color darkTintColor;
   final IconData icon;
 
   const Concept({
@@ -13,9 +14,10 @@ abstract class Concept extends Equatable {
     required this.description,
     required this.color,
     required this.tintColor,
+    required this.darkTintColor,
     required this.icon,
   });
 
   @override
-  List<Object?> get props => [title, description, color, tintColor, icon];
+  List<Object?> get props => [title, description, color, tintColor, darkTintColor, icon];
 }
