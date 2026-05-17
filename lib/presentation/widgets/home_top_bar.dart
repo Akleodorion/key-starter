@@ -22,9 +22,9 @@ class HomeTopBar extends StatelessWidget {
             const SizedBox(width: 8),
             PrimaryIconButton(
               icon: Icons.tune_rounded,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              ),
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsPage())),
             ),
           ],
         ),
