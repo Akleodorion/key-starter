@@ -4,6 +4,7 @@ import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/flashcard_clef_row.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/flashcard_note_count_row.dart';
+import 'package:key_starter/features/note_recognition/presentation/widgets/flashcard_range_section.dart';
 
 class FlashcardPage extends StatelessWidget {
   const FlashcardPage({super.key});
@@ -38,6 +39,8 @@ class FlashcardPage extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 24),
+              const FlashcardRangeSection(),
             ],
           ),
         ),

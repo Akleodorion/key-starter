@@ -4,14 +4,28 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 class FlashcardSettings extends Equatable {
   final ClefMode clef;
   final int noteCount;
+  final int minNoteStep;
+  final int maxNoteStep;
 
-  const FlashcardSettings({required this.clef, required this.noteCount});
+  const FlashcardSettings({
+    required this.clef,
+    required this.noteCount,
+    required this.minNoteStep,
+    required this.maxNoteStep,
+  });
 
-  FlashcardSettings copyWith({ClefMode? clef, int? noteCount}) => FlashcardSettings(
-        clef: clef ?? this.clef,
-        noteCount: noteCount ?? this.noteCount,
-      );
+  FlashcardSettings copyWith({
+    ClefMode? clef,
+    int? noteCount,
+    int? minNoteStep,
+    int? maxNoteStep,
+  }) => FlashcardSettings(
+    clef: clef ?? this.clef,
+    noteCount: noteCount ?? this.noteCount,
+    minNoteStep: minNoteStep ?? this.minNoteStep,
+    maxNoteStep: maxNoteStep ?? this.maxNoteStep,
+  );
 
   @override
-  List<Object?> get props => [clef, noteCount];
+  List<Object?> get props => [clef, noteCount, minNoteStep, maxNoteStep];
 }
