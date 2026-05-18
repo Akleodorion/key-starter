@@ -178,6 +178,12 @@ Do **not** create a separate file for a single helper function. Co-locate small 
 
 **One widget class per file.** Every `StatelessWidget`, `StatefulWidget`, `ConsumerWidget`, or `ConsumerStatefulWidget` must live in its own file, even if it is a small helper. Private helpers (`_MyHelper`) must be made public, given a descriptive name, and moved to a dedicated file. `CustomPainter` subclasses may stay in the same file as their widget.
 
+**Sub-part decomposition.** Within any widget, each visually distinct section — a container/badge block, an expanded text area, a button row — must be extracted into its own named class in the same directory, even if used by only one parent. Naming convention:
+- Container / icon block → `*Badge`, `*Icon`, `*Thumbnail`
+- Text / label block → `*Info`, `*Label`, `*Details`
+
+Example: `ConceptHeader` → `ConceptBadge` (tinted icon container) + `ConceptInfo` (title + description `Expanded`).
+
 ### Presentation Layer — Widget Decomposition
 Pages must not contain inline `_build*` methods or inline widget logic. Each distinct visual section becomes its own class in `features/<feature>/presentation/widgets/`:
 - `_buildLoading()` → `*LoadingView` (`StatelessWidget`)
