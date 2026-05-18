@@ -4,7 +4,7 @@ import 'package:key_starter/core/models/concepts/intervals_concept.dart';
 import 'package:key_starter/core/models/concepts/notes_concept.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_text_styles.dart';
-import 'package:key_starter/core/widgets/concept_card.dart';
+import 'package:key_starter/core/widgets/entry_card.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/note_concept_page.dart';
 import 'package:key_starter/presentation/widgets/home_top_bar.dart';
 
@@ -30,16 +30,16 @@ class HomePage extends StatelessWidget {
                 style: AppTextStyles.display(color: colors.text),
               ),
               const SizedBox(height: 24),
-              ConceptCard(
-                concept: const NotesConcept(),
+              EntryCard(
+                entry: const NotesConcept(),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const NoteConceptPage()),
                 ),
               ),
               const SizedBox(height: 12),
-              const ConceptCard(concept: ChordsConcept()),
+              const EntryCard(entry: ChordsConcept()),
               const SizedBox(height: 12),
-              const ConceptCard(concept: IntervalsConcept()),
+              const EntryCard(entry: IntervalsConcept()),
             ],
           ),
         ),

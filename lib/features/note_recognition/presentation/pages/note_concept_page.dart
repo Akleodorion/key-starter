@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/models/concepts/notes_concept.dart';
+import 'package:key_starter/core/models/exercises/defilement_exercise.dart';
+import 'package:key_starter/core/models/exercises/flashcard_exercise.dart';
+import 'package:key_starter/core/models/exercises/mesure_complete_exercise.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
+import 'package:key_starter/core/widgets/entry_card.dart';
 import 'package:key_starter/core/widgets/concept_header.dart';
 import 'package:key_starter/core/widgets/concept_top_bar.dart';
 
@@ -22,6 +26,12 @@ class NoteConceptPage extends StatelessWidget {
               const ConceptTopBar(),
               const SizedBox(height: 32),
               const ConceptHeader(concept: NotesConcept()),
+              const SizedBox(height: 32),
+              const EntryCard(entry: FlashcardExercise()),
+              const SizedBox(height: 12),
+              const EntryCard(entry: DefilementExercise()),
+              const SizedBox(height: 12),
+              const EntryCard(entry: MesureCompleteExercise()),
             ],
           ),
         ),

@@ -1,7 +1,7 @@
 import 'package:key_starter/core/models/card_entry.dart';
 
-abstract class Concept extends CardEntry {
-  const Concept({
+abstract class Exercise extends CardEntry {
+  const Exercise({
     required super.icon,
     required super.title,
     required super.description,
