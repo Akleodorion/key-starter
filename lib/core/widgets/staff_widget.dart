@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 
 /// Widget abstrait de portée musicale avec note positionnée.
@@ -44,6 +45,8 @@ abstract class StaffWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lineColor = AppColorTheme.of(context).text;
+
     return SizedBox(
       height: height,
       width: staffwidth ?? double.infinity,
@@ -52,6 +55,7 @@ abstract class StaffWidget extends ConsumerWidget {
           clef: clef(ref),
           diatonicStep: diatonicStep(ref),
           state: noteState(ref),
+          lineColor: lineColor,
         ),
       ),
     );
@@ -75,6 +79,7 @@ class _StaffPainter extends CustomPainter {
   final ClefMode clef;
   final int? diatonicStep;
   final NoteState state;
+  final Color lineColor;
 
   // Degré diatonique de la 1re ligne (ligne du bas) selon la clef.
   static const _bottomStep = {ClefMode.treble: 2, ClefMode.bass: -10};
@@ -83,6 +88,7 @@ class _StaffPainter extends CustomPainter {
     required this.clef,
     required this.diatonicStep,
     required this.state,
+    required this.lineColor,
   });
 
   @override
@@ -98,7 +104,7 @@ class _StaffPainter extends CustomPainter {
 
     // ── 5 lignes ──────────────────────────────────────────────────────────────
     final linePaint = Paint()
-      ..color = AppColors.text.withValues(alpha: 0.85)
+      ..color = lineColor.withValues(alpha: 0.85)
       ..strokeWidth = 1.1;
 
     for (var i = 0; i < 5; i++) {
@@ -123,7 +129,7 @@ class _StaffPainter extends CustomPainter {
         text: glyph,
         style: TextStyle(
           fontSize: fontSize,
-          color: AppColors.text,
+          color: lineColor,
           fontFamily: 'Bravura',
         ),
       ),
@@ -140,7 +146,7 @@ class _StaffPainter extends CustomPainter {
     final noteColor = switch (state) {
       NoteState.correct => AppColors.stateGreen,
       NoteState.wrong => AppColors.stateRed,
-      NoteState.idle => AppColors.text,
+      NoteState.idle => lineColor,
     };
     // La note est centrée horizontalement, décalée à droite de la clef.
     final noteX = size.width / 2 + 30;
@@ -218,5 +224,6 @@ class _StaffPainter extends CustomPainter {
   bool shouldRepaint(_StaffPainter old) =>
       old.clef != clef ||
       old.diatonicStep != diatonicStep ||
-      old.state != state;
+      old.state != state ||
+      old.lineColor != lineColor;
 }

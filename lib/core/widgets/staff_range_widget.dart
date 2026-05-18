@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
+import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 
 class StaffRangeWidget extends StatelessWidget {
@@ -20,6 +21,8 @@ class StaffRangeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lineColor = AppColorTheme.of(context).text;
+
     return SizedBox(
       height: height,
       width: double.infinity,
@@ -28,6 +31,7 @@ class StaffRangeWidget extends StatelessWidget {
           clef: clef,
           minDiatonicStep: minDiatonicStep,
           maxDiatonicStep: maxDiatonicStep,
+          lineColor: lineColor,
         ),
       ),
     );
@@ -38,6 +42,7 @@ class _StaffRangePainter extends CustomPainter {
   final ClefMode clef;
   final int minDiatonicStep;
   final int maxDiatonicStep;
+  final Color lineColor;
 
   static const _bottomStep = {ClefMode.treble: 2, ClefMode.bass: -10};
 
@@ -45,6 +50,7 @@ class _StaffRangePainter extends CustomPainter {
     required this.clef,
     required this.minDiatonicStep,
     required this.maxDiatonicStep,
+    required this.lineColor,
   });
 
   @override
@@ -61,7 +67,7 @@ class _StaffRangePainter extends CustomPainter {
 
     // ── 5 lignes ──────────────────────────────────────────────────────────────
     final linePaint = Paint()
-      ..color = AppColors.text.withValues(alpha: 0.85)
+      ..color = lineColor.withValues(alpha: 0.85)
       ..strokeWidth = 1.1;
 
     for (var i = 0; i < 5; i++) {
@@ -81,23 +87,44 @@ class _StaffRangePainter extends CustomPainter {
         text: glyph,
         style: TextStyle(
           fontSize: fontSize,
-          color: AppColors.text,
+          color: lineColor,
           fontFamily: 'Bravura',
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final baseline =
-        tp.computeDistanceToActualBaseline(TextBaseline.alphabetic);
+    final baseline = tp.computeDistanceToActualBaseline(
+      TextBaseline.alphabetic,
+    );
     tp.paint(canvas, Offset(22, anchorY - baseline));
 
-    // ── Note min (accent) — note max (accentDeep) ─────────────────────────────
+    // ── Note min — note max ───────────────────────────────────────────────────
     const noteSpacing = 40.0;
-    _paintNote(canvas, noteX - noteSpacing, yFor(minDiatonicStep), rx, ry,
-        lineGap, AppColors.notesFg, minDiatonicStep, bottomStep, yFor);
-    _paintNote(canvas, noteX + noteSpacing, yFor(maxDiatonicStep), rx, ry,
-        lineGap, AppColors.notesFg, maxDiatonicStep, bottomStep, yFor);
+    _paintNote(
+      canvas,
+      noteX - noteSpacing,
+      yFor(minDiatonicStep),
+      rx,
+      ry,
+      lineGap,
+      AppColors.notesFg,
+      minDiatonicStep,
+      bottomStep,
+      yFor,
+    );
+    _paintNote(
+      canvas,
+      noteX + noteSpacing,
+      yFor(maxDiatonicStep),
+      rx,
+      ry,
+      lineGap,
+      AppColors.notesFg,
+      maxDiatonicStep,
+      bottomStep,
+      yFor,
+    );
   }
 
   void _paintNote(
@@ -118,13 +145,19 @@ class _StaffRangePainter extends CustomPainter {
 
     if (step > bottomStep + 8) {
       for (var s = bottomStep + 10; s <= step; s += 2) {
-        canvas.drawLine(Offset(noteX - 12, yFor(s)), Offset(noteX + 12, yFor(s)),
-            ledgerPaint);
+        canvas.drawLine(
+          Offset(noteX - 12, yFor(s)),
+          Offset(noteX + 12, yFor(s)),
+          ledgerPaint,
+        );
       }
     } else if (step < bottomStep) {
       for (var s = bottomStep - 2; s >= step; s -= 2) {
-        canvas.drawLine(Offset(noteX - 12, yFor(s)), Offset(noteX + 12, yFor(s)),
-            ledgerPaint);
+        canvas.drawLine(
+          Offset(noteX - 12, yFor(s)),
+          Offset(noteX + 12, yFor(s)),
+          ledgerPaint,
+        );
       }
     }
 
@@ -160,5 +193,6 @@ class _StaffRangePainter extends CustomPainter {
   bool shouldRepaint(_StaffRangePainter old) =>
       old.clef != clef ||
       old.minDiatonicStep != minDiatonicStep ||
-      old.maxDiatonicStep != maxDiatonicStep;
+      old.maxDiatonicStep != maxDiatonicStep ||
+      old.lineColor != lineColor;
 }
