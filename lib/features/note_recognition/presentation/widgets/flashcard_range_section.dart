@@ -20,7 +20,12 @@ class FlashcardRangeSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        UiText('Étendue', size: 15, weight: FontWeight.w600, color: colors.text),
+        UiText(
+          'Étendue',
+          size: 15,
+          weight: FontWeight.w600,
+          color: colors.text,
+        ),
         const SizedBox(height: 2),
         UiText(
           'choisis la note la plus grave et la plus aiguë',
