@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:key_starter/core/models/concept.dart';
+import 'package:key_starter/core/models/card_entry.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
 import 'package:key_starter/core/widgets/ui_text.dart';
 
 class ConceptInfo extends StatelessWidget {
-  final Concept concept;
+  final CardEntry concept;
 
   const ConceptInfo({super.key, required this.concept});
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:key_starter/core/models/concept.dart';
+import 'package:key_starter/core/models/card_entry.dart';
 
 class ConceptBadge extends StatelessWidget {
-  final Concept concept;
+  final CardEntry concept;
 
   const ConceptBadge({super.key, required this.concept});
 

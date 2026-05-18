@@ -41,7 +41,12 @@ class EntryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                UiText(entry.title, size: 17, weight: FontWeight.w700, color: colors.text),
+                UiText(
+                  entry.title,
+                  size: 17,
+                  weight: FontWeight.w700,
+                  color: colors.text,
+                ),
                 const SizedBox(height: 2),
                 UiText(entry.description, size: 13, color: colors.text2),
               ],
