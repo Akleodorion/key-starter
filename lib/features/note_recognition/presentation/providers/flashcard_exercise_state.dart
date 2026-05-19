@@ -38,8 +38,18 @@ class FlashcardExerciseRunning extends FlashcardExerciseState {
 }
 
 class FlashcardExerciseCompleted extends FlashcardExerciseState {
-  const FlashcardExerciseCompleted();
+  final int correctCount;
+  final int totalNotes;
+  final int avgResponseMs;
+  final int bestStreak;
+
+  const FlashcardExerciseCompleted({
+    required this.correctCount,
+    required this.totalNotes,
+    required this.avgResponseMs,
+    required this.bestStreak,
+  });
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [correctCount, totalNotes, avgResponseMs, bestStreak];
 }

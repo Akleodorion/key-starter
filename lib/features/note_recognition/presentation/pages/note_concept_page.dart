@@ -21,24 +21,26 @@ class NoteConceptPage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const ConceptTopBar(),
-              const SizedBox(height: 32),
-              const ConceptHeader(concept: NotesConcept()),
-              const SizedBox(height: 32),
-              EntryCard(
-                entry: const FlashcardExercise(),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const FlashcardPage()),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const ConceptTopBar(),
+                const SizedBox(height: 32),
+                const ConceptHeader(concept: NotesConcept()),
+                const SizedBox(height: 32),
+                EntryCard(
+                  entry: const FlashcardExercise(),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const FlashcardPage()),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const EntryCard(entry: DefilementExercise()),
-              const SizedBox(height: 12),
-              const EntryCard(entry: MesureCompleteExercise()),
-            ],
+                const SizedBox(height: 12),
+                const EntryCard(entry: DefilementExercise()),
+                const SizedBox(height: 12),
+                const EntryCard(entry: MesureCompleteExercise()),
+              ],
+            ),
           ),
         ),
       ),

@@ -27,27 +27,36 @@ class FlashcardPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ConceptTopBar(title: 'Notes'),
-              const SizedBox(height: 32),
-              const DisplayText('Flashcard'),
-              const SizedBox(height: 32),
-              Container(
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  border: Border.all(color: colors.line),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    const FlashcardClefRow(),
-                    Divider(height: 1, thickness: 1, color: colors.line),
-                    const FlashcardNoteCountRow(),
-                  ],
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ConceptTopBar(title: 'Notes'),
+                      const SizedBox(height: 32),
+                      const DisplayText('Flashcard'),
+                      const SizedBox(height: 32),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          border: Border.all(color: colors.line),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            const FlashcardClefRow(),
+                            Divider(height: 1, thickness: 1, color: colors.line),
+                            const FlashcardNoteCountRow(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const FlashcardRangeSection(),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-              const FlashcardRangeSection(),
-              const Spacer(),
+              const SizedBox(height: 16),
               PrimaryButton(
                 label: 'Lancer',
                 color: AppColors.notesFg,

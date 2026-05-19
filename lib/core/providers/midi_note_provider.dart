@@ -14,3 +14,16 @@ final midiNoteOnProvider = StreamProvider<int>((ref) {
           packet.data[2] > 0)
       .map((packet) => packet.data[1]);
 });
+
+/// Emits the MIDI number of every note-off event (0x80 or 0x90 with velocity 0).
+final midiNoteOffProvider = StreamProvider<int>((ref) {
+  final stream = MidiCommand().onMidiDataReceived;
+  if (stream == null) return const Stream.empty();
+
+  return stream
+      .where((packet) =>
+          packet.data.length >= 3 &&
+          ((packet.data[0] & 0xF0) == 0x80 ||
+              ((packet.data[0] & 0xF0) == 0x90 && packet.data[2] == 0)))
+      .map((packet) => packet.data[1]);
+});

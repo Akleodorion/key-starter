@@ -13,6 +13,7 @@ import 'package:key_starter/features/note_recognition/presentation/providers/fla
 import 'package:key_starter/features/note_recognition/presentation/widgets/exercise_feedback_row.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/exercise_top_bar.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/flashcard_staff_card.dart';
+import 'package:key_starter/features/session/presentation/pages/recap_page.dart';
 
 class FlashcardExercisePage extends ConsumerStatefulWidget {
   final FlashcardSettings settings;
@@ -25,6 +26,8 @@ class FlashcardExercisePage extends ConsumerStatefulWidget {
 }
 
 class _FlashcardExercisePageState extends ConsumerState<FlashcardExercisePage> {
+  bool _handingOffToRecap = false;
+
   @override
   void initState() {
     super.initState();
@@ -36,10 +39,9 @@ class _FlashcardExercisePageState extends ConsumerState<FlashcardExercisePage> {
 
   @override
   void dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    if (!_handingOffToRecap) {
+      SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    }
     super.dispose();
   }
 
@@ -51,7 +53,26 @@ class _FlashcardExercisePageState extends ConsumerState<FlashcardExercisePage> {
 
     ref.listen(flashcardExerciseProvider(widget.settings), (_, next) {
       if (next is FlashcardExerciseCompleted) {
-        Navigator.of(context).pop();
+        if (!mounted) return;
+        _handingOffToRecap = true;
+        final navigator = Navigator.of(context);
+        final settings = widget.settings;
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => RecapPage(
+              exerciseLabel: 'Lecture · flashcard',
+              correctCount: next.correctCount,
+              totalNotes: next.totalNotes,
+              avgResponseMs: next.avgResponseMs,
+              bestStreak: next.bestStreak,
+              onRetry: () => navigator.pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => FlashcardExercisePage(settings: settings),
+                ),
+              ),
+            ),
+          ),
+        );
       }
     });
 

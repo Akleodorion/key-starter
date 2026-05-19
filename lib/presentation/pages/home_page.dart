@@ -20,24 +20,26 @@ class HomePage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const HomeTopBar(),
-              const SizedBox(height: 32),
-              DisplayText('Que veux tu travailler ?', color: colors.text),
-              const SizedBox(height: 24),
-              EntryCard(
-                entry: const NotesConcept(),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NoteConceptPage()),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const HomeTopBar(),
+                const SizedBox(height: 32),
+                DisplayText('Que veux tu travailler ?', color: colors.text),
+                const SizedBox(height: 24),
+                EntryCard(
+                  entry: const NotesConcept(),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const NoteConceptPage()),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const EntryCard(entry: ChordsConcept()),
-              const SizedBox(height: 12),
-              const EntryCard(entry: IntervalsConcept()),
-            ],
+                const SizedBox(height: 12),
+                const EntryCard(entry: ChordsConcept()),
+                const SizedBox(height: 12),
+                const EntryCard(entry: IntervalsConcept()),
+              ],
+            ),
           ),
         ),
       ),
