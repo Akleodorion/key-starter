@@ -1,12 +1,11 @@
 import 'dart:math';
 
+import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
-import 'package:key_starter/core/providers/midi_note_provider.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_settings_state.dart';
-
 
 final flashcardExerciseProvider = NotifierProvider.autoDispose
     .family<
@@ -29,18 +28,33 @@ class FlashcardExerciseNotifier extends Notifier<FlashcardExerciseState> {
 
   @override
   FlashcardExerciseState build() {
-    ref.listen(midiNoteOnProvider, (_, next) {
-      next.whenData(_onMidiReceived);
-    });
-    ref.listen(midiNoteOffProvider, (_, next) {
-      next.whenData(_onMidiNoteOff);
-    });
+    final subscription = MidiCommand().onMidiDataReceived?.listen(_onMidiPacket);
+    ref.onDispose(() => subscription?.cancel());
+
     _noteStartMs = DateTime.now().millisecondsSinceEpoch;
     return FlashcardExerciseRunning(
       noteSteps: _generateSteps(),
       currentIndex: 0,
       noteState: NoteState.idle,
     );
+  }
+
+  void _onMidiPacket(MidiPacket packet) {
+    final data = packet.data;
+    if (data.length < 3) return;
+
+    final status = data[0] & 0xF0;
+    final midiNumber = data[1];
+    final velocity = data[2];
+
+    final isNoteOn = status == 0x90 && velocity > 0;
+    final isNoteOff = status == 0x80 || (status == 0x90 && velocity == 0);
+
+    if (isNoteOn) {
+      _onMidiReceived(midiNumber);
+    } else if (isNoteOff) {
+      _onMidiNoteOff(midiNumber);
+    }
   }
 
   List<int> _generateSteps() {
@@ -67,8 +81,6 @@ class FlashcardExerciseNotifier extends Notifier<FlashcardExerciseState> {
     final playedStep = diatonicStepFromMidi(midiNumber);
     _lastPlayedMidiNumber = midiNumber;
 
-    // Activer le verrou maintenant si la note suivante requiert le même step,
-    // pour que le Note OFF reçu pendant l'animation de feedback puisse le lever.
     final nextIndex = currentState.currentIndex + 1;
     _awaitingNoteRelease = nextIndex < currentState.total &&
         playedStep == currentState.noteSteps[nextIndex];
