@@ -25,7 +25,7 @@ Clean Architecture with feature-based folder structure:
 
 ```
 lib/
-  core/           # shared errors, utils, widgets, enums
+  core/           # shared errors, utils, enums, models, providers, theme, widgets
   features/
     <feature>/
       data/
@@ -40,6 +40,9 @@ lib/
         pages/
         providers/    # notifier + provider file + state file
         widgets/      # widgets specific to this feature's pages
+  presentation/     # app-shell pages/widgets not tied to a single feature (e.g. home, settings)
+    pages/
+    widgets/
   injection_container.dart
   main.dart
 test/               # mirrors lib/ structure
@@ -50,36 +53,11 @@ DI: **get_it** (`registerLazySingleton` for stateless services like repositories
 Error handling: **dartz** `Either<Failure, T>` — never use `!` on an `Either`, it is never nullable.  
 Value equality: **equatable** on all entities and state classes.
 
-## Implemented Features
-
-### note_recognition
-Converts a raw MIDI number (0–127) into a `Note` entity.  
-- `MidiDataSourceImpl.noteFromMidiNumber(int)` — pure sync conversion, throws `MidiException` on out-of-range.  
-- `NoteRecognitionRepositoryImpl.recognizeNote(int)` — sync `Either<Failure, Note>`.  
-- `NoteRecognitionNotifier` (Riverpod `Notifier`) exposes `onMidiNoteReceived(int midiNumber)`.  
-- `recognizeNoteUseCaseProvider` is declared inside the notifier file to avoid circular imports.
-
-### session
-Manages a practice session lifecycle (create → play → complete).
-
-**Domain entities:**
-- `Session` — id, clef, minNote, maxNote, totalNotes, showNoteName, language, startedAt, result?. `isCompleted = result != null`.
-- `SessionResult` — correctCount, totalNotes, durationSec, bestStreak, avgResponseMs. `accuracy = correctCount / totalNotes`.
-
-**Use cases:**
-- `CreateSessionUseCase(CreateSessionParams)` → `Future<Either<Failure, Session>>`
-- `CompleteSessionUseCase(CompleteSessionParams)` → `Either<Failure, Session>` (sync, no I/O)
-- `GetLastSessionParamsUseCase()` → `Future<Either<Failure, CreateSessionParams?>>`
-
-**Persistence:** `SessionLocalDataSourceImpl` uses SharedPreferences to store the last `CreateSessionParams` (keys: `session_clef`, `session_min_note_midi`, `session_max_note_midi`, `session_total_notes`, `session_show_note_name`, `session_language`).
-
-**Validation in `SessionRepositoryImpl`:** `totalNotes` must be 5–100; `minNote.midiNumber < maxNote.midiNumber`.
-
 ## Coding Rules
 
 ### Naming
 - All identifiers and file names in **English** (not French). String messages displayed to the user may be in French.
-- **No single-letter or abbreviated variable names.** Always use full, descriptive names, even for local variables. Prefer clarity over brevity:
+- **No single-letter or abbreviated variable names** — always use full, descriptive names, even for locals:
   ```dart
   // wrong
   final s = ref.watch(sessionSetupNotifierProvider);
@@ -92,9 +70,8 @@ Manages a practice session lifecycle (create → play → complete).
 - `entities/` (plural) — never `entitie/`
 - `datasources/` — never `date_source`
 - `resource` — never `ressource`
-- Spell `batchesCounter`, `evaluation`, `function` correctly in identifiers.
 
-### Entities & Models
+### Entities, Models & Utility Classes
 - Domain entity: pure Dart class, `extends Equatable`, all fields `final`, no framework imports.
 - Data model: `extends` the entity, adds `factory fromJson` / `toJson`. Nothing else.
 - `copyWith` must follow standard Flutter convention — optional named parameters for each field, not a full replacement object:
@@ -103,6 +80,7 @@ Manages a practice session lifecycle (create → play → complete).
   Item copyWith({String? name, SuperPrice? superPrice}) => Item(
         id: id, name: name ?? this.name, superPrice: superPrice ?? this.superPrice, ...);
   ```
+- Utility classes: prefer direct getters over abstract-method-then-getter indirection — if a getter has no parameter variant, expose only the getter.
 
 ### State Classes
 Sealed state hierarchy per feature: `Initial`, `Loading`, `Loaded`, `Error` — each `extends Equatable`.  
@@ -145,11 +123,10 @@ ref.listen(myProvider(arg), (_, next) {
 ```
 
 ### Use Cases
-One class per use case, single public `call()` method, depends only on the repository interface.  
-Use `Future<Either<Failure, T>>` only when the use case touches I/O (datasource, network). Pure in-memory logic stays sync `Either<Failure, T>`.
+One class per use case, single public `call()` method, depends only on the repository interface. Sync `Either<Failure, T>` for pure in-memory logic; `Future<Either<Failure, T>>` only when touching I/O (datasource, network).
 
 ### Cross-feature coupling
-Features must not import from each other. If two features need the same small utility (e.g. MIDI → Note conversion), duplicate it. Shared pure utilities belong in `core/`.
+Features must not import from each other — duplicate small shared utilities (e.g. MIDI → Note conversion) instead. Shared pure utilities belong in `core/`.
 
 ### Dependency Injection (get_it)
 ```dart
@@ -174,9 +151,9 @@ SessionRepositoryImpl({
 ```
 
 ### File Granularity
-Do **not** create a separate file for a single helper function. Co-locate small functions with the widget or class that owns them. Extract to a file only when the function is reused across multiple widgets.
+Do **not** create a separate file for a single helper function — co-locate it with the widget or class that owns it. Extract to a file only when reused across multiple widgets.
 
-**One widget class per file.** Every `StatelessWidget`, `StatefulWidget`, `ConsumerWidget`, or `ConsumerStatefulWidget` must live in its own file, even if it is a small helper. Private helpers (`_MyHelper`) must be made public, given a descriptive name, and moved to a dedicated file. `CustomPainter` subclasses may stay in the same file as their widget.
+**One widget class per file.** Every `StatelessWidget`, `StatefulWidget`, `ConsumerWidget`, or `ConsumerStatefulWidget` lives in its own file, even small helpers — private helpers (`_MyHelper`) must be made public, given a descriptive name, and moved to a dedicated file. `CustomPainter` subclasses may stay with their widget.
 
 **Sub-part decomposition.** Within any widget, each visually distinct section — a container/badge block, an expanded text area, a button row — must be extracted into its own named class in the same directory, even if used by only one parent. Naming convention:
 - Container / icon block → `*Badge`, `*Icon`, `*Thumbnail`
@@ -185,7 +162,7 @@ Do **not** create a separate file for a single helper function. Co-locate small 
 Example: `ConceptHeader` → `ConceptBadge` (tinted icon container) + `ConceptInfo` (title + description `Expanded`).
 
 ### Presentation Layer — Widget Decomposition
-Pages must not contain inline `_build*` methods or inline widget logic. Each distinct visual section becomes its own class in `features/<feature>/presentation/widgets/`:
+Pages must not contain inline `_build*` methods or inline widget logic — each distinct visual section becomes its own class in `features/<feature>/presentation/widgets/`:
 - `_buildLoading()` → `*LoadingView` (`StatelessWidget`)
 - `_buildError(message)` → `*ErrorView` (`StatelessWidget`)
 - `_buildForm(...)` → `*FormView` (`ConsumerWidget` if it reads providers)
@@ -196,7 +173,7 @@ The page class itself becomes a thin state router — typically just a `ref.list
 Widgets used by a single feature live in `features/<feature>/presentation/widgets/`. Widgets reused across features live in `core/widgets/`.
 
 ### Abstract Widget Pattern (core/widgets/)
-Widgets in `core/widgets/` that need external data must **not** receive it as constructor parameters. Instead, define them as `abstract class … extends ConsumerWidget` with abstract methods for data and actions. Each feature then provides a concrete subclass that binds its own provider.
+Widgets in `core/widgets/` that need external data must **not** receive it as constructor parameters — define them as `abstract class … extends ConsumerWidget` with abstract methods for data and actions; each feature provides a concrete subclass that binds its own provider.
 
 ```dart
 // core/widgets/my_widget.dart
@@ -250,9 +227,6 @@ Do **not** document:
 - Obvious getters, constructors, or `build` overrides
 - Private helpers
 
-### Utility Classes
-Prefer direct getters over abstract-method-then-getter indirection. If a getter has no parameter variant, expose only the getter.
-
 ## Testing Rules
 
 - Name the system under test `sut`.
@@ -260,7 +234,6 @@ Prefer direct getters over abstract-method-then-getter indirection. If a getter 
 - Use `group()` to mirror the class and method hierarchy.
 - Use `@GenerateMocks([...])` with mockito; run `flutter pub run build_runner build --delete-conflicting-outputs` to regenerate mocks after any repository interface change.
 - Test files mirror `lib/` paths under `test/`.
-- Shared test data lives in `test/test_data/`; fixtures (raw JSON) in `test/fixtures/`.
 - For SharedPreferences tests: call `SharedPreferences.setMockInitialValues({})` in `setUp` before `SharedPreferences.getInstance()`.
 - For Riverpod notifier tests: use `ProviderContainer` with `overrides` to inject mock use cases.
 - `thenAnswer((_) => Future<void>.value())` for void async stubs (not `thenAnswer((_) async {})`).

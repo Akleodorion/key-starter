@@ -1,0 +1,12 @@
+name: key_starter_lints
+description: Custom analyzer lint rules for the key_starter project.
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  analyzer: ^8.0.0
+  custom_lint_builder: ^0.8.1
+  path: ^1.9.0

@@ -17,17 +17,17 @@ import 'package:key_starter/core/theme/app_colors.dart';
 /// de la note en implémentant [clef], [diatonicStep] et [noteState].
 ///
 /// ```dart
-/// class LessonStaffWidget extends StaffWidget {
-///   final Session session;
-///   const LessonStaffWidget({super.key, required this.session, super.height});
+/// class FlashcardStaffWidget extends StaffWidget {
+///   final FlashcardSettings settings;
+///   const FlashcardStaffWidget({super.key, required this.settings, super.height});
 ///
-///   @override ClefMode clef(WidgetRef ref) => session.clef;
-///   @override int? diatonicStep(WidgetRef ref) => _inProgress(ref)?.currentStep;
+///   @override ClefMode clef(WidgetRef ref) => settings.clef;
+///   @override int? diatonicStep(WidgetRef ref) => _runningExercise(ref)?.currentStep;
 ///   @override NoteState noteState(WidgetRef ref) { ... }
 /// }
 /// ```
 ///
-/// Voir aussi : [LessonStaffWidget], [StaffRangeWidget]
+/// Voir aussi : [FlashcardStaffWidget]
 abstract class StaffWidget extends ConsumerWidget {
   final double height;
   final double? staffwidth;

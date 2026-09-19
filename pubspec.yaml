@@ -52,6 +52,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
 
   flutter_lints: ^6.0.0
 
@@ -60,6 +62,11 @@ dev_dependencies:
 
   # Code generation (mockito)
   build_runner: ^2.13.1
+
+  # Custom analyzer lint rules
+  custom_lint: ^0.8.1
+  key_starter_lints:
+    path: key_starter_lints
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
