@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_settings_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/defilement_settings_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_settings_notifier.dart';
 
@@ -14,7 +15,7 @@ void main() {
   tearDown(() => container.dispose());
 
   group(
-    'NoteExerciseSettingsNotifier (logique partagée Flashcard/Défilement)',
+    'NoteExerciseSettingsNotifier (logique partagée Flashcard/Défilement/Accords)',
     () {
       test('état initial : clé de Sol, 15 notes, étendue -2 à 4', () {
         //assert
@@ -23,6 +24,16 @@ void main() {
         expect(settings.noteCount, 15);
         expect(settings.minNoteStep, -2);
         expect(settings.maxNoteStep, 4);
+      });
+
+      test('état initial Accords : clé de Sol, 15 accords, étendue 0 à 10 '
+          '(marge pour la quinte d\'une triade)', () {
+        //assert
+        final settings = container.read(chordFlashcardSettingsProvider);
+        expect(settings.clef, ClefMode.treble);
+        expect(settings.noteCount, 15);
+        expect(settings.minNoteStep, 0);
+        expect(settings.maxNoteStep, 10);
       });
 
       test('setClef reborne min/max dans les limites de la nouvelle clé', () {
@@ -79,9 +90,10 @@ void main() {
     },
   );
 
-  group('Indépendance des providers Flashcard et Défilement', () {
+  group('Indépendance des providers Flashcard, Défilement et Accords', () {
     test(
-      'modifier flashcardSettingsProvider ne change pas defilementSettingsProvider',
+      'modifier flashcardSettingsProvider ne change ni defilementSettingsProvider '
+      'ni chordFlashcardSettingsProvider',
       () {
         //act
         container
@@ -93,6 +105,10 @@ void main() {
         final defilementSettings = container.read(defilementSettingsProvider);
         expect(defilementSettings.clef, ClefMode.treble);
         expect(defilementSettings.noteCount, 15);
+
+        final chordSettings = container.read(chordFlashcardSettingsProvider);
+        expect(chordSettings.clef, ClefMode.treble);
+        expect(chordSettings.noteCount, 15);
       },
     );
   });
