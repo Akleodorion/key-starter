@@ -78,8 +78,108 @@ void paintClefGlyph(
   textPainter.paint(canvas, Offset(x, anchorY - baseline));
 }
 
+/// Dessine un groupe de notes empilées à la même position [noteX] — un
+/// accord (lignes supplémentaires couvrant l'étendue du groupe, une tête de
+/// note par degré, une hampe unique). Une seule note (`steps` à un élément)
+/// est le cas particulier d'un accord à une note : voir [paintNote].
+///
+/// La direction de la hampe suit la note la plus extrême du groupe, côté
+/// qui s'écarte le plus du seuil de bascule (même règle qu'une note seule).
+void paintChord(
+  Canvas canvas, {
+  required double noteX,
+  required List<int> steps,
+  required ClefMode clef,
+  required double staffTop,
+  required Color color,
+  double lineGap = staffLineGap,
+}) {
+  if (steps.isEmpty) return;
+
+  final bottomStep = staffBottomStep[clef]!;
+  final rx = lineGap * 0.75;
+  final ry = lineGap * 0.55;
+  final minStep = steps.reduce(min);
+  final maxStep = steps.reduce(max);
+
+  // ── Lignes supplémentaires ──────────────────────────────────────────────
+  final ledgerPaint = Paint()
+    ..color = color
+    ..strokeWidth = 1.2;
+
+  if (maxStep > bottomStep + 8) {
+    for (var s = bottomStep + 10; s <= maxStep; s += 2) {
+      final ly = staffYFor(s, clef: clef, staffTop: staffTop, lineGap: lineGap);
+      canvas.drawLine(
+        Offset(noteX - 12, ly),
+        Offset(noteX + 12, ly),
+        ledgerPaint,
+      );
+    }
+  }
+  if (minStep < bottomStep) {
+    for (var s = bottomStep - 2; s >= minStep; s -= 2) {
+      final ly = staffYFor(s, clef: clef, staffTop: staffTop, lineGap: lineGap);
+      canvas.drawLine(
+        Offset(noteX - 12, ly),
+        Offset(noteX + 12, ly),
+        ledgerPaint,
+      );
+    }
+  }
+
+  // ── Têtes de note ────────────────────────────────────────────────────────
+  final noteHeadPaint = Paint()..color = color;
+  for (final step in steps) {
+    final noteY = staffYFor(
+      step,
+      clef: clef,
+      staffTop: staffTop,
+      lineGap: lineGap,
+    );
+    canvas.save();
+    canvas.translate(noteX, noteY);
+    canvas.rotate(-22 * pi / 180);
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: rx * 2, height: ry * 2),
+      noteHeadPaint,
+    );
+    canvas.restore();
+  }
+
+  // ── Hampe partagée ────────────────────────────────────────────────────
+  final stemPaint = Paint()
+    ..color = color
+    ..strokeWidth = 1.6;
+
+  final threshold = bottomStep + 4;
+  final stemsDown = (maxStep - threshold) >= (threshold - minStep);
+  final anchorStep = stemsDown ? maxStep : minStep;
+  final anchorY = staffYFor(
+    anchorStep,
+    clef: clef,
+    staffTop: staffTop,
+    lineGap: lineGap,
+  );
+
+  if (stemsDown) {
+    canvas.drawLine(
+      Offset(noteX - rx, anchorY + 1),
+      Offset(noteX - rx, anchorY + lineGap * 3),
+      stemPaint,
+    );
+  } else {
+    canvas.drawLine(
+      Offset(noteX + rx, anchorY - 1),
+      Offset(noteX + rx, anchorY - lineGap * 3),
+      stemPaint,
+    );
+  }
+}
+
 /// Dessine une note (lignes supplémentaires, tête inclinée, hampe) à [noteX],
-/// pour le degré diatonique [step] sur la clef [clef].
+/// pour le degré diatonique [step] sur la clef [clef]. Cas particulier de
+/// [paintChord] à une seule note.
 void paintNote(
   Canvas canvas, {
   required double noteX,
@@ -88,68 +188,12 @@ void paintNote(
   required double staffTop,
   required Color color,
   double lineGap = staffLineGap,
-}) {
-  final bottomStep = staffBottomStep[clef]!;
-  final noteY = staffYFor(
-    step,
-    clef: clef,
-    staffTop: staffTop,
-    lineGap: lineGap,
-  );
-  final rx = lineGap * 0.75;
-  final ry = lineGap * 0.55;
-
-  // ── Lignes supplémentaires ──────────────────────────────────────────────
-  final ledgerPaint = Paint()
-    ..color = color
-    ..strokeWidth = 1.2;
-
-  if (step > bottomStep + 8) {
-    for (var s = bottomStep + 10; s <= step; s += 2) {
-      final ly = staffYFor(s, clef: clef, staffTop: staffTop, lineGap: lineGap);
-      canvas.drawLine(
-        Offset(noteX - 12, ly),
-        Offset(noteX + 12, ly),
-        ledgerPaint,
-      );
-    }
-  } else if (step < bottomStep) {
-    for (var s = bottomStep - 2; s >= step; s -= 2) {
-      final ly = staffYFor(s, clef: clef, staffTop: staffTop, lineGap: lineGap);
-      canvas.drawLine(
-        Offset(noteX - 12, ly),
-        Offset(noteX + 12, ly),
-        ledgerPaint,
-      );
-    }
-  }
-
-  // ── Tête de note ──────────────────────────────────────────────────────
-  canvas.save();
-  canvas.translate(noteX, noteY);
-  canvas.rotate(-22 * pi / 180);
-  canvas.drawOval(
-    Rect.fromCenter(center: Offset.zero, width: rx * 2, height: ry * 2),
-    Paint()..color = color,
-  );
-  canvas.restore();
-
-  // ── Hampe ─────────────────────────────────────────────────────────────
-  final stemPaint = Paint()
-    ..color = color
-    ..strokeWidth = 1.6;
-
-  if (step >= bottomStep + 4) {
-    canvas.drawLine(
-      Offset(noteX - rx, noteY + 1),
-      Offset(noteX - rx, noteY + lineGap * 3),
-      stemPaint,
-    );
-  } else {
-    canvas.drawLine(
-      Offset(noteX + rx, noteY - 1),
-      Offset(noteX + rx, noteY - lineGap * 3),
-      stemPaint,
-    );
-  }
-}
+}) => paintChord(
+  canvas,
+  noteX: noteX,
+  steps: [step],
+  clef: clef,
+  staffTop: staffTop,
+  color: color,
+  lineGap: lineGap,
+);
