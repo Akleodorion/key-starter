@@ -3,6 +3,7 @@ import 'package:key_starter/core/models/concepts/chords_concept.dart';
 import 'package:key_starter/core/models/concepts/intervals_concept.dart';
 import 'package:key_starter/core/models/concepts/notes_concept.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
+import 'package:key_starter/core/utils/feedback_utils.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
 import 'package:key_starter/core/widgets/entry_card.dart';
 import 'package:key_starter/features/chord_recognition/presentation/pages/chord_concept_page.dart';
@@ -43,7 +44,10 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const EntryCard(entry: IntervalsConcept()),
+                EntryCard(
+                  entry: const IntervalsConcept(),
+                  onTap: () => showFeatureUnavailableToast(context),
+                ),
               ],
             ),
           ),
