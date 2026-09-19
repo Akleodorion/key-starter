@@ -11,7 +11,7 @@ class FlashcardClefRow extends SettingsSegmentedRow<ClefMode> {
   String get label => 'Clé';
 
   @override
-  String? get description => 'une clé à la fois';
+  String? description(WidgetRef ref) => 'une clé à la fois';
 
   @override
   List<(ClefMode, String)> get options => const [

@@ -31,7 +31,7 @@ abstract class SettingsSegmentedRow<T> extends ConsumerWidget {
   const SettingsSegmentedRow({super.key});
 
   String get label;
-  String? get description => null;
+  String? description(WidgetRef ref) => null;
   List<(T, String)> get options;
 
   T selected(WidgetRef ref);
@@ -43,7 +43,7 @@ abstract class SettingsSegmentedRow<T> extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          SettingsRowLabel(label: label, description: description),
+          SettingsRowLabel(label: label, description: description(ref)),
           const SizedBox(width: 12),
           SegmentedPicker<T>(
             options: options,

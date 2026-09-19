@@ -11,7 +11,7 @@ class ThemeSettingsRow extends SettingsSegmentedRow<ThemeMode> {
   String get label => 'Thème';
 
   @override
-  String? get description => 'Auto suit ton appareil';
+  String? description(WidgetRef ref) => 'Auto suit ton appareil';
 
   @override
   List<(ThemeMode, String)> get options => const [
