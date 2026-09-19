@@ -7,6 +7,7 @@ import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/widgets/concept_header.dart';
 import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/core/widgets/entry_card.dart';
+import 'package:key_starter/features/note_recognition/presentation/pages/defilement_page.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/flashcard_page.dart';
 
 class NoteConceptPage extends StatelessWidget {
@@ -36,7 +37,12 @@ class NoteConceptPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const EntryCard(entry: DefilementExercise()),
+                EntryCard(
+                  entry: const DefilementExercise(),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const DefilementPage()),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 const EntryCard(entry: MesureCompleteExercise()),
               ],
