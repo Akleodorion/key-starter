@@ -1,9 +1,8 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/staff_paint_utils.dart';
 
 class StaffRangeWidget extends StatelessWidget {
   final ClefMode clef;
@@ -44,8 +43,6 @@ class _StaffRangePainter extends CustomPainter {
   final int maxDiatonicStep;
   final Color lineColor;
 
-  static const _bottomStep = {ClefMode.treble: 2, ClefMode.bass: -10};
-
   const _StaffRangePainter({
     required this.clef,
     required this.minDiatonicStep,
@@ -55,138 +52,42 @@ class _StaffRangePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const lineGap = 10.0;
-    final staffTop = size.height / 2 - lineGap * 2;
-    final bottomStep = _bottomStep[clef]!;
+    final staffTop = staffTopFor(size);
     final noteX = size.width / 2 + 30;
-    final rx = lineGap * 0.75;
-    final ry = lineGap * 0.55;
 
-    double yFor(int s) =>
-        staffTop + 4 * lineGap - (s - bottomStep) * lineGap / 2;
-
-    // ── 5 lignes ──────────────────────────────────────────────────────────────
-    final linePaint = Paint()
-      ..color = lineColor.withValues(alpha: 0.85)
-      ..strokeWidth = 1.1;
-
-    for (var i = 0; i < 5; i++) {
-      final y = staffTop + i * lineGap;
-      canvas.drawLine(Offset(20, y), Offset(size.width - 20, y), linePaint);
-    }
-
-    // ── Glyphe de clef ────────────────────────────────────────────────────────
-    final glyph = clef == ClefMode.treble ? '𝄞' : '𝄢';
-    final fontSize = clef == ClefMode.treble ? lineGap * 4 : lineGap * 3.5;
-    final anchorY = clef == ClefMode.treble
-        ? staffTop + lineGap * 3
-        : staffTop + lineGap;
-
-    final tp = TextPainter(
-      text: TextSpan(
-        text: glyph,
-        style: TextStyle(
-          fontSize: fontSize,
-          color: lineColor,
-          fontFamily: 'Bravura',
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    final baseline = tp.computeDistanceToActualBaseline(
-      TextBaseline.alphabetic,
+    paintStaffLines(
+      canvas,
+      staffTop: staffTop,
+      x1: 20,
+      x2: size.width - 20,
+      lineColor: lineColor,
     );
-    tp.paint(canvas, Offset(22, anchorY - baseline));
+    paintClefGlyph(
+      canvas,
+      clef: clef,
+      x: 22,
+      staffTop: staffTop,
+      color: lineColor,
+    );
 
-    // ── Note min — note max ───────────────────────────────────────────────────
+    // ── Note min — note max ─────────────────────────────────────────────
     const noteSpacing = 40.0;
-    _paintNote(
+    paintNote(
       canvas,
-      noteX - noteSpacing,
-      yFor(minDiatonicStep),
-      rx,
-      ry,
-      lineGap,
-      AppColors.notesFg,
-      minDiatonicStep,
-      bottomStep,
-      yFor,
+      noteX: noteX - noteSpacing,
+      step: minDiatonicStep,
+      clef: clef,
+      staffTop: staffTop,
+      color: AppColors.notesFg,
     );
-    _paintNote(
+    paintNote(
       canvas,
-      noteX + noteSpacing,
-      yFor(maxDiatonicStep),
-      rx,
-      ry,
-      lineGap,
-      AppColors.notesFg,
-      maxDiatonicStep,
-      bottomStep,
-      yFor,
+      noteX: noteX + noteSpacing,
+      step: maxDiatonicStep,
+      clef: clef,
+      staffTop: staffTop,
+      color: AppColors.notesFg,
     );
-  }
-
-  void _paintNote(
-    Canvas canvas,
-    double noteX,
-    double noteY,
-    double rx,
-    double ry,
-    double lineGap,
-    Color color,
-    int step,
-    int bottomStep,
-    double Function(int) yFor,
-  ) {
-    final ledgerPaint = Paint()
-      ..color = color
-      ..strokeWidth = 1.2;
-
-    if (step > bottomStep + 8) {
-      for (var s = bottomStep + 10; s <= step; s += 2) {
-        canvas.drawLine(
-          Offset(noteX - 12, yFor(s)),
-          Offset(noteX + 12, yFor(s)),
-          ledgerPaint,
-        );
-      }
-    } else if (step < bottomStep) {
-      for (var s = bottomStep - 2; s >= step; s -= 2) {
-        canvas.drawLine(
-          Offset(noteX - 12, yFor(s)),
-          Offset(noteX + 12, yFor(s)),
-          ledgerPaint,
-        );
-      }
-    }
-
-    canvas.save();
-    canvas.translate(noteX, noteY);
-    canvas.rotate(-22 * pi / 180);
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset.zero, width: rx * 2, height: ry * 2),
-      Paint()..color = color,
-    );
-    canvas.restore();
-
-    final stemPaint = Paint()
-      ..color = color
-      ..strokeWidth = 1.6;
-
-    if (step >= bottomStep + 4) {
-      canvas.drawLine(
-        Offset(noteX - rx, noteY + 1),
-        Offset(noteX - rx, noteY + lineGap * 3),
-        stemPaint,
-      );
-    } else {
-      canvas.drawLine(
-        Offset(noteX + rx, noteY - 1),
-        Offset(noteX + rx, noteY - lineGap * 3),
-        stemPaint,
-      );
-    }
   }
 
   @override
