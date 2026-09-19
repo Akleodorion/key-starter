@@ -1,25 +1,27 @@
 import 'package:equatable/equatable.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 
-class FlashcardSettings extends Equatable {
+/// Réglages communs aux exercices de séquence de notes (Flashcard,
+/// Défilement) : clé, nombre de notes et étendue diatonique.
+class NoteExerciseSettings extends Equatable {
   final ClefMode clef;
   final int noteCount;
   final int minNoteStep;
   final int maxNoteStep;
 
-  const FlashcardSettings({
+  const NoteExerciseSettings({
     required this.clef,
     required this.noteCount,
     required this.minNoteStep,
     required this.maxNoteStep,
   });
 
-  FlashcardSettings copyWith({
+  NoteExerciseSettings copyWith({
     ClefMode? clef,
     int? noteCount,
     int? minNoteStep,
     int? maxNoteStep,
-  }) => FlashcardSettings(
+  }) => NoteExerciseSettings(
     clef: clef ?? this.clef,
     noteCount: noteCount ?? this.noteCount,
     minNoteStep: minNoteStep ?? this.minNoteStep,

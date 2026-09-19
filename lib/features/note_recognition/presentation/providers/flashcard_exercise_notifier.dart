@@ -5,17 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_state.dart';
-import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_settings_state.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
 
 final flashcardExerciseProvider = NotifierProvider.autoDispose
     .family<
       FlashcardExerciseNotifier,
       FlashcardExerciseState,
-      FlashcardSettings
+      NoteExerciseSettings
     >((settings) => FlashcardExerciseNotifier(settings));
 
 class FlashcardExerciseNotifier extends Notifier<FlashcardExerciseState> {
-  final FlashcardSettings _settings;
+  final NoteExerciseSettings _settings;
   int _correctCount = 0;
   int _currentStreak = 0;
   int _bestStreak = 0;
@@ -28,7 +28,9 @@ class FlashcardExerciseNotifier extends Notifier<FlashcardExerciseState> {
 
   @override
   FlashcardExerciseState build() {
-    final subscription = MidiCommand().onMidiDataReceived?.listen(_onMidiPacket);
+    final subscription = MidiCommand().onMidiDataReceived?.listen(
+      _onMidiPacket,
+    );
     ref.onDispose(() => subscription?.cancel());
 
     _noteStartMs = DateTime.now().millisecondsSinceEpoch;
@@ -82,7 +84,8 @@ class FlashcardExerciseNotifier extends Notifier<FlashcardExerciseState> {
     _lastPlayedMidiNumber = midiNumber;
 
     final nextIndex = currentState.currentIndex + 1;
-    _awaitingNoteRelease = nextIndex < currentState.total &&
+    _awaitingNoteRelease =
+        nextIndex < currentState.total &&
         playedStep == currentState.noteSteps[nextIndex];
 
     final responseMs = _noteStartMs != null
@@ -119,7 +122,8 @@ class FlashcardExerciseNotifier extends Notifier<FlashcardExerciseState> {
 
     final nextIndex = currentState.currentIndex + 1;
     if (nextIndex >= currentState.total) {
-      final avgMs = _responseTimes.reduce((a, b) => a + b) ~/ _responseTimes.length;
+      final avgMs =
+          _responseTimes.reduce((a, b) => a + b) ~/ _responseTimes.length;
       state = FlashcardExerciseCompleted(
         correctCount: _correctCount,
         totalNotes: currentState.total,

@@ -4,11 +4,11 @@ import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/widgets/staff_widget.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_state.dart';
-import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_settings_state.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
 
 /// Implémentation de [StaffWidget] liée à [flashcardExerciseProvider].
 class FlashcardStaffWidget extends StaffWidget {
-  final FlashcardSettings settings;
+  final NoteExerciseSettings settings;
 
   const FlashcardStaffWidget({
     super.key,

@@ -9,14 +9,14 @@ import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/core/widgets/ui_text.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_state.dart';
-import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_settings_state.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/exercise_feedback_row.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/exercise_top_bar.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/flashcard_staff_card.dart';
 import 'package:key_starter/features/session/presentation/pages/recap_page.dart';
 
 class FlashcardExercisePage extends ConsumerStatefulWidget {
-  final FlashcardSettings settings;
+  final NoteExerciseSettings settings;
 
   const FlashcardExercisePage({super.key, required this.settings});
 

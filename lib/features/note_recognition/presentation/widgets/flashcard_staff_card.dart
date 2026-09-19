@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
-import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_settings_state.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/flashcard_staff_widget.dart';
 
 class FlashcardStaffCard extends StatelessWidget {
-  final FlashcardSettings settings;
+  final NoteExerciseSettings settings;
 
   const FlashcardStaffCard({super.key, required this.settings});
 
