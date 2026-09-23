@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_midi_command/flutter_midi_command.dart';
@@ -23,6 +24,7 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
   final List<int> _responseTimes = [];
   int? _lastPlayedMidiNumber;
   bool _awaitingNoteRelease = false;
+  Timer? _advanceTimer;
 
   DefilementExerciseNotifier(this._settings);
 
@@ -31,7 +33,10 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
     final subscription = MidiCommand().onMidiDataReceived?.listen(
       _onMidiPacket,
     );
-    ref.onDispose(() => subscription?.cancel());
+    ref.onDispose(() {
+      subscription?.cancel();
+      _advanceTimer?.cancel();
+    });
 
     _noteStartMs = DateTime.now().millisecondsSinceEpoch;
     return DefilementExerciseRunning(
@@ -108,7 +113,7 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
       playedStep: playedStep,
     );
 
-    Future.delayed(const Duration(milliseconds: 200), _advance);
+    _advanceTimer = Timer(const Duration(milliseconds: 200), _advance);
   }
 
   void simulateMidi(int midiNumber) {

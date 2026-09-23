@@ -31,6 +31,7 @@ class ChordFlashcardExerciseNotifier
   final List<int> _responseTimes = [];
 
   Timer? _detectionTimer;
+  Timer? _advanceTimer;
   final Set<int> _pendingDiatonicSteps = {};
   final Set<int> _pendingMidiNumbers = {};
   final Set<int> _awaitingReleaseMidiNumbers = {};
@@ -45,6 +46,7 @@ class ChordFlashcardExerciseNotifier
     ref.onDispose(() {
       subscription?.cancel();
       _detectionTimer?.cancel();
+      _advanceTimer?.cancel();
     });
 
     _chordStartMs = DateTime.now().millisecondsSinceEpoch;
@@ -136,7 +138,7 @@ class ChordFlashcardExerciseNotifier
       playedSteps: playedSteps,
     );
 
-    Future.delayed(const Duration(milliseconds: 200), _advance);
+    _advanceTimer = Timer(const Duration(milliseconds: 200), _advance);
   }
 
   void simulateMidi(List<int> midiNumbers) {
