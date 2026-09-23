@@ -14,6 +14,7 @@ class FlashcardStaffWidget extends StaffWidget {
     super.key,
     required this.settings,
     super.height = 100,
+    super.staffwidth,
   });
 
   @override

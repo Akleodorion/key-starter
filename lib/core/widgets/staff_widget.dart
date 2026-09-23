@@ -78,21 +78,25 @@ class _StaffPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final staffTop = staffTopFor(size);
+    // L'échelle suit la hauteur du widget : 100 px redonnent l'écart par défaut.
+    final lineGap = staffLineGapForHeight(size.height);
+    final staffTop = staffTopFor(size, lineGap: lineGap);
 
     paintStaffLines(
       canvas,
       staffTop: staffTop,
-      x1: 20,
-      x2: size.width - 20,
+      x1: lineGap * 2,
+      x2: size.width - lineGap * 2,
       lineColor: lineColor,
+      lineGap: lineGap,
     );
     paintClefGlyph(
       canvas,
       clef: clef,
-      x: 22,
+      x: lineGap * 2.2,
       staffTop: staffTop,
       color: lineColor,
+      lineGap: lineGap,
     );
 
     final step = diatonicStep;
@@ -106,11 +110,12 @@ class _StaffPainter extends CustomPainter {
     // La note est centrée horizontalement, décalée à droite de la clef.
     paintNote(
       canvas,
-      noteX: size.width / 2 + 30,
+      noteX: size.width / 2 + lineGap * 3,
       step: step,
       clef: clef,
       staffTop: staffTop,
       color: noteColor,
+      lineGap: lineGap,
     );
   }
 

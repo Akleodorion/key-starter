@@ -104,8 +104,8 @@ class _FlashcardExercisePageState extends ConsumerState<FlashcardExercisePage> {
                 child: UiText('joue cette note', size: 14, color: colors.text2),
               ),
               const SizedBox(height: 12),
-              FlashcardStaffCard(settings: widget.settings),
-              const Spacer(),
+              Expanded(child: FlashcardStaffCard(settings: widget.settings)),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
