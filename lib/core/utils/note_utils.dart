@@ -16,6 +16,15 @@ String noteLabel(int step, NoteLanguage lang) {
   return '${names[noteIndex]} $octave';
 }
 
+/// Returns the name of a MIDI key without its octave, black keys as sharps (Do♯, C♯).
+String pitchClassLabel(int midiNumber, NoteLanguage lang) {
+  final semitone = midiNumber % 12;
+  final names = lang == NoteLanguage.fr ? noteNamesFr : noteNamesEn;
+  final naturalIndex = diatonicSemitones.indexOf(semitone);
+  if (naturalIndex != -1) return names[naturalIndex];
+  return '${names[diatonicSemitones.indexOf(semitone - 1)]}♯';
+}
+
 /// Converts a diatonic step to its MIDI number (step 0 = C4 = MIDI 60).
 int midiFromDiatonicStep(int step) {
   final noteIndex = ((step % 7) + 7) % 7;

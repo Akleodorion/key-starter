@@ -16,6 +16,25 @@ void main() {
   );
 
   group('NoteConceptPage', () {
+    testWidgets('liste les exercices en commençant par "Notes simples"', (
+      tester,
+    ) async {
+      //act
+      await pumpNoteConceptPage(tester);
+
+      //assert
+      final exerciseTitles = tester
+          .widgetList<EntryCard>(find.byType(EntryCard))
+          .map((card) => card.entry.title)
+          .toList();
+      expect(exerciseTitles, [
+        'Notes simples',
+        'Flashcard',
+        'Défilement',
+        'Mesure complète',
+      ]);
+    });
+
     testWidgets('affiche une SnackBar au lieu de naviguer quand on tape sur '
         '"Mesure complète"', (tester) async {
       //arrange
