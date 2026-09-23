@@ -6,11 +6,20 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 /// Écart vertical entre deux lignes de la portée, en pixels.
 const double staffLineGap = 10.0;
 
+/// Écart maximal entre deux lignes, pour éviter une portée géante sur tablette.
+const double maxStaffLineGap = 32.0;
+
 /// Degré diatonique de la 1re ligne (ligne du bas) selon la clef.
 const Map<ClefMode, int> staffBottomStep = {
   ClefMode.treble: 2,
   ClefMode.bass: -10,
 };
+
+/// Écart entre les lignes qui fait tenir la portée dans [availableHeight],
+/// notes extrêmes et lignes supplémentaires comprises (≈ 10 écarts au total),
+/// borné entre [staffLineGap] et [maxStaffLineGap].
+double staffLineGapForHeight(double availableHeight) =>
+    (availableHeight / 10).clamp(staffLineGap, maxStaffLineGap);
 
 /// Position Y du haut de la portée (1re ligne), centrée verticalement dans
 /// [size] (les 5 lignes occupent 4 * [lineGap]).
@@ -40,7 +49,7 @@ void paintStaffLines(
 }) {
   final linePaint = Paint()
     ..color = lineColor.withValues(alpha: 0.85)
-    ..strokeWidth = 1.1;
+    ..strokeWidth = lineGap * 0.11;
 
   for (var i = 0; i < 5; i++) {
     final y = staffTop + i * lineGap;
@@ -99,20 +108,21 @@ void paintChord(
   final bottomStep = staffBottomStep[clef]!;
   final rx = lineGap * 0.75;
   final ry = lineGap * 0.55;
+  final ledgerHalfWidth = lineGap * 1.2;
   final minStep = steps.reduce(min);
   final maxStep = steps.reduce(max);
 
   // ── Lignes supplémentaires ──────────────────────────────────────────────
   final ledgerPaint = Paint()
     ..color = color
-    ..strokeWidth = 1.2;
+    ..strokeWidth = lineGap * 0.12;
 
   if (maxStep > bottomStep + 8) {
     for (var s = bottomStep + 10; s <= maxStep; s += 2) {
       final ly = staffYFor(s, clef: clef, staffTop: staffTop, lineGap: lineGap);
       canvas.drawLine(
-        Offset(noteX - 12, ly),
-        Offset(noteX + 12, ly),
+        Offset(noteX - ledgerHalfWidth, ly),
+        Offset(noteX + ledgerHalfWidth, ly),
         ledgerPaint,
       );
     }
@@ -121,8 +131,8 @@ void paintChord(
     for (var s = bottomStep - 2; s >= minStep; s -= 2) {
       final ly = staffYFor(s, clef: clef, staffTop: staffTop, lineGap: lineGap);
       canvas.drawLine(
-        Offset(noteX - 12, ly),
-        Offset(noteX + 12, ly),
+        Offset(noteX - ledgerHalfWidth, ly),
+        Offset(noteX + ledgerHalfWidth, ly),
         ledgerPaint,
       );
     }
@@ -150,7 +160,7 @@ void paintChord(
   // ── Hampe partagée ────────────────────────────────────────────────────
   final stemPaint = Paint()
     ..color = color
-    ..strokeWidth = 1.6;
+    ..strokeWidth = lineGap * 0.16;
 
   final threshold = bottomStep + 4;
   final stemsDown = (maxStep - threshold) >= (threshold - minStep);
@@ -164,13 +174,13 @@ void paintChord(
 
   if (stemsDown) {
     canvas.drawLine(
-      Offset(noteX - rx, anchorY + 1),
+      Offset(noteX - rx, anchorY + lineGap * 0.1),
       Offset(noteX - rx, anchorY + lineGap * 3),
       stemPaint,
     );
   } else {
     canvas.drawLine(
-      Offset(noteX + rx, anchorY - 1),
+      Offset(noteX + rx, anchorY - lineGap * 0.1),
       Offset(noteX + rx, anchorY - lineGap * 3),
       stemPaint,
     );
