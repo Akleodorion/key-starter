@@ -4,10 +4,15 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 import 'package:key_starter/core/theme/app_theme.dart';
-import 'package:key_starter/features/note_recognition/presentation/widgets/tempo_staff_line.dart';
+import 'package:key_starter/core/widgets/tempo_staff_line.dart';
 
 void main() {
-  const noteSteps = [0, 2, 4, 6];
+  const noteGroups = [
+    [0],
+    [2],
+    [4],
+    [6],
+  ];
 
   Future<void> pumpStaffLine(
     WidgetTester tester, {
@@ -18,7 +23,7 @@ void main() {
       theme: AppTheme.light(),
       home: Scaffold(
         body: TempoStaffLine(
-          noteSteps: noteSteps,
+          noteGroups: noteGroups,
           noteStates: noteStates,
           clef: ClefMode.treble,
           barFraction: barFraction,
@@ -59,7 +64,7 @@ void main() {
 
       //assert
       final painter = readPainter(tester);
-      expect(painter.noteSteps, noteSteps);
+      expect(painter.noteGroups, noteGroups);
       expect(painter.noteScales, everyElement(1.0));
       expect(painter.noteShifts, everyElement(0.0));
     });
@@ -134,6 +139,52 @@ void main() {
       //assert
       expect(withBar.barFraction, 0.25);
       expect(readPainter(tester).barFraction, isNull);
+    });
+  });
+
+  group('TempoStaffLinePainter', () {
+    TempoStaffLinePainter painterFor(List<List<int>> noteGroups) =>
+        TempoStaffLinePainter(
+          noteGroups: noteGroups,
+          noteColors: List.filled(noteGroups.length, Colors.black),
+          noteScales: List.filled(noteGroups.length, 1),
+          noteShifts: List.filled(noteGroups.length, 0),
+          barFraction: null,
+          clef: ClefMode.treble,
+          lineColor: Colors.black,
+          lineGap: 10,
+        );
+
+    test('should repaint when a chord of the line changes', () {
+      //arrange
+      final previous = painterFor([
+        [0, 2, 4],
+      ]);
+      final sut = painterFor([
+        [1, 3, 5],
+      ]);
+
+      //act
+      final shouldRepaint = sut.shouldRepaint(previous);
+
+      //assert
+      expect(shouldRepaint, isTrue);
+    });
+
+    test('should not repaint when the chords are the same', () {
+      //arrange
+      final previous = painterFor([
+        [0, 2, 4],
+      ]);
+      final sut = painterFor([
+        [0, 2, 4],
+      ]);
+
+      //act
+      final shouldRepaint = sut.shouldRepaint(previous);
+
+      //assert
+      expect(shouldRepaint, isFalse);
     });
   });
 }

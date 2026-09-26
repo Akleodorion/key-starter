@@ -5,7 +5,7 @@ import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
-import 'package:key_starter/features/note_recognition/domain/entities/tempo_timeline.dart';
+import 'package:key_starter/core/utils/tempo_timeline.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_state.dart';
 

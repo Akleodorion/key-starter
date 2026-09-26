@@ -6,7 +6,7 @@ import 'package:key_starter/core/theme/app_theme.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/tempo_exercise_page.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_config.dart';
-import 'package:key_starter/features/note_recognition/presentation/widgets/tempo_staff_line.dart';
+import 'package:key_starter/core/widgets/tempo_staff_line.dart';
 
 void main() {
   const config = TempoExerciseConfig(
