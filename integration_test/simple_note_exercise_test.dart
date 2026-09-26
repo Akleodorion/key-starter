@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:key_starter/core/widgets/entry_card.dart';
 import 'package:key_starter/core/widgets/primary_icon_button.dart';
+import 'package:key_starter/features/note_recognition/presentation/widgets/simple_note_black_keys_toggle_row.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/simple_note_note_count_row.dart';
 import 'package:key_starter/injection_container.dart';
 import 'package:key_starter/main.dart';
@@ -51,10 +52,35 @@ void main() {
         expect(find.text('Lecture · notes simples'), findsNothing);
       },
     );
+
+    testWidgets(
+      'touches noires activées : 10 bonnes réponses donnent un récap à 100%',
+      (tester) async {
+        //arrange
+        await _startSimpleNoteExerciseWithTenNotes(
+          tester,
+          includeBlackKeys: true,
+        );
+
+        //act - répondre juste aux 10 notes, touches noires comprises
+        for (var noteIndex = 0; noteIndex < 10; noteIndex++) {
+          await tester.tap(find.text('Juste'));
+          await tester.pump(const Duration(milliseconds: 700));
+        }
+        await tester.pumpAndSettle();
+
+        //assert
+        expect(find.text('Lecture · notes simples'), findsOneWidget);
+        expect(find.text('100'), findsOneWidget);
+      },
+    );
   });
 }
 
-Future<void> _startSimpleNoteExerciseWithTenNotes(WidgetTester tester) async {
+Future<void> _startSimpleNoteExerciseWithTenNotes(
+  WidgetTester tester, {
+  bool includeBlackKeys = false,
+}) async {
   if (sl.isRegistered<SharedPreferences>()) {
     await sl.reset();
   }
@@ -104,6 +130,17 @@ Future<void> _startSimpleNoteExerciseWithTenNotes(WidgetTester tester) async {
     ),
     findsOneWidget,
   );
+
+  if (includeBlackKeys) {
+    //act - activer les touches noires
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SimpleNoteBlackKeysToggleRow),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
 
   //act - lancer l'exercice
   await tester.tap(find.text('Lancer'));
