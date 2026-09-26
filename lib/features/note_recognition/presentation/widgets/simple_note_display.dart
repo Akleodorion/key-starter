@@ -9,13 +9,13 @@ import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
 
 class SimpleNoteDisplay extends StatefulWidget {
-  final int noteIndex;
+  final int pitchClass;
   final NoteState noteState;
   final NoteLanguage language;
 
   const SimpleNoteDisplay({
     super.key,
-    required this.noteIndex,
+    required this.pitchClass,
     required this.noteState,
     required this.language,
   });
@@ -53,9 +53,6 @@ class _SimpleNoteDisplayState extends State<SimpleNoteDisplay>
 
   @override
   Widget build(BuildContext context) {
-    final noteNames = widget.language == NoteLanguage.fr
-        ? noteNamesFr
-        : noteNamesEn;
     final noteColor = switch (widget.noteState) {
       NoteState.correct => AppColors.stateGreen,
       NoteState.wrong => AppColors.stateRed,
@@ -83,7 +80,7 @@ class _SimpleNoteDisplayState extends State<SimpleNoteDisplay>
         );
       },
       child: DisplayText(
-        noteNames[widget.noteIndex],
+        pitchClassLabel(widget.pitchClass, widget.language),
         size: 120,
         color: noteColor,
       ),

@@ -38,21 +38,27 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
     });
     _noteShownAt = _now();
     return SimpleNoteExerciseRunning(
-      noteIndexes: _generateNoteIndexes(),
+      pitchClasses: _generatePitchClasses(),
       currentIndex: 0,
       noteState: NoteState.idle,
     );
   }
 
-  List<int> _generateNoteIndexes() {
+  List<int> _generatePitchClasses() {
     final random = Random();
-    final noteNameCount = noteNamesFr.length;
-    final noteIndexes = [random.nextInt(noteNameCount)];
-    while (noteIndexes.length < _noteCount) {
-      final offsetFromPrevious = 1 + random.nextInt(noteNameCount - 1);
-      noteIndexes.add((noteIndexes.last + offsetFromPrevious) % noteNameCount);
+    const candidatePitchClasses = diatonicSemitones;
+    final candidateCount = candidatePitchClasses.length;
+    final candidatePositions = [random.nextInt(candidateCount)];
+    while (candidatePositions.length < _noteCount) {
+      final offsetFromPrevious = 1 + random.nextInt(candidateCount - 1);
+      candidatePositions.add(
+        (candidatePositions.last + offsetFromPrevious) % candidateCount,
+      );
     }
-    return noteIndexes;
+    return [
+      for (final position in candidatePositions)
+        candidatePitchClasses[position],
+    ];
   }
 
   void _onMidiPacket(MidiPacket packet) {
@@ -69,8 +75,7 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
     if (currentState is! SimpleNoteExerciseRunning) return;
     if (currentState.noteState != NoteState.idle) return;
 
-    final expectedSemitone = diatonicSemitones[currentState.currentNoteIndex];
-    final isCorrect = midiNumber % 12 == expectedSemitone;
+    final isCorrect = midiNumber % 12 == currentState.currentPitchClass;
     _responseTimesMs.add(_now().difference(_noteShownAt).inMilliseconds);
 
     if (isCorrect) {
@@ -94,10 +99,10 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
     if (currentState is! SimpleNoteExerciseRunning) return;
 
     final nextIndex = currentState.currentIndex + 1;
-    if (nextIndex >= currentState.noteIndexes.length) {
+    if (nextIndex >= currentState.pitchClasses.length) {
       state = SimpleNoteExerciseCompleted(
         correctCount: _correctCount,
-        totalNotes: currentState.noteIndexes.length,
+        totalNotes: currentState.pitchClasses.length,
         bestStreak: _bestStreak,
         avgResponseMs:
             _responseTimesMs.reduce((total, time) => total + time) ~/
@@ -108,7 +113,7 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
 
     _noteShownAt = _now();
     state = SimpleNoteExerciseRunning(
-      noteIndexes: currentState.noteIndexes,
+      pitchClasses: currentState.pitchClasses,
       currentIndex: nextIndex,
       noteState: NoteState.idle,
     );

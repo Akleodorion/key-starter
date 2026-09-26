@@ -22,8 +22,8 @@ void main() {
       container.read(simpleNoteExerciseProvider(noteCount))
           as SimpleNoteExerciseRunning;
 
-  int midiInOctave(int noteIndex, int octave) =>
-      (octave + 1) * 12 + diatonicSemitones[noteIndex];
+  int midiInOctave(int pitchClass, int octave) =>
+      (octave + 1) * 12 + pitchClass;
 
   Future<void> waitForNextNote() => Future<void>.delayed(
     SimpleNoteExerciseNotifier.feedbackDuration +
@@ -31,13 +31,13 @@ void main() {
   );
 
   Future<void> answer({required bool correctly}) async {
-    final expectedNoteIndex = readRunningState().currentNoteIndex;
-    final playedNoteIndex = correctly
-        ? expectedNoteIndex
-        : (expectedNoteIndex + 1) % 7;
+    final expectedPitchClass = readRunningState().currentPitchClass;
+    final playedPitchClass = correctly
+        ? expectedPitchClass
+        : (expectedPitchClass + 1) % 12;
     container
         .read(simpleNoteExerciseProvider(noteCount).notifier)
-        .simulateMidi(midiInOctave(playedNoteIndex, 4));
+        .simulateMidi(midiInOctave(playedPitchClass, 4));
     await waitForNextNote();
   }
 
@@ -49,19 +49,34 @@ void main() {
         container.listen(simpleNoteExerciseProvider(longNoteCount), (_, _) {});
 
         //act
-        final noteIndexes =
+        final pitchClasses =
             (container.read(simpleNoteExerciseProvider(longNoteCount))
                     as SimpleNoteExerciseRunning)
-                .noteIndexes;
+                .pitchClasses;
 
         //assert
-        for (var position = 1; position < noteIndexes.length; position++) {
+        for (var position = 1; position < pitchClasses.length; position++) {
           expect(
-            noteIndexes[position],
-            isNot(noteIndexes[position - 1]),
+            pitchClasses[position],
+            isNot(pitchClasses[position - 1]),
             reason: 'répétition aux positions ${position - 1} et $position',
           );
         }
+      });
+
+      test('ne tire que des touches blanches', () {
+        //arrange
+        const longNoteCount = 100;
+        container.listen(simpleNoteExerciseProvider(longNoteCount), (_, _) {});
+
+        //act
+        final pitchClasses =
+            (container.read(simpleNoteExerciseProvider(longNoteCount))
+                    as SimpleNoteExerciseRunning)
+                .pitchClasses;
+
+        //assert
+        expect(pitchClasses, everyElement(isIn(diatonicSemitones)));
       });
     });
 
@@ -71,10 +86,10 @@ void main() {
         final sut = container.read(
           simpleNoteExerciseProvider(noteCount).notifier,
         );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
+        final expectedPitchClass = readRunningState().currentPitchClass;
 
         //act
-        sut.simulateMidi(midiInOctave(expectedNoteIndex, 6));
+        sut.simulateMidi(midiInOctave(expectedPitchClass, 6));
 
         //assert
         expect(readRunningState().noteState, NoteState.correct);
@@ -85,11 +100,14 @@ void main() {
         final sut = container.read(
           simpleNoteExerciseProvider(noteCount).notifier,
         );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
-        final otherNoteIndex = (expectedNoteIndex + 1) % 7;
+        final expectedPitchClass = readRunningState().currentPitchClass;
+        final otherPitchClass =
+            diatonicSemitones[(diatonicSemitones.indexOf(expectedPitchClass) +
+                    1) %
+                7];
 
         //act
-        sut.simulateMidi(midiInOctave(otherNoteIndex, 4));
+        sut.simulateMidi(midiInOctave(otherPitchClass, 4));
 
         //assert
         expect(readRunningState().noteState, NoteState.wrong);
@@ -128,12 +146,15 @@ void main() {
         final sut = container.read(
           simpleNoteExerciseProvider(noteCount).notifier,
         );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
-        final otherNoteIndex = (expectedNoteIndex + 1) % 7;
-        sut.simulateMidi(midiInOctave(expectedNoteIndex, 4));
+        final expectedPitchClass = readRunningState().currentPitchClass;
+        final otherPitchClass =
+            diatonicSemitones[(diatonicSemitones.indexOf(expectedPitchClass) +
+                    1) %
+                7];
+        sut.simulateMidi(midiInOctave(expectedPitchClass, 4));
 
         //act
-        sut.simulateMidi(midiInOctave(otherNoteIndex, 4));
+        sut.simulateMidi(midiInOctave(otherPitchClass, 4));
 
         //assert
         expect(readRunningState().noteState, NoteState.correct);
@@ -144,10 +165,10 @@ void main() {
         final sut = container.read(
           simpleNoteExerciseProvider(noteCount).notifier,
         );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
+        final expectedPitchClass = readRunningState().currentPitchClass;
 
         //act
-        sut.simulateMidi(midiInOctave(expectedNoteIndex, 4));
+        sut.simulateMidi(midiInOctave(expectedPitchClass, 4));
         await waitForNextNote();
 
         //assert
@@ -210,7 +231,7 @@ void main() {
           final sut = clockContainer.read(provider.notifier);
           int currentNoteMidi() => midiInOctave(
             (clockContainer.read(provider) as SimpleNoteExerciseRunning)
-                .currentNoteIndex,
+                .currentPitchClass,
             4,
           );
 
