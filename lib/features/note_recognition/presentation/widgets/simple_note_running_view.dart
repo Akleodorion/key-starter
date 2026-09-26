@@ -30,14 +30,14 @@ class SimpleNoteRunningView extends ConsumerWidget {
         ExerciseTopBar(
           exerciseLabel: 'Lecture',
           currentNumber: running.currentIndex + 1,
-          total: running.noteIndexes.length,
+          total: running.pitchClasses.length,
         ),
         const SizedBox(height: 16),
         Center(child: UiText('joue cette note', size: 14, color: colors.text2)),
         Expanded(
           child: Center(
             child: SimpleNoteDisplay(
-              noteIndex: running.currentNoteIndex,
+              pitchClass: running.currentPitchClass,
               noteState: running.noteState,
               language: language,
             ),
