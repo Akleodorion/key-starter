@@ -16,6 +16,14 @@ _Avoid_: Intervalle
 La note qui nomme et ancre un accord (Do, Ré, Mi, Fa, Sol, La ou Si). C'est le seul paramètre variable de l'accord — la tierce et la quinte s'en déduisent automatiquement. En v1, les 7 fondamentales sont toutes éligibles au tirage aléatoire (y compris Si, qui donne une triade diminuée) ; un filtrage par fondamentale côté utilisateur est prévu mais pas encore construit.
 _Avoid_: Racine, root, tonique (tonique a un sens harmonique plus large, réservé si besoin plus tard)
 
+**Symbole d'accord**:
+Notation d'une consigne d'accord sans partition : une barre `|` devant le nom de la fondamentale (`|Do`, `|C`), pour la distinguer d'une consigne de note (`Do`). Suffixe `m` minuscule collé pour les fondamentales Ré, Mi, La et Si (`|Rém`, `|Dm`). Si reçoit `m` par choix pédagogique alors que sa triade est diminuée. Convention propre à l'app (issue d'un cours de piano), pas un standard musical.
+_Avoid_: `°`, `dim`, « majeur »/« mineur » en toutes lettres
+
+**État fondamental**:
+Un accord joué avec la fondamentale en bas et les trois notes empilées dans une seule octave (Do-Mi-Sol). L'octave de l'ensemble est libre dans les exercices sans partition ; renversements, accord étalé sur plusieurs octaves et notes doublées sont faux.
+_Avoid_: Position serrée (plus large : inclut les renversements)
+
 **Intervalle**:
 Un groupe de 2 notes simultanées. Hors périmètre produit actuel — sert uniquement de jalon technique interne pour valider la fenêtre de détection MIDI multi-notes avant de construire l'exercice Accords (3 notes). N'est pas exposé comme exercice ni comme concept dans l'app pour l'instant (`IntervalsConcept` reste orphelin).
 
