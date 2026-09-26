@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:key_starter/core/models/concepts/notes_concept.dart';
 import 'package:key_starter/core/models/exercises/defilement_exercise.dart';
 import 'package:key_starter/core/models/exercises/flashcard_exercise.dart';
-import 'package:key_starter/core/models/exercises/mesure_complete_exercise.dart';
 import 'package:key_starter/core/models/exercises/simple_note_exercise.dart';
+import 'package:key_starter/core/models/exercises/tempo_exercise.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
-import 'package:key_starter/core/utils/feedback_utils.dart';
 import 'package:key_starter/core/widgets/concept_header.dart';
 import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/core/widgets/entry_card.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/defilement_page.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/flashcard_page.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/simple_note_page.dart';
+import 'package:key_starter/features/note_recognition/presentation/pages/tempo_page.dart';
 
 class NoteConceptPage extends StatelessWidget {
   const NoteConceptPage({super.key});
@@ -55,8 +55,10 @@ class NoteConceptPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 EntryCard(
-                  entry: const MesureCompleteExercise(),
-                  onTap: () => showFeatureUnavailableToast(context),
+                  entry: const TempoExercise(),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => const TempoPage())),
                 ),
               ],
             ),
