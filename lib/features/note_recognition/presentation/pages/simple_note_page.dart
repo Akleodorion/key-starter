@@ -6,6 +6,8 @@ import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
 import 'package:key_starter/core/widgets/primary_button.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/simple_note_exercise_page.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_black_keys_notifier.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_settings_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/simple_note_settings_card.dart';
 
@@ -15,7 +17,10 @@ class SimpleNotePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColorTheme.of(context);
-    final noteCount = ref.watch(simpleNoteSettingsProvider).noteCount;
+    final config = SimpleNoteExerciseConfig(
+      noteCount: ref.watch(simpleNoteSettingsProvider).noteCount,
+      includeBlackKeys: ref.watch(simpleNoteBlackKeysProvider),
+    );
 
     return Scaffold(
       backgroundColor: colors.bg,
@@ -45,8 +50,7 @@ class SimpleNotePage extends ConsumerWidget {
                 color: AppColors.notesFg,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) =>
-                        SimpleNoteExercisePage(noteCount: noteCount),
+                    builder: (_) => SimpleNoteExercisePage(config: config),
                   ),
                 ),
               ),

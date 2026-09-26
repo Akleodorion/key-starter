@@ -6,26 +6,27 @@ sealed class SimpleNoteExerciseState extends Equatable {
 }
 
 class SimpleNoteExerciseRunning extends SimpleNoteExerciseState {
-  final List<int> noteIndexes;
+  /// Demi-tons attendus dans l'octave (Do=0 … Si=11), un par note de la série.
+  final List<int> pitchClasses;
   final int currentIndex;
   final NoteState noteState;
   final int? playedMidiNumber;
 
   const SimpleNoteExerciseRunning({
-    required this.noteIndexes,
+    required this.pitchClasses,
     required this.currentIndex,
     required this.noteState,
     this.playedMidiNumber,
   });
 
-  int get currentNoteIndex => noteIndexes[currentIndex];
+  int get currentPitchClass => pitchClasses[currentIndex];
 
   SimpleNoteExerciseRunning copyWith({
     int? currentIndex,
     NoteState? noteState,
     int? playedMidiNumber,
   }) => SimpleNoteExerciseRunning(
-    noteIndexes: noteIndexes,
+    pitchClasses: pitchClasses,
     currentIndex: currentIndex ?? this.currentIndex,
     noteState: noteState ?? this.noteState,
     playedMidiNumber: playedMidiNumber ?? this.playedMidiNumber,
@@ -33,7 +34,7 @@ class SimpleNoteExerciseRunning extends SimpleNoteExerciseState {
 
   @override
   List<Object?> get props => [
-    noteIndexes,
+    pitchClasses,
     currentIndex,
     noteState,
     playedMidiNumber,

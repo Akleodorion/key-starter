@@ -1,29 +1,39 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_state.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const noteCount = 10;
+  const config = SimpleNoteExerciseConfig(
+    noteCount: 10,
+    includeBlackKeys: false,
+  );
+  const longConfig = SimpleNoteExerciseConfig(
+    noteCount: 100,
+    includeBlackKeys: false,
+  );
   late ProviderContainer container;
 
   setUp(() {
     container = ProviderContainer();
-    container.listen(simpleNoteExerciseProvider(noteCount), (_, _) {});
+    container.listen(simpleNoteExerciseProvider(config), (_, _) {});
   });
 
   tearDown(() => container.dispose());
 
   SimpleNoteExerciseRunning readRunningState() =>
-      container.read(simpleNoteExerciseProvider(noteCount))
+      container.read(simpleNoteExerciseProvider(config))
           as SimpleNoteExerciseRunning;
 
-  int midiInOctave(int noteIndex, int octave) =>
-      (octave + 1) * 12 + diatonicSemitones[noteIndex];
+  int midiInOctave(int pitchClass, int octave) =>
+      (octave + 1) * 12 + pitchClass;
 
   Future<void> waitForNextNote() => Future<void>.delayed(
     SimpleNoteExerciseNotifier.feedbackDuration +
@@ -31,13 +41,13 @@ void main() {
   );
 
   Future<void> answer({required bool correctly}) async {
-    final expectedNoteIndex = readRunningState().currentNoteIndex;
-    final playedNoteIndex = correctly
-        ? expectedNoteIndex
-        : (expectedNoteIndex + 1) % 7;
+    final expectedPitchClass = readRunningState().currentPitchClass;
+    final playedPitchClass = correctly
+        ? expectedPitchClass
+        : (expectedPitchClass + 1) % 12;
     container
-        .read(simpleNoteExerciseProvider(noteCount).notifier)
-        .simulateMidi(midiInOctave(playedNoteIndex, 4));
+        .read(simpleNoteExerciseProvider(config).notifier)
+        .simulateMidi(midiInOctave(playedPitchClass, 4));
     await waitForNextNote();
   }
 
@@ -45,36 +55,47 @@ void main() {
     group('build', () {
       test('ne tire jamais deux fois la même note de suite', () {
         //arrange
-        const longNoteCount = 100;
-        container.listen(simpleNoteExerciseProvider(longNoteCount), (_, _) {});
+        container.listen(simpleNoteExerciseProvider(longConfig), (_, _) {});
 
         //act
-        final noteIndexes =
-            (container.read(simpleNoteExerciseProvider(longNoteCount))
+        final pitchClasses =
+            (container.read(simpleNoteExerciseProvider(longConfig))
                     as SimpleNoteExerciseRunning)
-                .noteIndexes;
+                .pitchClasses;
 
         //assert
-        for (var position = 1; position < noteIndexes.length; position++) {
+        for (var position = 1; position < pitchClasses.length; position++) {
           expect(
-            noteIndexes[position],
-            isNot(noteIndexes[position - 1]),
+            pitchClasses[position],
+            isNot(pitchClasses[position - 1]),
             reason: 'répétition aux positions ${position - 1} et $position',
           );
         }
+      });
+
+      test('ne tire que des touches blanches', () {
+        //arrange
+        container.listen(simpleNoteExerciseProvider(longConfig), (_, _) {});
+
+        //act
+        final pitchClasses =
+            (container.read(simpleNoteExerciseProvider(longConfig))
+                    as SimpleNoteExerciseRunning)
+                .pitchClasses;
+
+        //assert
+        expect(pitchClasses, everyElement(isIn(diatonicSemitones)));
       });
     });
 
     group('simulateMidi', () {
       test('compte juste la note attendue jouée dans une autre octave', () {
         //arrange
-        final sut = container.read(
-          simpleNoteExerciseProvider(noteCount).notifier,
-        );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
+        final sut = container.read(simpleNoteExerciseProvider(config).notifier);
+        final expectedPitchClass = readRunningState().currentPitchClass;
 
         //act
-        sut.simulateMidi(midiInOctave(expectedNoteIndex, 6));
+        sut.simulateMidi(midiInOctave(expectedPitchClass, 6));
 
         //assert
         expect(readRunningState().noteState, NoteState.correct);
@@ -82,14 +103,15 @@ void main() {
 
       test('compte faux une autre touche blanche', () {
         //arrange
-        final sut = container.read(
-          simpleNoteExerciseProvider(noteCount).notifier,
-        );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
-        final otherNoteIndex = (expectedNoteIndex + 1) % 7;
+        final sut = container.read(simpleNoteExerciseProvider(config).notifier);
+        final expectedPitchClass = readRunningState().currentPitchClass;
+        final otherPitchClass =
+            diatonicSemitones[(diatonicSemitones.indexOf(expectedPitchClass) +
+                    1) %
+                7];
 
         //act
-        sut.simulateMidi(midiInOctave(otherNoteIndex, 4));
+        sut.simulateMidi(midiInOctave(otherPitchClass, 4));
 
         //assert
         expect(readRunningState().noteState, NoteState.wrong);
@@ -97,9 +119,7 @@ void main() {
 
       test('compte faux une touche noire', () {
         //arrange
-        final sut = container.read(
-          simpleNoteExerciseProvider(noteCount).notifier,
-        );
+        final sut = container.read(simpleNoteExerciseProvider(config).notifier);
         const cSharp4MidiNumber = 61;
 
         //act
@@ -111,9 +131,7 @@ void main() {
 
       test('mémorise la touche jouée pour le retour visuel', () {
         //arrange
-        final sut = container.read(
-          simpleNoteExerciseProvider(noteCount).notifier,
-        );
+        final sut = container.read(simpleNoteExerciseProvider(config).notifier);
         const cSharp4MidiNumber = 61;
 
         //act
@@ -125,15 +143,16 @@ void main() {
 
       test('ignore une touche jouée pendant le retour visuel', () {
         //arrange
-        final sut = container.read(
-          simpleNoteExerciseProvider(noteCount).notifier,
-        );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
-        final otherNoteIndex = (expectedNoteIndex + 1) % 7;
-        sut.simulateMidi(midiInOctave(expectedNoteIndex, 4));
+        final sut = container.read(simpleNoteExerciseProvider(config).notifier);
+        final expectedPitchClass = readRunningState().currentPitchClass;
+        final otherPitchClass =
+            diatonicSemitones[(diatonicSemitones.indexOf(expectedPitchClass) +
+                    1) %
+                7];
+        sut.simulateMidi(midiInOctave(expectedPitchClass, 4));
 
         //act
-        sut.simulateMidi(midiInOctave(otherNoteIndex, 4));
+        sut.simulateMidi(midiInOctave(otherPitchClass, 4));
 
         //assert
         expect(readRunningState().noteState, NoteState.correct);
@@ -141,13 +160,11 @@ void main() {
 
       test('passe à la note suivante, en attente, après la réponse', () async {
         //arrange
-        final sut = container.read(
-          simpleNoteExerciseProvider(noteCount).notifier,
-        );
-        final expectedNoteIndex = readRunningState().currentNoteIndex;
+        final sut = container.read(simpleNoteExerciseProvider(config).notifier);
+        final expectedPitchClass = readRunningState().currentPitchClass;
 
         //act
-        sut.simulateMidi(midiInOctave(expectedNoteIndex, 4));
+        sut.simulateMidi(midiInOctave(expectedPitchClass, 4));
         await waitForNextNote();
 
         //assert
@@ -179,7 +196,7 @@ void main() {
           }
 
           //assert
-          final state = container.read(simpleNoteExerciseProvider(noteCount));
+          final state = container.read(simpleNoteExerciseProvider(config));
           expect(state, isA<SimpleNoteExerciseCompleted>());
           final completed = state as SimpleNoteExerciseCompleted;
           expect(completed.correctCount, 6);
@@ -192,7 +209,10 @@ void main() {
         'calcule le temps de réponse moyen depuis l\'affichage de chaque note',
         () async {
           //arrange
-          const twoNotes = 2;
+          const twoNotes = SimpleNoteExerciseConfig(
+            noteCount: 2,
+            includeBlackKeys: false,
+          );
           var currentTime = DateTime(2026);
           final clockContainer = ProviderContainer(
             overrides: [
@@ -210,7 +230,7 @@ void main() {
           final sut = clockContainer.read(provider.notifier);
           int currentNoteMidi() => midiInOctave(
             (clockContainer.read(provider) as SimpleNoteExerciseRunning)
-                .currentNoteIndex,
+                .currentPitchClass,
             4,
           );
 
@@ -229,5 +249,128 @@ void main() {
         },
       );
     });
+
+    group('avec les touches noires', () {
+      const blackKeysConfig = SimpleNoteExerciseConfig(
+        noteCount: 100,
+        includeBlackKeys: true,
+      );
+
+      SimpleNoteExerciseRunning buildRunningState() {
+        final blackKeysContainer = ProviderContainer(
+          overrides: [
+            simpleNoteExerciseProvider(
+              blackKeysConfig,
+            ).overrideWith(() => SimpleNoteExerciseNotifier(blackKeysConfig)),
+          ],
+        );
+        addTearDown(blackKeysContainer.dispose);
+        blackKeysContainer.listen(
+          simpleNoteExerciseProvider(blackKeysConfig),
+          (_, _) {},
+        );
+        return blackKeysContainer.read(
+              simpleNoteExerciseProvider(blackKeysConfig),
+            )
+            as SimpleNoteExerciseRunning;
+      }
+
+      test('tire parmi les 12 touches, touches noires comprises', () {
+        //act
+        final pitchClasses = buildRunningState().pitchClasses;
+
+        //assert
+        expect(pitchClasses, everyElement(inInclusiveRange(0, 11)));
+        expect(
+          pitchClasses.where(
+            (pitchClass) => !diatonicSemitones.contains(pitchClass),
+          ),
+          isNotEmpty,
+        );
+      });
+
+      test('ne tire jamais deux fois la même touche de suite', () {
+        //act
+        final pitchClasses = buildRunningState().pitchClasses;
+
+        //assert
+        for (var position = 1; position < pitchClasses.length; position++) {
+          expect(pitchClasses[position], isNot(pitchClasses[position - 1]));
+        }
+      });
+
+      group('simulateMidi', () {
+        const cSharpPitchClass = 1;
+        late ProviderContainer blackKeysContainer;
+        late SimpleNoteExerciseNotifier sut;
+
+        setUp(() {
+          blackKeysContainer = ProviderContainer(
+            overrides: [
+              simpleNoteExerciseProvider(blackKeysConfig).overrideWith(
+                () => SimpleNoteExerciseNotifier(
+                  blackKeysConfig,
+                  random: FixedRandom(cSharpPitchClass),
+                ),
+              ),
+            ],
+          );
+          blackKeysContainer.listen(
+            simpleNoteExerciseProvider(blackKeysConfig),
+            (_, _) {},
+          );
+          sut = blackKeysContainer.read(
+            simpleNoteExerciseProvider(blackKeysConfig).notifier,
+          );
+        });
+
+        tearDown(() => blackKeysContainer.dispose());
+
+        SimpleNoteExerciseRunning readBlackKeysState() =>
+            blackKeysContainer.read(simpleNoteExerciseProvider(blackKeysConfig))
+                as SimpleNoteExerciseRunning;
+
+        test(
+          'compte juste la touche noire attendue, dans une autre octave',
+          () {
+            //arrange
+            expect(readBlackKeysState().currentPitchClass, cSharpPitchClass);
+
+            //act
+            sut.simulateMidi(midiInOctave(cSharpPitchClass, 2));
+
+            //assert
+            expect(readBlackKeysState().noteState, NoteState.correct);
+          },
+        );
+
+        test('compte faux la touche blanche voisine de la touche noire', () {
+          //arrange
+          const cPitchClass = 0;
+
+          //act
+          sut.simulateMidi(midiInOctave(cPitchClass, 4));
+
+          //assert
+          expect(readBlackKeysState().noteState, NoteState.wrong);
+        });
+      });
+    });
   });
+}
+
+/// Random figé : renvoie toujours la même valeur, bornée par `max`.
+class FixedRandom implements Random {
+  final int value;
+
+  FixedRandom(this.value);
+
+  @override
+  int nextInt(int max) => value % max;
+
+  @override
+  bool nextBool() => false;
+
+  @override
+  double nextDouble() => 0;
 }

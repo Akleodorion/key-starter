@@ -8,14 +8,14 @@ import 'package:key_starter/features/note_recognition/presentation/widgets/simpl
 void main() {
   Future<void> pumpDisplay(
     WidgetTester tester, {
-    required int noteIndex,
+    required int pitchClass,
     required NoteLanguage language,
   }) => tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
         body: SimpleNoteDisplay(
-          noteIndex: noteIndex,
+          pitchClass: pitchClass,
           noteState: NoteState.idle,
           language: language,
         ),
@@ -28,12 +28,12 @@ void main() {
       tester,
     ) async {
       //arrange
-      const solNoteIndex = 4;
+      const solPitchClass = 7;
 
       //act
       await pumpDisplay(
         tester,
-        noteIndex: solNoteIndex,
+        pitchClass: solPitchClass,
         language: NoteLanguage.fr,
       );
 
@@ -45,17 +45,34 @@ void main() {
       tester,
     ) async {
       //arrange
-      const solNoteIndex = 4;
+      const solPitchClass = 7;
 
       //act
       await pumpDisplay(
         tester,
-        noteIndex: solNoteIndex,
+        pitchClass: solPitchClass,
         language: NoteLanguage.en,
       );
 
       //assert
       expect(find.text('G'), findsOneWidget);
+    });
+
+    testWidgets('affiche une touche noire en dièse, sans octave', (
+      tester,
+    ) async {
+      //arrange
+      const fSharpPitchClass = 6;
+
+      //act
+      await pumpDisplay(
+        tester,
+        pitchClass: fSharpPitchClass,
+        language: NoteLanguage.fr,
+      );
+
+      //assert
+      expect(find.text('Fa♯'), findsOneWidget);
     });
   });
 }
