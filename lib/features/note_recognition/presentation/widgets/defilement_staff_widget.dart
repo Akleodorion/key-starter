@@ -5,7 +5,9 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
+import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/defilement_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/defilement_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
@@ -16,6 +18,7 @@ const double _clefPanelWidth = 70.0;
 /// Portée qui défile, liée à [defilementExerciseProvider] : toute la séquence
 /// de notes est dessinée à la suite, et la portée glisse pour amener la note
 /// courante au repère (bord gauche de la zone défilante) à chaque réponse.
+/// La note courante gonfle (juste) ou tremble (fausse) quand elle est jugée.
 class DefilementStaffWidget extends ConsumerStatefulWidget {
   final NoteExerciseSettings settings;
   final double height;
@@ -101,14 +104,20 @@ class _DefilementStaffWidgetState extends ConsumerState<DefilementStaffWidget> {
                       controller: _scrollController,
                       scrollDirection: Axis.horizontal,
                       physics: const NeverScrollableScrollPhysics(),
-                      child: CustomPaint(
-                        size: Size(canvasWidth, widget.height),
-                        painter: _DefilementScrollingStaffPainter(
-                          noteSteps: noteSteps,
-                          currentIndex: currentIndex,
-                          noteState: noteState,
-                          clef: widget.settings.clef,
-                          lineColor: lineColor,
+                      child: NoteFeedbackMotion(
+                        noteState: noteState,
+                        duration: noteAdvanceDelay,
+                        builder: (context, noteScale, noteShift) => CustomPaint(
+                          size: Size(canvasWidth, widget.height),
+                          painter: DefilementScrollingStaffPainter(
+                            noteSteps: noteSteps,
+                            currentIndex: currentIndex,
+                            noteState: noteState,
+                            clef: widget.settings.clef,
+                            lineColor: lineColor,
+                            currentNoteScale: noteScale,
+                            currentNoteShift: noteShift,
+                          ),
                         ),
                       ),
                     ),
@@ -169,20 +178,25 @@ class _DefilementPinnedClefPainter extends CustomPainter {
 }
 
 /// Dessine la portée et toute la séquence de notes ; seule la note à
-/// [currentIndex] est colorée selon [noteState].
-class _DefilementScrollingStaffPainter extends CustomPainter {
+/// [currentIndex] est colorée selon [noteState], avec son échelle et son
+/// décalage horizontal.
+class DefilementScrollingStaffPainter extends CustomPainter {
   final List<int> noteSteps;
   final int currentIndex;
   final NoteState noteState;
   final ClefMode clef;
   final Color lineColor;
+  final double currentNoteScale;
+  final double currentNoteShift;
 
-  const _DefilementScrollingStaffPainter({
+  const DefilementScrollingStaffPainter({
     required this.noteSteps,
     required this.currentIndex,
     required this.noteState,
     required this.clef,
     required this.lineColor,
+    this.currentNoteScale = 1,
+    this.currentNoteShift = 0,
   });
 
   @override
@@ -206,19 +220,34 @@ class _DefilementScrollingStaffPainter extends CustomPainter {
             }
           : AppColors.notesFg;
 
+      final noteX = index * _noteSpacing + _noteSpacing / 2;
+      canvas.save();
+      if (isCurrent) {
+        final noteY = staffYFor(
+          noteSteps[index],
+          clef: clef,
+          staffTop: staffTop,
+        );
+        canvas.translate(noteX + currentNoteShift, noteY);
+        canvas.scale(currentNoteScale);
+        canvas.translate(-noteX, -noteY);
+      }
       paintNote(
         canvas,
-        noteX: index * _noteSpacing + _noteSpacing / 2,
+        noteX: noteX,
         step: noteSteps[index],
         clef: clef,
         staffTop: staffTop,
         color: color,
       );
+      canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(_DefilementScrollingStaffPainter old) =>
+  bool shouldRepaint(DefilementScrollingStaffPainter old) =>
+      old.currentNoteScale != currentNoteScale ||
+      old.currentNoteShift != currentNoteShift ||
       old.currentIndex != currentIndex ||
       old.noteState != noteState ||
       old.clef != clef ||

@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
+import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_state.dart';
@@ -18,6 +21,36 @@ void main() {
 
   group('FlashcardExerciseNotifier', () {
     group('simulateMidi', () {
+      test('passe à la suivante 150 ms après le retour visuel, pas avant', () {
+        fakeAsync((async) {
+          //arrange
+          final container = ProviderContainer();
+          addTearDown(container.dispose);
+          container.listen(flashcardExerciseProvider(settings), (_, _) {});
+          final sut = container.read(
+            flashcardExerciseProvider(settings).notifier,
+          );
+          final running =
+              container.read(flashcardExerciseProvider(settings))
+                  as FlashcardExerciseRunning;
+          sut.simulateMidi(midiFromDiatonicStep(running.currentStep));
+          //act
+          async.elapse(noteAdvanceDelay - const Duration(milliseconds: 50));
+          final stateDuringFeedback =
+              container.read(flashcardExerciseProvider(settings))
+                  as FlashcardExerciseRunning;
+          async.elapse(const Duration(milliseconds: 50));
+          final indexAfterFeedback =
+              (container.read(flashcardExerciseProvider(settings))
+                      as FlashcardExerciseRunning)
+                  .currentIndex;
+
+          //assert
+          expect(stateDuringFeedback.noteState, NoteState.correct);
+          expect(indexAfterFeedback, 1);
+        });
+      });
+
       test(
         'ne plante pas si on quitte l\'exercice pendant le retour visuel',
         () async {

@@ -1,15 +1,20 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
+import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_exercise_notifier.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
 
 /// Portée affichant l'accord courant de [chordFlashcardExerciseProvider].
+/// L'accord gonfle (juste) ou tremble (faux) quand il est jugé.
 ///
 /// Ne sous-classe pas [StaffWidget] (dont le contrat est mono-note) —
 /// spécifique à cette feature, comme `DefilementStaffWidget`.
@@ -30,33 +35,46 @@ class ChordFlashcardStaffWidget extends ConsumerWidget {
     final running = exerciseState is ChordFlashcardExerciseRunning
         ? exerciseState
         : null;
+    final noteState = running?.noteState ?? NoteState.idle;
 
     return SizedBox(
       height: height,
       width: double.infinity,
-      child: CustomPaint(
-        painter: _ChordFlashcardStaffPainter(
-          clef: settings.clef,
-          steps: running?.currentChord ?? const [],
-          state: running?.noteState ?? NoteState.idle,
-          lineColor: lineColor,
+      child: NoteFeedbackMotion(
+        noteState: noteState,
+        duration: noteAdvanceDelay,
+        builder: (context, chordScale, chordShift) => CustomPaint(
+          painter: ChordFlashcardStaffPainter(
+            clef: settings.clef,
+            steps: running?.currentChord ?? const [],
+            state: noteState,
+            lineColor: lineColor,
+            chordScale: chordScale,
+            chordShift: chordShift,
+          ),
         ),
       ),
     );
   }
 }
 
-class _ChordFlashcardStaffPainter extends CustomPainter {
+/// Dessine la portée, la clef et l'accord, mis à l'échelle et décalé
+/// horizontalement autour de son centre.
+class ChordFlashcardStaffPainter extends CustomPainter {
   final ClefMode clef;
   final List<int> steps;
   final NoteState state;
   final Color lineColor;
+  final double chordScale;
+  final double chordShift;
 
-  const _ChordFlashcardStaffPainter({
+  const ChordFlashcardStaffPainter({
     required this.clef,
     required this.steps,
     required this.state,
     required this.lineColor,
+    this.chordScale = 1,
+    this.chordShift = 0,
   });
 
   @override
@@ -85,18 +103,37 @@ class _ChordFlashcardStaffPainter extends CustomPainter {
       NoteState.wrong => AppColors.stateRed,
       NoteState.idle => lineColor,
     };
+    final chordX = size.width / 2 + 30;
+    final lowestY = staffYFor(
+      steps.reduce(min),
+      clef: clef,
+      staffTop: staffTop,
+    );
+    final highestY = staffYFor(
+      steps.reduce(max),
+      clef: clef,
+      staffTop: staffTop,
+    );
+    final chordCenterY = (lowestY + highestY) / 2;
+    canvas.save();
+    canvas.translate(chordX + chordShift, chordCenterY);
+    canvas.scale(chordScale);
+    canvas.translate(-chordX, -chordCenterY);
     paintChord(
       canvas,
-      noteX: size.width / 2 + 30,
+      noteX: chordX,
       steps: steps,
       clef: clef,
       staffTop: staffTop,
       color: chordColor,
     );
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_ChordFlashcardStaffPainter old) =>
+  bool shouldRepaint(ChordFlashcardStaffPainter old) =>
+      old.chordScale != chordScale ||
+      old.chordShift != chordShift ||
       old.clef != clef ||
       old.steps != steps ||
       old.state != state ||

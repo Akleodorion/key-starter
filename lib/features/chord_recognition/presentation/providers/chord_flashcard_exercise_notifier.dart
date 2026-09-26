@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
@@ -138,7 +139,7 @@ class ChordFlashcardExerciseNotifier
       playedSteps: playedSteps,
     );
 
-    _advanceTimer = Timer(const Duration(milliseconds: 200), _advance);
+    _advanceTimer = Timer(noteAdvanceDelay, _advance);
   }
 
   void simulateMidi(List<int> midiNumbers) {

@@ -4,13 +4,16 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
+import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 
 /// Widget abstrait de portée musicale avec note positionnée.
 ///
 /// Dessine une portée à 5 lignes, le glyphe de clef (Sol ou Fa) et,
 /// si [diatonicStep] est non-null, la note correspondante colorée selon
 /// [noteState]. Les lignes supplémentaires sont ajoutées automatiquement.
+/// Une note qui vient d'être jugée gonfle (juste) ou tremble (fausse).
 ///
 /// Les sous-classes fournissent la clef, le degré diatonique et l'état
 /// de la note en implémentant [clef], [diatonicStep] et [noteState].
@@ -45,35 +48,49 @@ abstract class StaffWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lineColor = AppColorTheme.of(context).text;
+    final currentClef = clef(ref);
+    final currentStep = diatonicStep(ref);
+    final currentNoteState = noteState(ref);
 
     return SizedBox(
       height: height,
       width: staffwidth ?? double.infinity,
-      child: CustomPaint(
-        painter: _StaffPainter(
-          clef: clef(ref),
-          diatonicStep: diatonicStep(ref),
-          state: noteState(ref),
-          lineColor: lineColor,
+      child: NoteFeedbackMotion(
+        noteState: currentNoteState,
+        duration: noteAdvanceDelay,
+        builder: (context, noteScale, noteShift) => CustomPaint(
+          painter: StaffPainter(
+            clef: currentClef,
+            diatonicStep: currentStep,
+            state: currentNoteState,
+            lineColor: lineColor,
+            noteScale: noteScale,
+            noteShift: noteShift,
+          ),
         ),
       ),
     );
   }
 }
 
-/// Dessine la portée, le glyphe de clef et la note sur un [Canvas], via les
-/// fonctions partagées de `staff_paint_utils.dart`.
-class _StaffPainter extends CustomPainter {
+/// Dessine la portée, le glyphe de clef et la note (avec son échelle et son
+/// décalage horizontal) sur un [Canvas], via les fonctions partagées de
+/// `staff_paint_utils.dart`.
+class StaffPainter extends CustomPainter {
   final ClefMode clef;
   final int? diatonicStep;
   final NoteState state;
   final Color lineColor;
+  final double noteScale;
+  final double noteShift;
 
-  const _StaffPainter({
+  const StaffPainter({
     required this.clef,
     required this.diatonicStep,
     required this.state,
     required this.lineColor,
+    this.noteScale = 1,
+    this.noteShift = 0,
   });
 
   @override
@@ -108,19 +125,33 @@ class _StaffPainter extends CustomPainter {
       NoteState.idle => lineColor,
     };
     // La note est centrée horizontalement, décalée à droite de la clef.
+    final noteX = size.width / 2 + lineGap * 3;
+    final noteY = staffYFor(
+      step,
+      clef: clef,
+      staffTop: staffTop,
+      lineGap: lineGap,
+    );
+    canvas.save();
+    canvas.translate(noteX + noteShift, noteY);
+    canvas.scale(noteScale);
+    canvas.translate(-noteX, -noteY);
     paintNote(
       canvas,
-      noteX: size.width / 2 + lineGap * 3,
+      noteX: noteX,
       step: step,
       clef: clef,
       staffTop: staffTop,
       color: noteColor,
       lineGap: lineGap,
     );
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_StaffPainter old) =>
+  bool shouldRepaint(StaffPainter old) =>
+      old.noteScale != noteScale ||
+      old.noteShift != noteShift ||
       old.clef != clef ||
       old.diatonicStep != diatonicStep ||
       old.state != state ||

@@ -88,15 +88,16 @@ Future<void> _startDefilementExerciseWithTenNotes(WidgetTester tester) async {
   await tester.pumpAndSettle();
 
   //act - Notes -> Défilement
-  await tester.tap(
-    find.descendant(
-      of: find.ancestor(
-        of: find.text('Défilement'),
-        matching: find.byType(EntryCard),
-      ),
-      matching: find.byType(PrimaryIconButton),
+  final defilementButton = find.descendant(
+    of: find.ancestor(
+      of: find.text('Défilement'),
+      matching: find.byType(EntryCard),
     ),
+    matching: find.byType(PrimaryIconButton),
   );
+  await tester.ensureVisible(defilementButton);
+  await tester.pumpAndSettle();
+  await tester.tap(defilementButton);
   await tester.pumpAndSettle();
 
   //assert - la clé de Sol est sélectionnée par défaut
