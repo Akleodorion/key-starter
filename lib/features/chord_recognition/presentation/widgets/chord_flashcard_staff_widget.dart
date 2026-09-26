@@ -6,6 +6,7 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
 import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_exercise_notifier.dart';
@@ -41,6 +42,7 @@ class ChordFlashcardStaffWidget extends ConsumerWidget {
       width: double.infinity,
       child: NoteFeedbackMotion(
         noteState: noteState,
+        duration: noteAdvanceDelay,
         builder: (context, chordScale, chordShift) => CustomPaint(
           painter: ChordFlashcardStaffPainter(
             clef: settings.clef,

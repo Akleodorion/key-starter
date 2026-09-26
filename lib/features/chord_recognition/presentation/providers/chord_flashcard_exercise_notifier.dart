@@ -139,7 +139,7 @@ class ChordFlashcardExerciseNotifier
       playedSteps: playedSteps,
     );
 
-    _advanceTimer = Timer(noteFeedbackDuration, _advance);
+    _advanceTimer = Timer(noteAdvanceDelay, _advance);
   }
 
   void simulateMidi(List<int> midiNumbers) {

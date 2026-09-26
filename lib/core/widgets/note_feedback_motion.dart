@@ -4,9 +4,11 @@ import 'package:key_starter/core/utils/note_feedback_motion.dart';
 
 /// Rejoue l'effet de retour d'une note de portée chaque fois que
 /// [noteState] passe à juste ou faux : [builder] reçoit à chaque frame
-/// l'échelle (gonflement) et le décalage horizontal (tremblement) à appliquer.
+/// l'échelle (gonflement) et le décalage horizontal (tremblement) à appliquer,
+/// l'effet durant [duration].
 class NoteFeedbackMotion extends StatefulWidget {
   final NoteState noteState;
+  final Duration duration;
   final Widget Function(BuildContext context, double scale, double shift)
   builder;
 
@@ -14,6 +16,7 @@ class NoteFeedbackMotion extends StatefulWidget {
     super.key,
     required this.noteState,
     required this.builder,
+    this.duration = noteFeedbackDuration,
   });
 
   @override
@@ -23,7 +26,7 @@ class NoteFeedbackMotion extends StatefulWidget {
 class _NoteFeedbackMotionState extends State<NoteFeedbackMotion>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
-    duration: noteFeedbackDuration,
+    duration: widget.duration,
     vsync: this,
   );
 

@@ -5,6 +5,10 @@ import 'package:key_starter/core/enums/note_state.dart';
 /// Durée de l'effet sur une note de portée qui vient d'être jugée.
 const noteFeedbackDuration = Duration(milliseconds: 400);
 
+/// Délai avant la note suivante dans les exercices sans tempo ; l'effet y
+/// est joué sur cette même durée pour ne pas être coupé.
+const noteAdvanceDelay = Duration(milliseconds: 150);
+
 const _swellScaleGain = 0.3;
 const _shakeAmplitude = 12.0;
 const _shakeOscillations = 3;

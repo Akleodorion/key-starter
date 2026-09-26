@@ -21,40 +21,35 @@ void main() {
 
   group('FlashcardExerciseNotifier', () {
     group('simulateMidi', () {
-      test(
-        'garde le retour visuel affiché le temps de l\'effet sur la note',
-        () {
-          fakeAsync((async) {
-            //arrange
-            final container = ProviderContainer();
-            addTearDown(container.dispose);
-            container.listen(flashcardExerciseProvider(settings), (_, _) {});
-            final sut = container.read(
-              flashcardExerciseProvider(settings).notifier,
-            );
-            final running =
-                container.read(flashcardExerciseProvider(settings))
-                    as FlashcardExerciseRunning;
-            sut.simulateMidi(midiFromDiatonicStep(running.currentStep));
-            async.elapse(const Duration(milliseconds: 150));
+      test('passe à la suivante 150 ms après le retour visuel, pas avant', () {
+        fakeAsync((async) {
+          //arrange
+          final container = ProviderContainer();
+          addTearDown(container.dispose);
+          container.listen(flashcardExerciseProvider(settings), (_, _) {});
+          final sut = container.read(
+            flashcardExerciseProvider(settings).notifier,
+          );
+          final running =
+              container.read(flashcardExerciseProvider(settings))
+                  as FlashcardExerciseRunning;
+          sut.simulateMidi(midiFromDiatonicStep(running.currentStep));
+          //act
+          async.elapse(noteAdvanceDelay - const Duration(milliseconds: 50));
+          final stateDuringFeedback =
+              container.read(flashcardExerciseProvider(settings))
+                  as FlashcardExerciseRunning;
+          async.elapse(const Duration(milliseconds: 50));
+          final indexAfterFeedback =
+              (container.read(flashcardExerciseProvider(settings))
+                      as FlashcardExerciseRunning)
+                  .currentIndex;
 
-            //act
-            async.elapse(const Duration(milliseconds: 200));
-            final stateDuringFeedback =
-                container.read(flashcardExerciseProvider(settings))
-                    as FlashcardExerciseRunning;
-            async.elapse(noteFeedbackDuration);
-            final indexAfterFeedback =
-                (container.read(flashcardExerciseProvider(settings))
-                        as FlashcardExerciseRunning)
-                    .currentIndex;
-
-            //assert
-            expect(stateDuringFeedback.noteState, NoteState.correct);
-            expect(indexAfterFeedback, 1);
-          });
-        },
-      );
+          //assert
+          expect(stateDuringFeedback.noteState, NoteState.correct);
+          expect(indexAfterFeedback, 1);
+        });
+      });
 
       test(
         'ne plante pas si on quitte l\'exercice pendant le retour visuel',
@@ -72,7 +67,7 @@ void main() {
 
           //act
           container.dispose();
-          await Future<void>.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 300));
 
           //assert — le test échoue d'office si le délai touche un notifier détruit
         },

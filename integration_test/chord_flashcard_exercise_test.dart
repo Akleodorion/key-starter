@@ -129,12 +129,12 @@ Future<void> _startChordFlashcardExerciseWithTenChords(
 
 Future<void> _answerTenChordsAlternately(WidgetTester tester) async {
   //act - répondre aux 10 accords en alternant bons (Juste) et mauvais (Faux) ;
-  // 600ms couvre la fenêtre de détection MIDI (100ms) + le délai d'avancement
-  // (400ms, durée de l'effet sur l'accord) + une marge.
+  // 400ms couvre la fenêtre de détection MIDI (100ms) + le délai d'avancement
+  // (150ms) + une marge.
   for (var chordIndex = 0; chordIndex < 10; chordIndex++) {
     final answerCorrectly = chordIndex.isEven;
     await tester.tap(find.text(answerCorrectly ? 'Juste' : 'Faux'));
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 400));
   }
   await tester.pumpAndSettle();
 }

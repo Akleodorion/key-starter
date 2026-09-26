@@ -5,6 +5,7 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
 import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/defilement_exercise_notifier.dart';
@@ -105,6 +106,7 @@ class _DefilementStaffWidgetState extends ConsumerState<DefilementStaffWidget> {
                       physics: const NeverScrollableScrollPhysics(),
                       child: NoteFeedbackMotion(
                         noteState: noteState,
+                        duration: noteAdvanceDelay,
                         builder: (context, noteScale, noteShift) => CustomPaint(
                           size: Size(canvasWidth, widget.height),
                           painter: DefilementScrollingStaffPainter(

@@ -94,9 +94,9 @@ void main() {
       //act
       readNotifier().judgeCurrentChord(NoteState.correct);
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump(const Duration(milliseconds: 75));
       final midAnimation = readPainter(tester);
-      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump(const Duration(milliseconds: 100));
       final afterAnimation = readPainter(tester);
 
       //assert
@@ -111,7 +111,7 @@ void main() {
       //act
       readNotifier().judgeCurrentChord(NoteState.wrong);
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 20));
       final midAnimation = readPainter(tester);
 
       //assert

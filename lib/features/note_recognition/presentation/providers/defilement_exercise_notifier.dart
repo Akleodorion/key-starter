@@ -114,7 +114,7 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
       playedStep: playedStep,
     );
 
-    _advanceTimer = Timer(noteFeedbackDuration, _advance);
+    _advanceTimer = Timer(noteAdvanceDelay, _advance);
   }
 
   void simulateMidi(int midiNumber) {

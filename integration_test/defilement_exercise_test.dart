@@ -131,7 +131,7 @@ Future<void> _answerTenNotesAlternately(WidgetTester tester) async {
   for (var noteIndex = 0; noteIndex < 10; noteIndex++) {
     final answerCorrectly = noteIndex.isEven;
     await tester.tap(find.text(answerCorrectly ? 'Juste' : 'Faux'));
-    await tester.pump(const Duration(milliseconds: 550));
+    await tester.pump(const Duration(milliseconds: 350));
   }
   await tester.pumpAndSettle();
 }

@@ -63,5 +63,28 @@ void main() {
       expect(midShift, isNot(0));
       expect(lastShift, 0);
     });
+
+    testWidgets('joue l\'effet sur la durée demandée', (tester) async {
+      //arrange
+      Widget motion(NoteState noteState) => NoteFeedbackMotion(
+        noteState: noteState,
+        duration: const Duration(milliseconds: 150),
+        builder: (context, scale, shift) {
+          lastScale = scale;
+          return const SizedBox();
+        },
+      );
+      await tester.pumpWidget(motion(NoteState.idle));
+
+      //act
+      await tester.pumpWidget(motion(NoteState.correct));
+      await tester.pump(const Duration(milliseconds: 75));
+      final midScale = lastScale;
+      await tester.pump(const Duration(milliseconds: 100));
+
+      //assert
+      expect(midScale, greaterThan(1.2));
+      expect(lastScale, 1);
+    });
   });
 }

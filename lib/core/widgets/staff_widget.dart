@@ -4,6 +4,7 @@ import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
 import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 
@@ -56,6 +57,7 @@ abstract class StaffWidget extends ConsumerWidget {
       width: staffwidth ?? double.infinity,
       child: NoteFeedbackMotion(
         noteState: currentNoteState,
+        duration: noteAdvanceDelay,
         builder: (context, noteScale, noteShift) => CustomPaint(
           painter: StaffPainter(
             clef: currentClef,
