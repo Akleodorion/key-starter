@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/providers/notation_language_provider.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/widgets/ui_text.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/exercise_top_bar.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/simple_note_answer_buttons.dart';
@@ -11,12 +12,12 @@ import 'package:key_starter/features/note_recognition/presentation/widgets/simpl
 
 class SimpleNoteRunningView extends ConsumerWidget {
   final SimpleNoteExerciseRunning running;
-  final int noteCount;
+  final SimpleNoteExerciseConfig config;
 
   const SimpleNoteRunningView({
     super.key,
     required this.running,
-    required this.noteCount,
+    required this.config,
   });
 
   @override
@@ -30,14 +31,14 @@ class SimpleNoteRunningView extends ConsumerWidget {
         ExerciseTopBar(
           exerciseLabel: 'Lecture',
           currentNumber: running.currentIndex + 1,
-          total: running.noteIndexes.length,
+          total: running.pitchClasses.length,
         ),
         const SizedBox(height: 16),
         Center(child: UiText('joue cette note', size: 14, color: colors.text2)),
         Expanded(
           child: Center(
             child: SimpleNoteDisplay(
-              noteIndex: running.currentNoteIndex,
+              pitchClass: running.currentPitchClass,
               noteState: running.noteState,
               language: language,
             ),
@@ -52,7 +53,7 @@ class SimpleNoteRunningView extends ConsumerWidget {
                 language: language,
               ),
             ),
-            SimpleNoteAnswerButtons(noteCount: noteCount),
+            SimpleNoteAnswerButtons(config: config),
           ],
         ),
         const SizedBox(height: 4),
