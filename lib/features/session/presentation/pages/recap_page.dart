@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 import 'package:key_starter/core/widgets/ui_text.dart';
+import 'package:key_starter/features/session/domain/entities/timing_offset.dart';
 import 'package:key_starter/features/session/presentation/widgets/recap_stats_card.dart';
 import 'package:key_starter/features/session/presentation/widgets/recap_top_bar.dart';
 
@@ -10,7 +11,8 @@ class RecapPage extends StatefulWidget {
   final String exerciseLabel;
   final int correctCount;
   final int totalNotes;
-  final int avgResponseMs;
+  final int? avgResponseMs;
+  final TimingOffset? timingOffset;
   final int bestStreak;
   final VoidCallback onRetry;
 
@@ -19,7 +21,8 @@ class RecapPage extends StatefulWidget {
     required this.exerciseLabel,
     required this.correctCount,
     required this.totalNotes,
-    required this.avgResponseMs,
+    this.avgResponseMs,
+    this.timingOffset,
     required this.bestStreak,
     required this.onRetry,
   });
@@ -65,6 +68,7 @@ class _RecapPageState extends State<RecapPage> {
                 correctCount: widget.correctCount,
                 totalNotes: widget.totalNotes,
                 avgResponseMs: widget.avgResponseMs,
+                timingOffset: widget.timingOffset,
                 bestStreak: widget.bestStreak,
               ),
               const Spacer(),
