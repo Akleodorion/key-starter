@@ -5,18 +5,24 @@ import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_state.dart';
 
 final simpleNoteExerciseProvider = NotifierProvider.autoDispose
-    .family<SimpleNoteExerciseNotifier, SimpleNoteExerciseState, int>(
-      (noteCount) => SimpleNoteExerciseNotifier(noteCount),
-    );
+    .family<
+      SimpleNoteExerciseNotifier,
+      SimpleNoteExerciseState,
+      SimpleNoteExerciseConfig
+    >((config) => SimpleNoteExerciseNotifier(config));
 
 class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
   static const feedbackDuration = Duration(milliseconds: 500);
 
-  final int _noteCount;
+  static const _allPitchClasses = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+  final SimpleNoteExerciseConfig _config;
   final DateTime Function() _now;
+  final Random _random;
   Timer? _advanceTimer;
   int _correctCount = 0;
   int _currentStreak = 0;
@@ -24,8 +30,12 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
   late DateTime _noteShownAt;
   final List<int> _responseTimesMs = [];
 
-  SimpleNoteExerciseNotifier(this._noteCount, {DateTime Function()? now})
-    : _now = now ?? DateTime.now;
+  SimpleNoteExerciseNotifier(
+    this._config, {
+    DateTime Function()? now,
+    Random? random,
+  }) : _now = now ?? DateTime.now,
+       _random = random ?? Random();
 
   @override
   SimpleNoteExerciseState build() {
@@ -45,12 +55,13 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
   }
 
   List<int> _generatePitchClasses() {
-    final random = Random();
-    const candidatePitchClasses = diatonicSemitones;
+    final candidatePitchClasses = _config.includeBlackKeys
+        ? _allPitchClasses
+        : diatonicSemitones;
     final candidateCount = candidatePitchClasses.length;
-    final candidatePositions = [random.nextInt(candidateCount)];
-    while (candidatePositions.length < _noteCount) {
-      final offsetFromPrevious = 1 + random.nextInt(candidateCount - 1);
+    final candidatePositions = [_random.nextInt(candidateCount)];
+    while (candidatePositions.length < _config.noteCount) {
+      final offsetFromPrevious = 1 + _random.nextInt(candidateCount - 1);
       candidatePositions.add(
         (candidatePositions.last + offsetFromPrevious) % candidateCount,
       );

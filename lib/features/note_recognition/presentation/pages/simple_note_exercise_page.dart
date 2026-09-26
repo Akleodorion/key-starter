@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
+import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/simple_note_running_view.dart';
 import 'package:key_starter/features/session/presentation/pages/recap_page.dart';
 
 class SimpleNoteExercisePage extends ConsumerStatefulWidget {
-  final int noteCount;
+  final SimpleNoteExerciseConfig config;
 
-  const SimpleNoteExercisePage({super.key, required this.noteCount});
+  const SimpleNoteExercisePage({super.key, required this.config});
 
   @override
   ConsumerState<SimpleNoteExercisePage> createState() =>
@@ -41,10 +42,10 @@ class _SimpleNoteExercisePageState
   @override
   Widget build(BuildContext context) {
     final colors = AppColorTheme.of(context);
-    final noteCount = widget.noteCount;
-    final exerciseState = ref.watch(simpleNoteExerciseProvider(noteCount));
+    final config = widget.config;
+    final exerciseState = ref.watch(simpleNoteExerciseProvider(config));
 
-    ref.listen(simpleNoteExerciseProvider(noteCount), (_, next) {
+    ref.listen(simpleNoteExerciseProvider(config), (_, next) {
       if (next is! SimpleNoteExerciseCompleted || !mounted) return;
       _handingOffToRecap = true;
       final navigator = Navigator.of(context);
@@ -58,7 +59,7 @@ class _SimpleNoteExercisePageState
             bestStreak: next.bestStreak,
             onRetry: () => navigator.pushReplacement(
               MaterialPageRoute(
-                builder: (_) => SimpleNoteExercisePage(noteCount: noteCount),
+                builder: (_) => SimpleNoteExercisePage(config: config),
               ),
             ),
           ),
@@ -74,7 +75,7 @@ class _SimpleNoteExercisePageState
           child: switch (exerciseState) {
             SimpleNoteExerciseRunning() => SimpleNoteRunningView(
               running: exerciseState,
-              noteCount: noteCount,
+              config: config,
             ),
             SimpleNoteExerciseCompleted() => const SizedBox.shrink(),
           },
