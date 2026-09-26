@@ -1,11 +1,10 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
+import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
 import 'package:key_starter/features/note_recognition/domain/entities/tempo_timeline.dart';
 
@@ -36,14 +35,9 @@ class TempoStaffLine extends StatefulWidget {
 
 class _TempoStaffLineState extends State<TempoStaffLine>
     with TickerProviderStateMixin {
-  static const _feedbackDuration = Duration(milliseconds: 400);
-  static const _swellScaleGain = 0.3;
-  static const _shakeAmplitude = 12.0;
-  static const _shakeOscillations = 3;
-
   late final List<AnimationController> _controllers = List.generate(
     TempoTimeline.notesPerLine,
-    (_) => AnimationController(duration: _feedbackDuration, vsync: this),
+    (_) => AnimationController(duration: noteFeedbackDuration, vsync: this),
   );
 
   @override
@@ -99,19 +93,11 @@ class _TempoStaffLineState extends State<TempoStaffLine>
     );
   }
 
-  double _scaleOf(int index) {
-    if (widget.noteStates[index] != NoteState.correct) return 1;
-    return 1 + sin(_controllers[index].value * pi) * _swellScaleGain;
-  }
+  double _scaleOf(int index) =>
+      noteFeedbackScale(widget.noteStates[index], _controllers[index].value);
 
-  double _shiftOf(int index) {
-    if (widget.noteStates[index] != NoteState.wrong) return 0;
-    final progress = _controllers[index].value;
-    if (progress == 1) return 0;
-    return sin(progress * pi * 2 * _shakeOscillations) *
-        _shakeAmplitude *
-        (1 - progress);
-  }
+  double _shiftOf(int index) =>
+      noteFeedbackShift(widget.noteStates[index], _controllers[index].value);
 }
 
 /// Dessine la portée, la clé, les notes (chacune avec sa couleur, son échelle
