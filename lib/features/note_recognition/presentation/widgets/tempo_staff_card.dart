@@ -5,6 +5,8 @@ import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/tempo_count_in_label.dart';
 import 'package:key_starter/features/note_recognition/presentation/widgets/tempo_staff_lines.dart';
 
+/// Carte des portées : les deux lignes se partagent toute la hauteur
+/// disponible, avec le décompte par-dessus.
 class TempoStaffCard extends StatelessWidget {
   final List<int> noteSteps;
   final List<NoteState> noteStates;
@@ -37,19 +39,22 @@ class TempoStaffCard extends StatelessWidget {
         border: Border.all(color: colors.line),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          TempoStaffLines(
-            noteSteps: noteSteps,
-            noteStates: noteStates,
-            clef: clef,
-            topLine: topLine,
-            barLine: barLine,
-            barFraction: barFraction,
-          ),
-          TempoCountInLabel(beat: countInBeat),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) => Stack(
+          alignment: Alignment.center,
+          children: [
+            TempoStaffLines(
+              noteSteps: noteSteps,
+              noteStates: noteStates,
+              clef: clef,
+              topLine: topLine,
+              barLine: barLine,
+              barFraction: barFraction,
+              lineHeight: constraints.maxHeight / 2,
+            ),
+            TempoCountInLabel(beat: countInBeat),
+          ],
+        ),
       ),
     );
   }

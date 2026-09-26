@@ -92,6 +92,7 @@ class _TempoStaffLineState extends State<TempoStaffLine>
             barFraction: widget.barFraction,
             clef: widget.clef,
             lineColor: lineColor,
+            lineGap: staffLineGapForHeight(widget.height),
           ),
         );
       },
@@ -116,8 +117,6 @@ class _TempoStaffLineState extends State<TempoStaffLine>
 /// Dessine la portée, la clé, les notes (chacune avec sa couleur, son échelle
 /// et son décalage horizontal) et la barre.
 class TempoStaffLinePainter extends CustomPainter {
-  static const double _clefPanelWidth = 70.0;
-
   final List<int> noteSteps;
   final List<Color> noteColors;
   final List<double> noteScales;
@@ -125,6 +124,7 @@ class TempoStaffLinePainter extends CustomPainter {
   final double? barFraction;
   final ClefMode clef;
   final Color lineColor;
+  final double lineGap;
 
   const TempoStaffLinePainter({
     required this.noteSteps,
@@ -134,31 +134,40 @@ class TempoStaffLinePainter extends CustomPainter {
     required this.barFraction,
     required this.clef,
     required this.lineColor,
+    required this.lineGap,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final staffTop = staffTopFor(size);
+    final staffTop = staffTopFor(size, lineGap: lineGap);
+    final clefPanelWidth = lineGap * 7;
     paintStaffLines(
       canvas,
       staffTop: staffTop,
-      x1: 20,
+      x1: lineGap * 2,
       x2: size.width,
       lineColor: lineColor,
+      lineGap: lineGap,
     );
     paintClefGlyph(
       canvas,
       clef: clef,
-      x: 22,
+      x: lineGap * 2.2,
       staffTop: staffTop,
       color: lineColor,
+      lineGap: lineGap,
     );
 
-    final notesWidth = size.width - _clefPanelWidth;
+    final notesWidth = size.width - clefPanelWidth;
     final slotWidth = notesWidth / TempoTimeline.notesPerLine;
     for (var index = 0; index < noteSteps.length; index++) {
-      final noteX = _clefPanelWidth + (index + 0.5) * slotWidth;
-      final noteY = staffYFor(noteSteps[index], clef: clef, staffTop: staffTop);
+      final noteX = clefPanelWidth + (index + 0.5) * slotWidth;
+      final noteY = staffYFor(
+        noteSteps[index],
+        clef: clef,
+        staffTop: staffTop,
+        lineGap: lineGap,
+      );
       canvas.save();
       canvas.translate(noteX + noteShifts[index], noteY);
       canvas.scale(noteScales[index]);
@@ -170,19 +179,20 @@ class TempoStaffLinePainter extends CustomPainter {
         clef: clef,
         staffTop: staffTop,
         color: noteColors[index],
+        lineGap: lineGap,
       );
       canvas.restore();
     }
 
     final fraction = barFraction;
     if (fraction != null) {
-      final barX = _clefPanelWidth + fraction * notesWidth;
+      final barX = clefPanelWidth + fraction * notesWidth;
       canvas.drawLine(
-        Offset(barX, staffTop - staffLineGap * 2),
-        Offset(barX, staffTop + staffLineGap * 6),
+        Offset(barX, staffTop - lineGap * 2),
+        Offset(barX, staffTop + lineGap * 6),
         Paint()
           ..color = AppColors.notesFg
-          ..strokeWidth = 3,
+          ..strokeWidth = lineGap * 0.3,
       );
     }
   }
@@ -192,6 +202,7 @@ class TempoStaffLinePainter extends CustomPainter {
       old.barFraction != barFraction ||
       old.clef != clef ||
       old.lineColor != lineColor ||
+      old.lineGap != lineGap ||
       !listEquals(old.noteSteps, noteSteps) ||
       !listEquals(old.noteColors, noteColors) ||
       !listEquals(old.noteScales, noteScales) ||

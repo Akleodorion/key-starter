@@ -68,16 +68,18 @@ class _TempoRunningViewState extends ConsumerState<TempoRunningView>
           ),
         ),
         const SizedBox(height: 12),
-        TempoStaffCard(
-          noteSteps: widget.running.noteSteps,
-          noteStates: widget.running.noteStates,
-          clef: widget.config.settings.clef,
-          topLine: timeline.topLineAt(elapsed),
-          barLine: barLine,
-          barFraction: barFraction,
-          countInBeat: timeline.countInBeatAt(elapsed),
+        Expanded(
+          child: TempoStaffCard(
+            noteSteps: widget.running.noteSteps,
+            noteStates: widget.running.noteStates,
+            clef: widget.config.settings.clef,
+            topLine: timeline.topLineAt(elapsed),
+            barLine: barLine,
+            barFraction: barFraction,
+            countInBeat: timeline.countInBeatAt(elapsed),
+          ),
         ),
-        const Spacer(),
+        const SizedBox(height: 12),
         Align(
           alignment: Alignment.centerRight,
           child: TempoAnswerButtons(config: widget.config),
