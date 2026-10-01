@@ -8,6 +8,9 @@ import 'package:key_starter/features/note_recognition/presentation/providers/not
 import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_state.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
+
+import '../../../../core/input/fake_input_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -383,6 +386,129 @@ void main() {
 
           //assert — le test échoue d'office si un minuteur touche un notifier détruit
         });
+      });
+    });
+  });
+
+  group('TempoExerciseNotifier — source d\'entrée', () {
+    test('situe une note de la source à son attaque, pas à sa réception', () {
+      fakeAsync((async) {
+        //arrange
+        final startTime = DateTime(2026, 9, 26);
+        final inputSource = FakeInputSource();
+        final container = ProviderContainer(
+          overrides: [
+            inputSourceProvider.overrideWithValue(inputSource),
+            tempoExerciseProvider(config).overrideWith(
+              () => TempoExerciseNotifier(
+                config,
+                now: () => startTime.add(async.elapsed),
+              ),
+            ),
+          ],
+        );
+        container.listen(tempoExerciseProvider(config), (_, _) {});
+        final firstStep = readRunning(container).noteSteps.first;
+        elapseUntil(async, noteTime(0) + const Duration(milliseconds: 200));
+
+        //act
+        inputSource.play(
+          midiFromDiatonicStep(firstStep),
+          attackTime: startTime.add(noteTime(0)),
+        );
+        final firstNoteState = readRunning(container).noteStates.first;
+
+        //assert
+        expect(firstNoteState, NoteState.correct);
+        container.dispose();
+        async.flushTimers();
+      });
+    });
+
+    test('ne déclare aucune cible : l\'exercice est réservé au MIDI', () {
+      fakeAsync((async) {
+        //arrange
+        final inputSource = FakeInputSource();
+        final container = ProviderContainer(
+          overrides: [inputSourceProvider.overrideWithValue(inputSource)],
+        );
+
+        //act
+        container.listen(tempoExerciseProvider(config), (_, _) {});
+
+        //assert
+        expect(inputSource.listenedTargets, isEmpty);
+        container.dispose();
+        async.flushTimers();
+      });
+    });
+  });
+
+  group('TempoExerciseNotifier — pause', () {
+    test('fige le temps de jeu pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, const Duration(seconds: 1));
+
+        //act
+        sut.pause();
+        async.elapse(const Duration(seconds: 3));
+
+        //assert
+        expect(sut.elapsed, const Duration(seconds: 1));
+        expect(sut.isPaused, isTrue);
+      });
+    });
+
+    test('ne ferme aucune fenêtre pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, noteTime(0));
+
+        //act
+        sut.pause();
+        async.elapse(const Duration(seconds: 5));
+
+        //assert
+        expect(readRunning(container).noteStates.first, NoteState.idle);
+      });
+    });
+
+    test('ignore les notes jouées pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, noteTime(0));
+        sut.pause();
+
+        //act
+        playNoteCorrectly(container, 0);
+
+        //assert
+        expect(readRunning(container).noteStates.first, NoteState.idle);
+      });
+    });
+
+    test('reprend la chronologie là où elle s\'était arrêtée', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, noteTime(0));
+        sut.pause();
+        async.elapse(const Duration(seconds: 5));
+
+        //act
+        sut.resume();
+        playNoteCorrectly(container, 0);
+        async.elapse(const Duration(milliseconds: 1300));
+
+        //assert
+        final noteStates = readRunning(container).noteStates;
+        expect(noteStates[0], NoteState.correct);
+        expect(noteStates[1], NoteState.wrong);
+        expect(sut.isPaused, isFalse);
       });
     });
   });

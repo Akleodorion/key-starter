@@ -4,6 +4,8 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   device_manager
+  permission_handler_windows
+  record_windows
   universal_ble
 )
 

@@ -7,6 +7,9 @@ import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_state.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
+
+import '../../../../core/input/fake_input_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -355,6 +358,77 @@ void main() {
           expect(readBlackKeysState().noteState, NoteState.wrong);
         });
       });
+    });
+  });
+
+  group('SimpleNoteExerciseNotifier — source d\'entrée', () {
+    late FakeInputSource inputSource;
+    late ProviderContainer sourceContainer;
+
+    setUp(() {
+      inputSource = FakeInputSource();
+      sourceContainer = ProviderContainer(
+        overrides: [inputSourceProvider.overrideWithValue(inputSource)],
+      );
+      sourceContainer.listen(simpleNoteExerciseProvider(config), (_, _) {});
+    });
+
+    tearDown(() => sourceContainer.dispose());
+
+    SimpleNoteExerciseRunning readSourceRunningState() =>
+        sourceContainer.read(simpleNoteExerciseProvider(config))
+            as SimpleNoteExerciseRunning;
+
+    test('déclare comme cibles toutes les octaves de la note attendue', () {
+      //arrange
+      final running = readSourceRunningState();
+
+      //act
+      final listenedTargets = inputSource.listenedTargets;
+
+      //assert
+      expect(listenedTargets, [
+        pianoMidiNumbersOfPitchClass(running.currentPitchClass),
+      ]);
+    });
+
+    test('déclare la cible suivante après le retour visuel', () async {
+      //arrange
+      final firstPitchClass = readSourceRunningState().currentPitchClass;
+      inputSource.play(midiInOctave(firstPitchClass, 4));
+
+      //act
+      await waitForNextNote();
+
+      //assert
+      expect(inputSource.listenedTargets, [
+        pianoMidiNumbersOfPitchClass(firstPitchClass),
+        pianoMidiNumbersOfPitchClass(
+          readSourceRunningState().currentPitchClass,
+        ),
+      ]);
+    });
+
+    test('valide une note jouée sur la source d\'entrée, octave libre', () {
+      //arrange
+      final pitchClass = readSourceRunningState().currentPitchClass;
+
+      //act
+      inputSource.play(midiInOctave(pitchClass, 2));
+
+      //assert
+      expect(readSourceRunningState().noteState, NoteState.correct);
+    });
+
+    test('ignore les notes relâchées', () {
+      //arrange
+      final pitchClass = readSourceRunningState().currentPitchClass;
+
+      //act
+      inputSource.release(midiInOctave(pitchClass, 4));
+
+      //assert
+      expect(readSourceRunningState().noteState, NoteState.idle);
     });
   });
 }

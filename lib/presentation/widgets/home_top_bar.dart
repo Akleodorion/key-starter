@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:key_starter/core/widgets/midi_pill.dart';
+import 'package:key_starter/core/widgets/input_source_pill.dart';
 import 'package:key_starter/core/widgets/primary_icon_button.dart';
 import 'package:key_starter/presentation/pages/settings_page.dart';
 import 'package:key_starter/presentation/widgets/app_brand.dart';
@@ -18,7 +18,7 @@ class HomeTopBar extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const MidiPill(),
+            const InputSourcePill(),
             const SizedBox(width: 8),
             PrimaryIconButton(
               icon: Icons.tune_rounded,

@@ -9,6 +9,8 @@ import 'package:key_starter/injection_container.dart';
 import 'package:key_starter/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'connected_midi_keyboard.dart';
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -60,7 +62,12 @@ Future<void> _startSimpleChordExerciseWithTenChords(WidgetTester tester) async {
   }
   SharedPreferences.setMockInitialValues({});
   await initDependencies();
-  await tester.pumpWidget(const ProviderScope(child: KeyStarterApp()));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: connectedMidiKeyboardOverrides,
+      child: const KeyStarterApp(),
+    ),
+  );
   await tester.pumpAndSettle();
 
   //act - Accueil -> Accords

@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/input/input_event.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_exercise_state.dart';
@@ -41,11 +42,12 @@ class ChordFlashcardExerciseNotifier
 
   @override
   ChordFlashcardExerciseState build() {
-    final subscription = MidiCommand().onMidiDataReceived?.listen(
-      _onMidiPacket,
-    );
+    final subscription = ref
+        .read(inputSourceProvider)
+        .events
+        .listen(_onInputEvent);
     ref.onDispose(() {
-      subscription?.cancel();
+      subscription.cancel();
       _detectionTimer?.cancel();
       _advanceTimer?.cancel();
     });
@@ -58,21 +60,12 @@ class ChordFlashcardExerciseNotifier
     );
   }
 
-  void _onMidiPacket(MidiPacket packet) {
-    final data = packet.data;
-    if (data.length < 3) return;
-
-    final status = data[0] & 0xF0;
-    final midiNumber = data[1];
-    final velocity = data[2];
-
-    final isNoteOn = status == 0x90 && velocity > 0;
-    final isNoteOff = status == 0x80 || (status == 0x90 && velocity == 0);
-
-    if (isNoteOn) {
-      _onNoteOn(midiNumber);
-    } else if (isNoteOff) {
-      _onNoteOff(midiNumber);
+  void _onInputEvent(InputEvent event) {
+    switch (event) {
+      case NotePlayed(:final midiNumber):
+        _onNoteOn(midiNumber);
+      case NoteReleased(:final midiNumber):
+        _onNoteOff(midiNumber);
     }
   }
 

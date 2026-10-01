@@ -41,3 +41,17 @@ int? diatonicStepFromMidi(int midiNumber) {
   if (noteIndex == -1) return null;
   return (octave - 4) * 7 + noteIndex;
 }
+
+/// Lowest and highest MIDI numbers of an 88-key piano (A0, C8).
+const int pianoLowestMidi = 21;
+const int pianoHighestMidi = 108;
+
+/// Every MIDI number of the piano keyboard sharing this pitch class (0–11).
+Set<int> pianoMidiNumbersOfPitchClass(int pitchClass) => {
+  for (
+    var midiNumber = pianoLowestMidi;
+    midiNumber <= pianoHighestMidi;
+    midiNumber++
+  )
+    if (midiNumber % 12 == pitchClass) midiNumber,
+};
