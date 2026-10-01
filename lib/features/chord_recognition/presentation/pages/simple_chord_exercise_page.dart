@@ -3,15 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/widgets/midi_only_exercise_frame.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_config.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_notifier.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_state.dart';
 import 'package:key_starter/features/chord_recognition/presentation/widgets/simple_chord_running_view.dart';
 import 'package:key_starter/features/session/presentation/pages/recap_page.dart';
 
 class SimpleChordExercisePage extends ConsumerStatefulWidget {
-  final int chordCount;
+  final SimpleChordExerciseConfig config;
 
-  const SimpleChordExercisePage({super.key, required this.chordCount});
+  const SimpleChordExercisePage({super.key, required this.config});
 
   @override
   ConsumerState<SimpleChordExercisePage> createState() =>
@@ -42,24 +43,26 @@ class _SimpleChordExercisePageState
   @override
   Widget build(BuildContext context) {
     final colors = AppColorTheme.of(context);
-    final chordCount = widget.chordCount;
-    final exerciseState = ref.watch(simpleChordExerciseProvider(chordCount));
+    final config = widget.config;
+    final exerciseState = ref.watch(simpleChordExerciseProvider(config));
 
-    ref.listen(simpleChordExerciseProvider(chordCount), (_, next) {
+    ref.listen(simpleChordExerciseProvider(config), (_, next) {
       if (next is! SimpleChordExerciseCompleted || !mounted) return;
       _handingOffToRecap = true;
       final navigator = Navigator.of(context);
       navigator.pushReplacement(
         MaterialPageRoute(
           builder: (_) => RecapPage(
-            exerciseLabel: 'Lecture · accords simples',
+            exerciseLabel: config.isInversionPractice
+                ? 'Lecture · renversements simples'
+                : 'Lecture · accords simples',
             correctCount: next.correctCount,
             totalNotes: next.totalChords,
             avgResponseMs: next.avgResponseMs,
             bestStreak: next.bestStreak,
             onRetry: () => navigator.pushReplacement(
               MaterialPageRoute(
-                builder: (_) => SimpleChordExercisePage(chordCount: chordCount),
+                builder: (_) => SimpleChordExercisePage(config: config),
               ),
             ),
           ),
@@ -76,7 +79,7 @@ class _SimpleChordExercisePageState
             child: switch (exerciseState) {
               SimpleChordExerciseRunning() => SimpleChordRunningView(
                 running: exerciseState,
-                chordCount: chordCount,
+                config: config,
               ),
               SimpleChordExerciseCompleted() => const SizedBox.shrink(),
             },

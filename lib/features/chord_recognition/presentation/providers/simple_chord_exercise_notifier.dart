@@ -1,18 +1,21 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/input/input_event.dart';
 import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
+import 'package:key_starter/features/chord_recognition/domain/entities/chord_prompt.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_config.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_state.dart';
 
 final simpleChordExerciseProvider = NotifierProvider.autoDispose
-    .family<SimpleChordExerciseNotifier, SimpleChordExerciseState, int>(
-      (chordCount) => SimpleChordExerciseNotifier(chordCount),
-    );
+    .family<
+      SimpleChordExerciseNotifier,
+      SimpleChordExerciseState,
+      SimpleChordExerciseConfig
+    >((config) => SimpleChordExerciseNotifier(config));
 
 /// Durée de la fenêtre de regroupement des Note On MIDI : le protocole MIDI
 /// n'a pas de message "accord" natif.
@@ -21,7 +24,7 @@ const _detectionWindow = Duration(milliseconds: 100);
 class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
   static const feedbackDuration = Duration(milliseconds: 500);
 
-  final int _chordCount;
+  final SimpleChordExerciseConfig _config;
   final DateTime Function() _now;
   late DateTime _chordShownAt;
   final List<int> _responseTimesMs = [];
@@ -32,7 +35,7 @@ class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
   int _currentStreak = 0;
   int _bestStreak = 0;
 
-  SimpleChordExerciseNotifier(this._chordCount, {DateTime Function()? now})
+  SimpleChordExerciseNotifier(this._config, {DateTime Function()? now})
     : _now = now ?? DateTime.now;
 
   @override
@@ -48,21 +51,29 @@ class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
     });
     _chordShownAt = _now();
     return SimpleChordExerciseRunning(
-      rootIndexes: _generateRootIndexes(),
+      chords: _generateChords(),
       currentIndex: 0,
       noteState: NoteState.idle,
     );
   }
 
-  List<int> _generateRootIndexes() {
+  /// Tire les consignes parmi toutes les fondamentales et les positions
+  /// choisies, sans jamais répéter deux fois de suite la même consigne.
+  List<ChordPrompt> _generateChords() {
     final random = Random();
-    final noteNameCount = noteNamesFr.length;
-    final rootIndexes = [random.nextInt(noteNameCount)];
-    while (rootIndexes.length < _chordCount) {
-      final offsetFromPrevious = 1 + random.nextInt(noteNameCount - 1);
-      rootIndexes.add((rootIndexes.last + offsetFromPrevious) % noteNameCount);
+    final candidates = [
+      for (final inversion in _config.inversions)
+        for (var rootIndex = 0; rootIndex < noteNamesFr.length; rootIndex++)
+          ChordPrompt(rootIndex: rootIndex, inversion: inversion),
+    ];
+    final candidateIndexes = [random.nextInt(candidates.length)];
+    while (candidateIndexes.length < _config.chordCount) {
+      final offsetFromPrevious = 1 + random.nextInt(candidates.length - 1);
+      candidateIndexes.add(
+        (candidateIndexes.last + offsetFromPrevious) % candidates.length,
+      );
     }
-    return rootIndexes;
+    return [for (final index in candidateIndexes) candidates[index]];
   }
 
   void _onInputEvent(InputEvent event) {
@@ -95,10 +106,7 @@ class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
     final playedMidiNumbers = _pendingMidiNumbers.toList()..sort();
     _pendingMidiNumbers.clear();
 
-    final isCorrect = _isRootPosition(
-      playedMidiNumbers,
-      currentState.currentRootIndex,
-    );
+    final isCorrect = currentState.currentChord.isPlayedBy(playedMidiNumbers);
 
     if (isCorrect) {
       _correctCount++;
@@ -121,10 +129,10 @@ class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
     if (currentState is! SimpleChordExerciseRunning) return;
 
     final nextIndex = currentState.currentIndex + 1;
-    if (nextIndex >= currentState.rootIndexes.length) {
+    if (nextIndex >= currentState.chords.length) {
       state = SimpleChordExerciseCompleted(
         correctCount: _correctCount,
-        totalChords: currentState.rootIndexes.length,
+        totalChords: currentState.chords.length,
         bestStreak: _bestStreak,
         avgResponseMs:
             _responseTimesMs.reduce((total, time) => total + time) ~/
@@ -139,25 +147,5 @@ class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
       noteState: NoteState.idle,
       playedMidiNumbers: const [],
     );
-  }
-
-  bool _isRootPosition(List<int> sortedMidiNumbers, int rootIndex) {
-    final lowestMidiNumber = sortedMidiNumbers.first;
-    if (lowestMidiNumber % 12 != diatonicSemitones[rootIndex]) return false;
-
-    int semitonesAboveRoot(int degreesAboveRoot) {
-      final degree = rootIndex + degreesAboveRoot;
-      final noteNameCount = diatonicSemitones.length;
-      return diatonicSemitones[degree % noteNameCount] +
-          12 * (degree ~/ noteNameCount) -
-          diatonicSemitones[rootIndex];
-    }
-
-    final expectedMidiNumbers = [
-      lowestMidiNumber,
-      lowestMidiNumber + semitonesAboveRoot(2),
-      lowestMidiNumber + semitonesAboveRoot(4),
-    ];
-    return listEquals(sortedMidiNumbers, expectedMidiNumbers);
   }
 }

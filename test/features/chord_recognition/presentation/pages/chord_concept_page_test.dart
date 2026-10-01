@@ -43,8 +43,35 @@ void main() {
           .widgetList<EntryCard>(find.byType(EntryCard))
           .map((card) => card.entry.title)
           .toList();
-      expect(exerciseTitles, ['Accords simples', 'Flashcard', 'Tempo']);
+      expect(exerciseTitles, [
+        'Accords simples',
+        'Flashcard',
+        'Tempo',
+        'Renversements simples',
+      ]);
     });
+
+    testWidgets(
+      'range les exercices sous "État fondamental" puis "Renversements"',
+      (tester) async {
+        //act
+        await pumpChordConceptPage(tester);
+
+        //assert
+        final rootPositionTop = tester
+            .getTopLeft(find.text('ÉTAT FONDAMENTAL'))
+            .dy;
+        final inversionsTop = tester.getTopLeft(find.text('RENVERSEMENTS')).dy;
+        expect(
+          tester.getTopLeft(find.text('Tempo')).dy,
+          inInclusiveRange(rootPositionTop, inversionsTop),
+        );
+        expect(
+          tester.getTopLeft(find.text('Renversements simples')).dy,
+          greaterThan(inversionsTop),
+        );
+      },
+    );
 
     testWidgets('ouvre les réglages de Tempo quand on tape sur "Tempo"', (
       tester,

@@ -6,15 +6,16 @@ class SegmentedPicker<T> extends StatelessWidget {
   final List<(T, String)> options;
   final T selected;
   final ValueChanged<T> onChanged;
+  final double segmentWidth;
 
   const SegmentedPicker({
     super.key,
     required this.options,
     required this.selected,
     required this.onChanged,
+    this.segmentWidth = 56.0,
   });
 
-  static const double _segmentWidth = 56.0;
   static const double _padding = 3.0;
 
   @override
@@ -32,10 +33,10 @@ class SegmentedPicker<T> extends StatelessWidget {
           AnimatedPositioned(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            left: _padding + selectedIndex * _segmentWidth,
+            left: _padding + selectedIndex * segmentWidth,
             top: _padding,
             bottom: _padding,
-            width: _segmentWidth,
+            width: segmentWidth,
             child: Container(
               decoration: BoxDecoration(
                 color: colors.surface,
@@ -61,7 +62,7 @@ class SegmentedPicker<T> extends StatelessWidget {
                   onTap: () => onChanged(value),
                   behavior: HitTestBehavior.opaque,
                   child: SizedBox(
-                    width: _segmentWidth,
+                    width: segmentWidth,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Center(
@@ -69,7 +70,9 @@ class SegmentedPicker<T> extends StatelessWidget {
                           duration: const Duration(milliseconds: 150),
                           style: AppTextStyles.ui(
                             size: 13,
-                            weight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                            weight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
                             color: isSelected ? colors.text : colors.text2,
                           ),
                           child: Text(label),

@@ -1,31 +1,32 @@
 import 'package:equatable/equatable.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/features/chord_recognition/domain/entities/chord_prompt.dart';
 
 sealed class SimpleChordExerciseState extends Equatable {
   const SimpleChordExerciseState();
 }
 
 class SimpleChordExerciseRunning extends SimpleChordExerciseState {
-  final List<int> rootIndexes;
+  final List<ChordPrompt> chords;
   final int currentIndex;
   final NoteState noteState;
   final List<int> playedMidiNumbers;
 
   const SimpleChordExerciseRunning({
-    required this.rootIndexes,
+    required this.chords,
     required this.currentIndex,
     required this.noteState,
     this.playedMidiNumbers = const [],
   });
 
-  int get currentRootIndex => rootIndexes[currentIndex];
+  ChordPrompt get currentChord => chords[currentIndex];
 
   SimpleChordExerciseRunning copyWith({
     int? currentIndex,
     NoteState? noteState,
     List<int>? playedMidiNumbers,
   }) => SimpleChordExerciseRunning(
-    rootIndexes: rootIndexes,
+    chords: chords,
     currentIndex: currentIndex ?? this.currentIndex,
     noteState: noteState ?? this.noteState,
     playedMidiNumbers: playedMidiNumbers ?? this.playedMidiNumbers,
@@ -33,7 +34,7 @@ class SimpleChordExerciseRunning extends SimpleChordExerciseState {
 
   @override
   List<Object?> get props => [
-    rootIndexes,
+    chords,
     currentIndex,
     noteState,
     playedMidiNumbers,
