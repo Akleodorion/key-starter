@@ -20,6 +20,9 @@ class MidiInputSource implements InputSource {
   @override
   void listenFor(Set<int> candidateMidiNumbers) {}
 
+  @override
+  void stopListening() {}
+
   /// Un message de note fait 3 octets : [statut, numéro, vélocité]. Un Note On
   /// de vélocité 0 est un Note Off.
   Iterable<InputEvent> _eventsFromPacket(MidiPacket packet) sync* {

@@ -46,6 +46,7 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
     final subscription = _inputSource.events.listen(_onInputEvent);
     ref.onDispose(() {
       subscription.cancel();
+      _inputSource.stopListening();
       _advanceTimer?.cancel();
     });
     final pitchClasses = _generatePitchClasses();
