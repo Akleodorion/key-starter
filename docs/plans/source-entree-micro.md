@@ -53,7 +53,7 @@ Deux PR successives, chacune partie de `master`.
 
 ### 2. Tests de l'analyse
 - **Signaux synthétiques générés dans les tests** : partiels avec inharmonicité ; bonne note ; mauvaise note ; mauvaise octave ; bruit seul ; volume sous -55 dB ; attaque puis résonance (la résonance d'une cible ne valide pas une seconde fois) ; plusieurs candidats.
-- **Fixtures WAV du synthé** dans `test/fixtures/audio/`. ⚠️ **Christian doit les enregistrer** : 5-6 notes (par exemple C3, C4, A4, E5, C6), plus une mauvaise octave, au téléphone, en PCM16 mono 44,1 kHz. Le lecteur WAV du banc devient un helper de test.
+- **Pas de fixtures WAV** : la détection a déjà été validée en direct sur le synthé de Christian. Les tests automatisés reposent uniquement sur des signaux synthétiques.
 
 ### 3. `MicrophoneInputSource`
 - **Capture** : `record` (`startStream`, pcm16, 44,1 kHz, mono, `autoGain`/`echoCancel`/`noiseSuppress` désactivés), puis conversion Int16 → double.
