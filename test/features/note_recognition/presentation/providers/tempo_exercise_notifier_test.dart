@@ -443,4 +443,73 @@ void main() {
       });
     });
   });
+
+  group('TempoExerciseNotifier — pause', () {
+    test('fige le temps de jeu pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, const Duration(seconds: 1));
+
+        //act
+        sut.pause();
+        async.elapse(const Duration(seconds: 3));
+
+        //assert
+        expect(sut.elapsed, const Duration(seconds: 1));
+        expect(sut.isPaused, isTrue);
+      });
+    });
+
+    test('ne ferme aucune fenêtre pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, noteTime(0));
+
+        //act
+        sut.pause();
+        async.elapse(const Duration(seconds: 5));
+
+        //assert
+        expect(readRunning(container).noteStates.first, NoteState.idle);
+      });
+    });
+
+    test('ignore les notes jouées pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, noteTime(0));
+        sut.pause();
+
+        //act
+        playNoteCorrectly(container, 0);
+
+        //assert
+        expect(readRunning(container).noteStates.first, NoteState.idle);
+      });
+    });
+
+    test('reprend la chronologie là où elle s\'était arrêtée', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = container.read(tempoExerciseProvider(config).notifier);
+        elapseUntil(async, noteTime(0));
+        sut.pause();
+        async.elapse(const Duration(seconds: 5));
+
+        //act
+        sut.resume();
+        playNoteCorrectly(container, 0);
+        async.elapse(const Duration(milliseconds: 1300));
+
+        //assert
+        final noteStates = readRunning(container).noteStates;
+        expect(noteStates[0], NoteState.correct);
+        expect(noteStates[1], NoteState.wrong);
+        expect(sut.isPaused, isFalse);
+      });
+    });
+  });
 }

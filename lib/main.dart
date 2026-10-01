@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/providers/theme_provider.dart';
 import 'package:key_starter/core/theme/app_theme.dart';
 import 'package:key_starter/injection_container.dart';
@@ -11,11 +12,27 @@ void main() async {
   runApp(const ProviderScope(child: KeyStarterApp()));
 }
 
-class KeyStarterApp extends ConsumerWidget {
+class KeyStarterApp extends ConsumerStatefulWidget {
   const KeyStarterApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<KeyStarterApp> createState() => _KeyStarterAppState();
+}
+
+class _KeyStarterAppState extends ConsumerState<KeyStarterApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Le micro sert de repli sans clavier MIDI : on le demande dès le premier
+    // lancement, une seule fois.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) =>
+          ref.read(microphonePermissionProvider.notifier).requestOnFirstLaunch(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Key Starter',
       debugShowCheckedModeBanner: false,

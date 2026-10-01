@@ -38,6 +38,7 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
     final subscription = _inputSource.events.listen(_onInputEvent);
     ref.onDispose(() {
       subscription.cancel();
+      _inputSource.stopListening();
       _advanceTimer?.cancel();
     });
 
