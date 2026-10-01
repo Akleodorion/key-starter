@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/input/input_event.dart';
+import 'package:key_starter/core/input/input_source.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/defilement_exercise_state.dart';
@@ -25,43 +27,40 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
   final List<int> _responseTimes = [];
   int? _lastPlayedMidiNumber;
   bool _awaitingNoteRelease = false;
+  late final InputSource _inputSource;
   Timer? _advanceTimer;
 
   DefilementExerciseNotifier(this._settings);
 
   @override
   DefilementExerciseState build() {
-    final subscription = MidiCommand().onMidiDataReceived?.listen(
-      _onMidiPacket,
-    );
+    _inputSource = ref.read(inputSourceProvider);
+    final subscription = _inputSource.events.listen(_onInputEvent);
     ref.onDispose(() {
-      subscription?.cancel();
+      subscription.cancel();
       _advanceTimer?.cancel();
     });
 
-    _noteStartMs = DateTime.now().millisecondsSinceEpoch;
+    final noteSteps = _generateSteps();
+    _showNote(noteSteps.first);
     return DefilementExerciseRunning(
-      noteSteps: _generateSteps(),
+      noteSteps: noteSteps,
       currentIndex: 0,
       noteState: NoteState.idle,
     );
   }
 
-  void _onMidiPacket(MidiPacket packet) {
-    final data = packet.data;
-    if (data.length < 3) return;
+  void _showNote(int step) {
+    _noteStartMs = DateTime.now().millisecondsSinceEpoch;
+    _inputSource.listenFor({midiFromDiatonicStep(step)});
+  }
 
-    final status = data[0] & 0xF0;
-    final midiNumber = data[1];
-    final velocity = data[2];
-
-    final isNoteOn = status == 0x90 && velocity > 0;
-    final isNoteOff = status == 0x80 || (status == 0x90 && velocity == 0);
-
-    if (isNoteOn) {
-      _onMidiReceived(midiNumber);
-    } else if (isNoteOff) {
-      _onMidiNoteOff(midiNumber);
+  void _onInputEvent(InputEvent event) {
+    switch (event) {
+      case NotePlayed(:final midiNumber, :final attackTime):
+        _onNotePlayed(midiNumber, attackTime);
+      case NoteReleased(:final midiNumber):
+        _onNoteReleased(midiNumber);
     }
   }
 
@@ -74,13 +73,13 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
     );
   }
 
-  void _onMidiNoteOff(int midiNumber) {
+  void _onNoteReleased(int midiNumber) {
     if (_awaitingNoteRelease && midiNumber == _lastPlayedMidiNumber) {
       _awaitingNoteRelease = false;
     }
   }
 
-  void _onMidiReceived(int midiNumber) {
+  void _onNotePlayed(int midiNumber, DateTime playedAt) {
     final currentState = state;
     if (currentState is! DefilementExerciseRunning) return;
     if (currentState.noteState != NoteState.idle) return;
@@ -95,7 +94,7 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
         playedStep == currentState.noteSteps[nextIndex];
 
     final responseMs = _noteStartMs != null
-        ? DateTime.now().millisecondsSinceEpoch - _noteStartMs!
+        ? playedAt.millisecondsSinceEpoch - _noteStartMs!
         : 0;
     _responseTimes.add(responseMs);
 
@@ -119,7 +118,7 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
 
   void simulateMidi(int midiNumber) {
     _awaitingNoteRelease = false;
-    _onMidiReceived(midiNumber);
+    _onNotePlayed(midiNumber, DateTime.now());
   }
 
   void _advance() {
@@ -137,7 +136,7 @@ class DefilementExerciseNotifier extends Notifier<DefilementExerciseState> {
         bestStreak: _bestStreak,
       );
     } else {
-      _noteStartMs = DateTime.now().millisecondsSinceEpoch;
+      _showNote(currentState.noteSteps[nextIndex]);
       state = DefilementExerciseRunning(
         noteSteps: currentState.noteSteps,
         currentIndex: nextIndex,

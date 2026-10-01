@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/input/input_event.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_state.dart';
 
@@ -36,11 +37,12 @@ class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
 
   @override
   SimpleChordExerciseState build() {
-    final subscription = MidiCommand().onMidiDataReceived?.listen(
-      _onMidiPacket,
-    );
+    final subscription = ref
+        .read(inputSourceProvider)
+        .events
+        .listen(_onInputEvent);
     ref.onDispose(() {
-      subscription?.cancel();
+      subscription.cancel();
       _detectionTimer?.cancel();
       _advanceTimer?.cancel();
     });
@@ -63,13 +65,8 @@ class SimpleChordExerciseNotifier extends Notifier<SimpleChordExerciseState> {
     return rootIndexes;
   }
 
-  void _onMidiPacket(MidiPacket packet) {
-    final data = packet.data;
-    if (data.length < 3) return;
-
-    final status = data[0] & 0xF0;
-    final isNoteOn = status == 0x90 && data[2] > 0;
-    if (isNoteOn) _onNoteOn(data[1]);
+  void _onInputEvent(InputEvent event) {
+    if (event is NotePlayed) _onNoteOn(event.midiNumber);
   }
 
   void simulateMidi(List<int> midiNumbers) {

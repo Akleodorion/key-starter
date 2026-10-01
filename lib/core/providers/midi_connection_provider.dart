@@ -1,11 +1,11 @@
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:key_starter/core/providers/midi_command_provider.dart';
 
 /// Émet le nom du premier équipement MIDI connecté, ou null si aucun.
 /// Se connecte automatiquement aux appareils disponibles et se met à jour
 /// à chaque changement de configuration MIDI.
 final midiConnectionProvider = StreamProvider<String?>((ref) async* {
-  final midi = MidiCommand();
+  final midi = ref.watch(midiCommandProvider);
 
   Future<String?> connectAndGetName() async {
     final devices = await midi.devices ?? [];

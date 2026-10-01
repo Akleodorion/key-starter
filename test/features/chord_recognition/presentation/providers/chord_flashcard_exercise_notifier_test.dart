@@ -8,6 +8,9 @@ import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_exercise_notifier.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_flashcard_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
+
+import '../../../../core/input/fake_input_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -78,6 +81,42 @@ void main() {
           //assert — le test échoue d'office si le délai touche un notifier détruit
         },
       );
+    });
+  });
+
+  group('ChordFlashcardExerciseNotifier — source d\'entrée', () {
+    test('exige de relâcher l\'accord avant d\'accepter le suivant', () {
+      fakeAsync((async) {
+        //arrange
+        final inputSource = FakeInputSource();
+        final container = ProviderContainer(
+          overrides: [inputSourceProvider.overrideWithValue(inputSource)],
+        );
+        addTearDown(container.dispose);
+        container.listen(chordFlashcardExerciseProvider(settings), (_, _) {});
+        ChordFlashcardExerciseRunning readRunning() =>
+            container.read(chordFlashcardExerciseProvider(settings))
+                as ChordFlashcardExerciseRunning;
+        List<int> currentChordMidiNumbers() =>
+            readRunning().currentChord.map(midiFromDiatonicStep).toList();
+        final firstChord = currentChordMidiNumbers();
+        firstChord.forEach(inputSource.play);
+        async.elapse(const Duration(milliseconds: 100) + noteAdvanceDelay);
+
+        //act
+        currentChordMidiNumbers().forEach(inputSource.play);
+        async.elapse(const Duration(milliseconds: 100));
+        final stateWhileHeld = readRunning();
+        firstChord.forEach(inputSource.release);
+        currentChordMidiNumbers().forEach(inputSource.play);
+        async.elapse(const Duration(milliseconds: 100));
+        final stateAfterRelease = readRunning();
+
+        //assert
+        expect(stateWhileHeld.currentIndex, 1);
+        expect(stateWhileHeld.noteState, NoteState.idle);
+        expect(stateAfterRelease.noteState, NoteState.correct);
+      });
     });
   });
 }

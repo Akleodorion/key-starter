@@ -3,6 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_notifier.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_state.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
+
+import '../../../../core/input/fake_input_source.dart';
 
 /// Triades diatoniques de Do majeur à l'état fondamental, octave 4 (Do4 = 60).
 const _rootPositionChordsInOctave4 = [
@@ -262,6 +265,36 @@ void main() {
           expect(completed.avgResponseMs, 800);
         },
       );
+    });
+  });
+
+  group('SimpleChordExerciseNotifier — source d\'entrée', () {
+    test('regroupe les notes de la source en un accord', () async {
+      //arrange
+      final inputSource = FakeInputSource();
+      final sourceContainer = ProviderContainer(
+        overrides: [inputSourceProvider.overrideWithValue(inputSource)],
+      );
+      addTearDown(sourceContainer.dispose);
+      sourceContainer.listen(
+        simpleChordExerciseProvider(chordCount),
+        (_, _) {},
+      );
+      final running =
+          sourceContainer.read(simpleChordExerciseProvider(chordCount))
+              as SimpleChordExerciseRunning;
+
+      //act
+      _rootPositionChordsInOctave4[running.currentRootIndex].forEach(
+        inputSource.play,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      final playedState =
+          sourceContainer.read(simpleChordExerciseProvider(chordCount))
+              as SimpleChordExerciseRunning;
+
+      //assert
+      expect(playedState.noteState, NoteState.correct);
     });
   });
 }

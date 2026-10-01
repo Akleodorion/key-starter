@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/input/input_event.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/note_recognition/domain/entities/tempo_timeline.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_config.dart';
@@ -57,11 +58,12 @@ class TempoExerciseNotifier extends Notifier<TempoExerciseState> {
 
   @override
   TempoExerciseState build() {
-    final subscription = MidiCommand().onMidiDataReceived?.listen(
-      _onMidiPacket,
-    );
+    final subscription = ref
+        .read(inputSourceProvider)
+        .events
+        .listen(_onInputEvent);
     ref.onDispose(() {
-      subscription?.cancel();
+      subscription.cancel();
       _windowCloseTimer?.cancel();
     });
 
@@ -74,13 +76,12 @@ class TempoExerciseNotifier extends Notifier<TempoExerciseState> {
     );
   }
 
-  void simulateMidi(int midiNumber) => _onNotePlayed(midiNumber);
+  void simulateMidi(int midiNumber) => _onNotePlayed(midiNumber, elapsed);
 
-  void _onMidiPacket(MidiPacket packet) {
-    final data = packet.data;
-    if (data.length < 3) return;
-    final isNoteOn = data[0] & 0xF0 == 0x90 && data[2] > 0;
-    if (isNoteOn) _onNotePlayed(data[1]);
+  void _onInputEvent(InputEvent event) {
+    if (event is NotePlayed) {
+      _onNotePlayed(event.midiNumber, event.attackTime.difference(_startTime));
+    }
   }
 
   List<int> _generateSteps() {
@@ -92,8 +93,7 @@ class TempoExerciseNotifier extends Notifier<TempoExerciseState> {
     );
   }
 
-  void _onNotePlayed(int midiNumber) {
-    final playedAt = elapsed;
+  void _onNotePlayed(int midiNumber, Duration playedAt) {
     if (timeline.isCountIn(playedAt)) return;
     _closeWindowsBefore(playedAt);
     final currentState = state;

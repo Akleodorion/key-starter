@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/input/input_event.dart';
+import 'package:key_starter/core/input/input_source.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_state.dart';
@@ -23,6 +25,7 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
   final SimpleNoteExerciseConfig _config;
   final DateTime Function() _now;
   final Random _random;
+  late final InputSource _inputSource;
   Timer? _advanceTimer;
   int _correctCount = 0;
   int _currentStreak = 0;
@@ -39,16 +42,16 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
 
   @override
   SimpleNoteExerciseState build() {
-    final subscription = MidiCommand().onMidiDataReceived?.listen(
-      _onMidiPacket,
-    );
+    _inputSource = ref.read(inputSourceProvider);
+    final subscription = _inputSource.events.listen(_onInputEvent);
     ref.onDispose(() {
-      subscription?.cancel();
+      subscription.cancel();
       _advanceTimer?.cancel();
     });
-    _noteShownAt = _now();
+    final pitchClasses = _generatePitchClasses();
+    _showNote(pitchClasses.first);
     return SimpleNoteExerciseRunning(
-      pitchClasses: _generatePitchClasses(),
+      pitchClasses: pitchClasses,
       currentIndex: 0,
       noteState: NoteState.idle,
     );
@@ -72,22 +75,26 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
     ];
   }
 
-  void _onMidiPacket(MidiPacket packet) {
-    final data = packet.data;
-    if (data.length < 3) return;
-
-    final status = data[0] & 0xF0;
-    final isNoteOn = status == 0x90 && data[2] > 0;
-    if (isNoteOn) simulateMidi(data[1]);
+  /// L'octave ne compte pas : toutes les touches de la classe de hauteur sont
+  /// des réponses acceptées.
+  void _showNote(int pitchClass) {
+    _noteShownAt = _now();
+    _inputSource.listenFor(pianoMidiNumbersOfPitchClass(pitchClass));
   }
 
-  void simulateMidi(int midiNumber) {
+  void _onInputEvent(InputEvent event) {
+    if (event is NotePlayed) _onNotePlayed(event.midiNumber, event.attackTime);
+  }
+
+  void simulateMidi(int midiNumber) => _onNotePlayed(midiNumber, _now());
+
+  void _onNotePlayed(int midiNumber, DateTime playedAt) {
     final currentState = state;
     if (currentState is! SimpleNoteExerciseRunning) return;
     if (currentState.noteState != NoteState.idle) return;
 
     final isCorrect = midiNumber % 12 == currentState.currentPitchClass;
-    _responseTimesMs.add(_now().difference(_noteShownAt).inMilliseconds);
+    _responseTimesMs.add(playedAt.difference(_noteShownAt).inMilliseconds);
 
     if (isCorrect) {
       _correctCount++;
@@ -122,7 +129,7 @@ class SimpleNoteExerciseNotifier extends Notifier<SimpleNoteExerciseState> {
       return;
     }
 
-    _noteShownAt = _now();
+    _showNote(currentState.pitchClasses[nextIndex]);
     state = SimpleNoteExerciseRunning(
       pitchClasses: currentState.pitchClasses,
       currentIndex: nextIndex,
