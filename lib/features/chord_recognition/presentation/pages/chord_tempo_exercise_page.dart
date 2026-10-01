@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
+import 'package:key_starter/core/widgets/midi_only_exercise_frame.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_config.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_notifier.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_state.dart';
@@ -68,18 +69,24 @@ class _ChordTempoExercisePageState
       );
     });
 
-    return Scaffold(
-      backgroundColor: colors.bg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: switch (exerciseState) {
-            ChordTempoExerciseRunning() => ChordTempoRunningView(
-              running: exerciseState,
-              config: config,
-            ),
-            ChordTempoExerciseCompleted() => const SizedBox.shrink(),
-          },
+    return MidiOnlyExerciseFrame(
+      onPause: () =>
+          ref.read(chordTempoExerciseProvider(config).notifier).pause(),
+      onResume: () =>
+          ref.read(chordTempoExerciseProvider(config).notifier).resume(),
+      child: Scaffold(
+        backgroundColor: colors.bg,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: switch (exerciseState) {
+              ChordTempoExerciseRunning() => ChordTempoRunningView(
+                running: exerciseState,
+                config: config,
+              ),
+              ChordTempoExerciseCompleted() => const SizedBox.shrink(),
+            },
+          ),
         ),
       ),
     );

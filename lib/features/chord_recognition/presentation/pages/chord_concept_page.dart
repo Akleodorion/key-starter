@@ -47,7 +47,7 @@ class ChordConceptPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                EntryCard(
+                MidiOnlyEntryCard(
                   entry: const ChordTempoExercise(),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const ChordTempoPage()),

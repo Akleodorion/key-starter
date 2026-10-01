@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_config.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_notifier.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_state.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
+
+import '../../../../core/input/fake_input_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -317,6 +320,149 @@ void main() {
 
           //assert — le test échoue d'office si un minuteur touche un notifier détruit
         });
+      });
+    });
+  });
+
+  group('ChordTempoExerciseNotifier — source d\'entrée', () {
+    test('situe un accord de la source à son attaque, pas à sa réception', () {
+      fakeAsync((async) {
+        //arrange
+        final startTime = DateTime(2026, 9, 26);
+        final inputSource = FakeInputSource();
+        final container = ProviderContainer(
+          overrides: [
+            inputSourceProvider.overrideWithValue(inputSource),
+            chordTempoExerciseProvider(config).overrideWith(
+              () => ChordTempoExerciseNotifier(
+                config,
+                now: () => startTime.add(async.elapsed),
+              ),
+            ),
+          ],
+        );
+        container.listen(chordTempoExerciseProvider(config), (_, _) {});
+        final firstChord = readRunning(container).chordSteps.first;
+        elapseUntil(async, chordTime(0) + const Duration(milliseconds: 200));
+
+        //act
+        for (final step in firstChord) {
+          inputSource.play(
+            midiFromDiatonicStep(step),
+            attackTime: startTime.add(chordTime(0)),
+          );
+        }
+        async.elapse(detectionWindow);
+        final firstChordState = readRunning(container).chordStates.first;
+
+        //assert
+        expect(firstChordState, NoteState.correct);
+        container.dispose();
+        async.flushTimers();
+      });
+    });
+
+    test('ne déclare aucune cible : l\'exercice est réservé au MIDI', () {
+      fakeAsync((async) {
+        //arrange
+        final inputSource = FakeInputSource();
+        final container = ProviderContainer(
+          overrides: [inputSourceProvider.overrideWithValue(inputSource)],
+        );
+
+        //act
+        container.listen(chordTempoExerciseProvider(config), (_, _) {});
+
+        //assert
+        expect(inputSource.listenedTargets, isEmpty);
+        container.dispose();
+        async.flushTimers();
+      });
+    });
+  });
+
+  group('ChordTempoExerciseNotifier — pause', () {
+    test('fige le temps de jeu pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = readNotifier(container);
+        elapseUntil(async, const Duration(seconds: 1));
+
+        //act
+        sut.pause();
+        async.elapse(const Duration(seconds: 3));
+
+        //assert
+        expect(sut.elapsed, const Duration(seconds: 1));
+        expect(sut.isPaused, isTrue);
+      });
+    });
+
+    test('ne ferme aucune fenêtre pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = readNotifier(container);
+        elapseUntil(async, chordTime(0));
+
+        //act
+        sut.pause();
+        async.elapse(const Duration(seconds: 5));
+
+        //assert
+        expect(readRunning(container).chordStates.first, NoteState.idle);
+      });
+    });
+
+    test('ignore les accords joués pendant la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = readNotifier(container);
+        elapseUntil(async, chordTime(0));
+        sut.pause();
+
+        //act
+        playChordCorrectly(container, 0);
+        async.elapse(detectionWindow);
+
+        //assert
+        expect(readRunning(container).chordStates.first, NoteState.idle);
+      });
+    });
+
+    test('abandonne l\'accord en cours de regroupement à la pause', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = readNotifier(container);
+        elapseUntil(async, chordTime(0));
+        playChordWrongly(container, 0);
+
+        //act
+        sut.pause();
+        async.elapse(detectionWindow);
+
+        //assert
+        expect(readRunning(container).chordStates.first, NoteState.idle);
+      });
+    });
+
+    test('reprend la chronologie là où elle s\'était arrêtée', () {
+      runExercise((async, container) {
+        //arrange
+        final sut = readNotifier(container);
+        elapseUntil(async, chordTime(0));
+        sut.pause();
+        async.elapse(const Duration(seconds: 5));
+
+        //act
+        sut.resume();
+        playChordCorrectly(container, 0);
+        async.elapse(const Duration(milliseconds: 1300));
+
+        //assert
+        final chordStates = readRunning(container).chordStates;
+        expect(chordStates[0], NoteState.correct);
+        expect(chordStates[1], NoteState.wrong);
+        expect(sut.isPaused, isFalse);
       });
     });
   });
