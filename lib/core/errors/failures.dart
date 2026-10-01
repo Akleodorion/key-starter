@@ -4,15 +4,6 @@ abstract class Failure extends Equatable {
   const Failure();
 }
 
-class InvalidMidiNoteFailure extends Failure {
-  final int midiNumber;
-
-  const InvalidMidiNoteFailure(this.midiNumber);
-
-  @override
-  List<Object?> get props => [midiNumber];
-}
-
 class InvalidSessionParamsFailure extends Failure {
   const InvalidSessionParamsFailure();
 
