@@ -1,6 +1,6 @@
 # Key Starter
 
-App Flutter d'apprentissage du piano ("karate way", progressif). Ce contexte couvre le vocabulaire des exercices de reconnaissance de notes/groupes de notes joués sur un clavier MIDI.
+App Flutter d'apprentissage du piano ("karate way", progressif). Ce contexte couvre le vocabulaire des exercices de reconnaissance de notes/groupes de notes joués sur un clavier — reçus en MIDI, ou à défaut entendus au micro.
 
 ## Language
 
@@ -32,3 +32,19 @@ Le court délai (démarré à la réception du premier Note On MIDI d'une étape
 
 **Correspondance exacte**:
 Règle de validation d'un groupe de notes : l'ensemble des notes jouées pendant la fenêtre de détection doit être identique à l'ensemble des notes cibles — ni note manquante, ni note en trop. Toute note en trop invalide l'étape.
+
+**Source d'entrée**:
+D'où l'app reçoit ce que l'élève joue : **MIDI** (un clavier connecté) ou **Micro** (le son du synthé ou du piano capté par le téléphone). Choisie automatiquement, jamais par l'utilisateur : MIDI dès qu'un clavier est connecté, Micro sinon, « Aucune entrée » si ni l'un ni l'autre n'est disponible. Bascule à chaud pendant un exercice. Le MIDI est la référence de précision ; le Micro est un repli, réservé aux exercices sur une seule note (Notes simples, Flashcard, Défilement) — Accords, Accords simples et Tempo exigent le MIDI.
+_Avoid_: Détection audio, mode audio, entrée sonore
+
+**Vérification guidée**:
+Manière dont la source Micro juge une réponse : elle sait quelle(s) note(s) l'exercice attend et vérifie si c'est ce qui est joué (ou repère une autre note nettement jouée). Elle ne cherche jamais à reconnaître à l'aveugle n'importe quelle note — c'est cette connaissance de la cible qui rend le Micro fiable.
+_Avoid_: Transcription, reconnaissance à l'aveugle
+
+**Attaque**:
+Le début d'un son entendu au Micro (montée nette du volume) — l'équivalent du Note On MIDI. Au Micro, chaque réponse doit être une nouvelle attaque : la résonance d'une note précédente ne compte jamais, même si c'est la note attendue. Il n'existe pas d'équivalent du Note Off au Micro. Le temps de réponse se mesure à l'attaque, pas au moment du verdict.
+_Avoid_: Onset (en dehors du code)
+
+**Seuil d'écoute**:
+Le volume minimal (-55 dB) en dessous duquel un son n'est jamais pris pour une note au Micro. Fixe, non réglable par l'utilisateur ; le bruit de fond de la pièce peut le relever automatiquement, jamais l'abaisser.
+_Avoid_: Sensibilité, gain
