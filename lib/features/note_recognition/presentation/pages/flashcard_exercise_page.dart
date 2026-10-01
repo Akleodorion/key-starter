@@ -6,6 +6,7 @@ import 'package:key_starter/core/providers/notation_language_provider.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
+import 'package:key_starter/core/widgets/microphone_exercise_frame.dart';
 import 'package:key_starter/core/widgets/ui_text.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/flashcard_exercise_state.dart';
@@ -86,66 +87,72 @@ class _FlashcardExercisePageState extends ConsumerState<FlashcardExercisePage> {
       flashcardExerciseProvider(widget.settings).notifier,
     );
 
-    return Scaffold(
-      backgroundColor: colors.bg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ExerciseTopBar(
-                exerciseLabel: 'Lecture',
-                currentNumber: currentNumber,
-                total: total,
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: UiText('joue cette note', size: 14, color: colors.text2),
-              ),
-              const SizedBox(height: 12),
-              Expanded(child: FlashcardStaffCard(settings: widget.settings)),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: ExerciseFeedbackRow(
-                      playedStep: running?.playedStep,
-                      noteState: running?.noteState ?? NoteState.idle,
-                      language: language,
-                    ),
+    return MicrophoneExerciseFrame(
+      child: Scaffold(
+        backgroundColor: colors.bg,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ExerciseTopBar(
+                  exerciseLabel: 'Lecture',
+                  currentNumber: currentNumber,
+                  total: total,
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: UiText(
+                    'joue cette note',
+                    size: 14,
+                    color: colors.text2,
                   ),
-                  OutlinedButton.icon(
-                    onPressed: isIdle
-                        ? () => notifier.simulateMidi(
-                            midiFromDiatonicStep(running!.currentStep),
-                          )
-                        : null,
-                    icon: const Icon(Icons.check_circle_rounded, size: 16),
-                    label: const Text('Juste'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.stateGreen,
-                      side: const BorderSide(color: AppColors.stateGreen),
+                ),
+                const SizedBox(height: 12),
+                Expanded(child: FlashcardStaffCard(settings: widget.settings)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ExerciseFeedbackRow(
+                        playedStep: running?.playedStep,
+                        noteState: running?.noteState ?? NoteState.idle,
+                        language: language,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: isIdle
-                        ? () => notifier.simulateMidi(
-                            midiFromDiatonicStep(running!.currentStep + 1),
-                          )
-                        : null,
-                    icon: const Icon(Icons.cancel_rounded, size: 16),
-                    label: const Text('Faux'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.stateRed,
-                      side: const BorderSide(color: AppColors.stateRed),
+                    OutlinedButton.icon(
+                      onPressed: isIdle
+                          ? () => notifier.simulateMidi(
+                              midiFromDiatonicStep(running!.currentStep),
+                            )
+                          : null,
+                      icon: const Icon(Icons.check_circle_rounded, size: 16),
+                      label: const Text('Juste'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.stateGreen,
+                        side: const BorderSide(color: AppColors.stateGreen),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-            ],
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: isIdle
+                          ? () => notifier.simulateMidi(
+                              midiFromDiatonicStep(running!.currentStep + 1),
+                            )
+                          : null,
+                      icon: const Icon(Icons.cancel_rounded, size: 16),
+                      label: const Text('Faux'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.stateRed,
+                        side: const BorderSide(color: AppColors.stateRed),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+              ],
+            ),
           ),
         ),
       ),

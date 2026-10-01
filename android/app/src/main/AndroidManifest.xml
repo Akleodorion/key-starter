@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- USB Host : requis pour détecter les claviers MIDI via USB -->
     <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application
         android:label="key_starter"
         android:name="${applicationName}"

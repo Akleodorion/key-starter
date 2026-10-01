@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
+import 'package:key_starter/core/widgets/microphone_exercise_frame.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_config.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_notifier.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/simple_note_exercise_state.dart';
@@ -67,18 +68,20 @@ class _SimpleNoteExercisePageState
       );
     });
 
-    return Scaffold(
-      backgroundColor: colors.bg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: switch (exerciseState) {
-            SimpleNoteExerciseRunning() => SimpleNoteRunningView(
-              running: exerciseState,
-              config: config,
-            ),
-            SimpleNoteExerciseCompleted() => const SizedBox.shrink(),
-          },
+    return MicrophoneExerciseFrame(
+      child: Scaffold(
+        backgroundColor: colors.bg,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: switch (exerciseState) {
+              SimpleNoteExerciseRunning() => SimpleNoteRunningView(
+                running: exerciseState,
+                config: config,
+              ),
+              SimpleNoteExerciseCompleted() => const SizedBox.shrink(),
+            },
+          ),
         ),
       ),
     );

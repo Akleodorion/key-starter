@@ -47,9 +47,9 @@ Deux PR successives, chacune partie de `master`.
   - on respecte les règles de nommage du `CLAUDE.md`.
 - **Seuil d'écoute** : une constante `minimumGate = 10^(-55/20) ≈ 0,0018` remplace le paramètre modifiable. Le suivi du bruit (`noiseFloor × gateFactor`) est conservé.
 - `NoteAttemptResult` expose l'**instant de l'attaque**, au lieu d'une `latencyMs` estimée.
-- `listenFor` accepte **plusieurs candidats**, pour Notes simples où l'octave est libre. Il valide si l'un d'eux passe la vérification. *Risque* : le coût CPU, multiplié par ~7 octaves. On le mesure d'abord avec le banc, et si c'est trop lent, on se limite aux octaves que le synthé peut jouer.
+- `listenFor` accepte **plusieurs candidats**, pour Notes simples où l'octave est libre : `TargetNoteListener` remplace `SingleNoteListener`. Il partage un seul tampon audio, un seul apprentissage du bruit de fond et les deux analyseurs ; chaque candidat garde sa bande de fréquences, son seuil et son suivi d'attaque. Le premier candidat qui tranche décide. *Mesuré* : 8 candidats coûtent autant qu'un seul au repos (~60 ms de calcul pour 2,5 s de son sur Mac), alors que 8 listeners indépendants coûtaient ~520 ms.
 - `NoteDebouncer` et les fonctions de transcription aveugle (chroma, `bestTriad`) ne sont pas portés.
-- `tool/audio_detection_prototype_bench.dart` est conservé comme outil manuel, adapté aux nouveaux chemins. Les pages prototype ne sont pas reprises.
+- `tool/audio_detection_prototype_bench.dart` **n'est pas repris** : il reposait sur la transcription aveugle (`analyze`) et sur les échantillons WAV de l'Iowa. Il reste disponible sur la branche `prototype-audio-detection`. Les pages prototype ne sont pas reprises non plus.
 
 ### 2. Tests de l'analyse
 - **Signaux synthétiques générés dans les tests** : partiels avec inharmonicité ; bonne note ; mauvaise note ; mauvaise octave ; bruit seul ; volume sous -55 dB ; attaque puis résonance (la résonance d'une cible ne valide pas une seconde fois) ; plusieurs candidats.
@@ -62,18 +62,18 @@ Deux PR successives, chacune partie de `master`.
   - cible validée → `NotePlayed(cible, attackTime)` ;
   - autre note entendue nettement → `NotePlayed(noteEntendue, attackTime)` ;
   - sinon, rien.
-  - **Jamais de `NoteReleased`.** Les notifiers qui attendent un relâchement (anti-répétition de Flashcard et Défilement) doivent considérer qu'au Micro, une nouvelle attaque suffit. On le fait par un `NoteReleased` synthétique émis juste après chaque `NotePlayed`, documenté dans la source.
+  - **Pas de vrai Note Off au micro.** Pour que l'anti-répétition de Flashcard et Défilement fonctionne sans changer les notifiers, chaque `NotePlayed` est aussitôt suivi d'un `NoteReleased`, et l'écoute s'arrête jusqu'au prochain `listenFor` : une réponse au micro est toujours une nouvelle attaque.
 - Dépendances : `record`, `fftea`. Permission Android `RECORD_AUDIO`. iOS `NSMicrophoneUsageDescription` (texte définitif, sans « PROTOTYPE »).
 - **Pas de modification macOS** : on ne reprend ni le passage en 12.0 ni les entitlements du POC.
 
 ### 4. Sélection automatique et bascule à chaud
 - `inputSourceProvider` choisit MIDI si `midiConnectionProvider` voit un appareil, sinon Micro si la permission est accordée, sinon « Aucune entrée ».
 - **Façade unique** : les notifiers gardent un seul abonnement. La façade relaie les événements de la source active et **réarme la nouvelle source avec la dernière cible** lors d'une bascule. L'exercice ne redémarre pas.
-- **Toast de bascule** dans les pages d'exercice, sur changement de type de source : « Clavier MIDI connecté » / « Passage au micro ».
+- **Toast de bascule** dans les pages d'exercice, sur changement de type de source : « Clavier MIDI connecté » / « Passage au micro » (`MicrophoneExerciseFrame`).
 
 ### 5. Permission micro
 - Demandée **une seule fois, au premier démarrage**, même si un MIDI est branché (`permission_handler`).
-- Si elle est refusée et qu'aucun MIDI n'est connecté, l'exercice affiche « Branchez un clavier MIDI ou autorisez le micro dans les réglages », avec un bouton `openAppSettings()`.
+- Si elle est refusée et qu'aucun MIDI n'est connecté, l'exercice affiche un `MaterialBanner` « Branchez un clavier MIDI ou autorisez le micro dans les réglages », avec un bouton qui ouvre les réglages. L'autorisation est relue à chaque retour dans l'app.
 
 ### 6. Pastille de source
 - `MidiPill` devient `InputSourcePill` : « MIDI · nom de l'appareil » / « Micro » / « Aucune entrée ».

@@ -8,7 +8,15 @@ class EntryCard extends StatelessWidget {
   final CardEntry entry;
   final VoidCallback? onTap;
 
-  const EntryCard({super.key, required this.entry, this.onTap});
+  /// Carte atténuée : l'entrée n'est pas accessible en ce moment.
+  final bool isDimmed;
+
+  const EntryCard({
+    super.key,
+    required this.entry,
+    this.onTap,
+    this.isDimmed = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +24,7 @@ class EntryCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tint = isDark ? entry.darkTintColor : entry.tintColor;
 
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
@@ -57,5 +65,6 @@ class EntryCard extends StatelessWidget {
         ],
       ),
     );
+    return isDimmed ? Opacity(opacity: 0.45, child: card) : card;
   }
 }
