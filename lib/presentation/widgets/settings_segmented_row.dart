@@ -34,6 +34,9 @@ abstract class SettingsSegmentedRow<T> extends ConsumerWidget {
   String? description(WidgetRef ref) => null;
   List<(T, String)> get options;
 
+  /// Largeur de chaque option, à élargir pour des libellés plus longs.
+  double get segmentWidth => 56.0;
+
   T selected(WidgetRef ref);
   void onChanged(WidgetRef ref, T value);
 
@@ -49,6 +52,7 @@ abstract class SettingsSegmentedRow<T> extends ConsumerWidget {
             options: options,
             selected: selected(ref),
             onChanged: (value) => onChanged(ref, value),
+            segmentWidth: segmentWidth,
           ),
         ],
       ),

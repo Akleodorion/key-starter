@@ -3,18 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/theme/app_theme.dart';
-import 'package:key_starter/features/note_recognition/presentation/pages/tempo_exercise_page.dart';
+import 'package:key_starter/features/chord_recognition/presentation/pages/chord_tempo_exercise_page.dart';
 import 'package:key_starter/features/note_recognition/presentation/providers/note_exercise_settings_state.dart';
-import 'package:key_starter/features/note_recognition/presentation/providers/tempo_exercise_config.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_config.dart';
 import 'package:key_starter/core/widgets/tempo_staff_line.dart';
 
 void main() {
-  const config = TempoExerciseConfig(
+  const config = ChordTempoExerciseConfig(
     settings: NoteExerciseSettings(
       clef: ClefMode.treble,
       noteCount: 10,
-      minNoteStep: -2,
-      maxNoteStep: 4,
+      minNoteStep: 0,
+      maxNoteStep: 10,
     ),
     bpm: 60,
   );
@@ -37,14 +37,14 @@ void main() {
       ProviderScope(
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: const TempoExercisePage(config: config),
+          home: const ChordTempoExercisePage(config: config),
         ),
       ),
     );
     await tester.pump(const Duration(milliseconds: 100));
   }
 
-  group('TempoExercisePage', () {
+  group('ChordTempoExercisePage', () {
     testWidgets('tient sans dépassement sur un petit téléphone en paysage', (
       tester,
     ) async {

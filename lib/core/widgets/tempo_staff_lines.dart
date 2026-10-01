@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
-import 'package:key_starter/features/note_recognition/domain/entities/tempo_timeline.dart';
-import 'package:key_starter/features/note_recognition/presentation/widgets/tempo_staff_line.dart';
+import 'package:key_starter/core/utils/tempo_timeline.dart';
+import 'package:key_starter/core/widgets/tempo_staff_line.dart';
 
 /// Deux lignes de portée visibles, la ligne en cours en haut et la suivante
 /// en dessous. Quand [topLine] passe de k à k + 1, les lignes remontent :
@@ -12,7 +12,7 @@ import 'package:key_starter/features/note_recognition/presentation/widgets/tempo
 class TempoStaffLines extends StatelessWidget {
   static const int _visibleLineCount = 2;
 
-  final List<int> noteSteps;
+  final List<List<int>> noteGroups;
   final List<NoteState> noteStates;
   final ClefMode clef;
   final double topLine;
@@ -22,7 +22,7 @@ class TempoStaffLines extends StatelessWidget {
 
   const TempoStaffLines({
     super.key,
-    required this.noteSteps,
+    required this.noteGroups,
     required this.noteStates,
     required this.clef,
     required this.topLine,
@@ -34,7 +34,7 @@ class TempoStaffLines extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const notesPerLine = TempoTimeline.notesPerLine;
-    final lineCount = (noteSteps.length / notesPerLine).ceil();
+    final lineCount = (noteGroups.length / notesPerLine).ceil();
     final firstLine = topLine.floor();
     final lastLine = min(topLine.ceil() + _visibleLineCount - 1, lineCount - 1);
 
@@ -53,7 +53,7 @@ class TempoStaffLines extends StatelessWidget {
                 child: Opacity(
                   opacity: _opacityAt(lineIndex - topLine),
                   child: TempoStaffLine(
-                    noteSteps: _slice(noteSteps, lineIndex),
+                    noteGroups: _slice(noteGroups, lineIndex),
                     noteStates: _slice(noteStates, lineIndex),
                     clef: clef,
                     barFraction: lineIndex == barLine ? barFraction : null,

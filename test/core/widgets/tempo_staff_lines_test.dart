@@ -3,13 +3,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/theme/app_theme.dart';
-import 'package:key_starter/features/note_recognition/presentation/widgets/tempo_staff_line.dart';
-import 'package:key_starter/features/note_recognition/presentation/widgets/tempo_staff_lines.dart';
+import 'package:key_starter/core/widgets/tempo_staff_line.dart';
+import 'package:key_starter/core/widgets/tempo_staff_lines.dart';
 
 void main() {
   // 10 notes : lignes de 4, 4 et 2 notes.
-  const noteSteps = [0, 1, 2, 3, 4, 5, 6, 0, 1, 2];
-  final noteStates = List.filled(noteSteps.length, NoteState.idle);
+  const noteGroups = [
+    [0],
+    [1],
+    [2],
+    [3],
+    [4],
+    [5],
+    [6],
+    [0],
+    [1],
+    [2],
+  ];
+  final noteStates = List.filled(noteGroups.length, NoteState.idle);
 
   Future<void> pumpStaffLines(
     WidgetTester tester, {
@@ -21,7 +32,7 @@ void main() {
       theme: AppTheme.light(),
       home: Scaffold(
         body: TempoStaffLines(
-          noteSteps: noteSteps,
+          noteGroups: noteGroups,
           noteStates: noteStates,
           clef: ClefMode.treble,
           topLine: topLine,
@@ -68,8 +79,16 @@ void main() {
       //assert
       final secondLine = tester.widget<TempoStaffLine>(lineFinder(1));
       final lastLine = tester.widget<TempoStaffLine>(lineFinder(2));
-      expect(secondLine.noteSteps, [4, 5, 6, 0]);
-      expect(lastLine.noteSteps, [1, 2]);
+      expect(secondLine.noteGroups, [
+        [4],
+        [5],
+        [6],
+        [0],
+      ]);
+      expect(lastLine.noteGroups, [
+        [1],
+        [2],
+      ]);
     });
 
     testWidgets(

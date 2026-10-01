@@ -17,12 +17,16 @@ La note qui nomme et ancre un accord (Do, Ré, Mi, Fa, Sol, La ou Si). C'est le 
 _Avoid_: Racine, root, tonique (tonique a un sens harmonique plus large, réservé si besoin plus tard)
 
 **Symbole d'accord**:
-Notation d'une consigne d'accord sans partition : une barre `|` devant le nom de la fondamentale (`|Do`, `|C`), pour la distinguer d'une consigne de note (`Do`). Suffixe `m` minuscule collé pour les fondamentales Ré, Mi, La et Si (`|Rém`, `|Dm`). Si reçoit `m` par choix pédagogique alors que sa triade est diminuée. Convention propre à l'app (issue d'un cours de piano), pas un standard musical.
-_Avoid_: `°`, `dim`, « majeur »/« mineur » en toutes lettres
+Notation d'une consigne d'accord sans partition : une barre `|` devant le nom de la fondamentale (`|Do`, `|C`), pour la distinguer d'une consigne de note (`Do`). Suffixe `m` minuscule collé pour les fondamentales Ré, Mi, La et Si (`|Rém`, `|Dm`). Si reçoit `m` par choix pédagogique alors que sa triade est diminuée. Un renversement s'indique par son numéro entre parenthèses, collé après le suffixe : `|Do(1)`, `|Rém(2)`, `|Am(1)` ; sans parenthèses, c'est l'état fondamental. Convention propre à l'app (issue d'un cours de piano), pas un standard musical.
+_Avoid_: `°`, `dim`, « majeur »/« mineur » en toutes lettres, `|Do/Mi` (accord à basse imposée)
 
 **État fondamental**:
 Un accord joué avec la fondamentale en bas et les trois notes empilées dans une seule octave (Do-Mi-Sol). L'octave de l'ensemble est libre dans les exercices sans partition ; renversements, accord étalé sur plusieurs octaves et notes doublées sont faux.
 _Avoid_: Position serrée (plus large : inclut les renversements)
+
+**Renversement**:
+Un accord joué avec une autre note que la fondamentale à la basse, les trois notes toujours serrées dans une seule octave. **1er renversement** : la tierce à la basse (Mi-Sol-Do). **2e renversement** : la quinte à la basse (Sol-Do-Mi). Travaillé dans sa propre section (Renversements simples, sans partition) : seul le renversement demandé est juste, octave libre ; l'état fondamental, l'autre renversement, un accord étalé ou une note doublée sont faux. Les exercices à l'état fondamental continuent de compter tout renversement comme faux.
+_Avoid_: Inversion (en dehors du code), position (seul : ambigu)
 
 **Intervalle**:
 Un groupe de 2 notes simultanées. Hors périmètre produit actuel — sert uniquement de jalon technique interne pour valider la fenêtre de détection MIDI multi-notes avant de construire l'exercice Accords (3 notes). N'est pas exposé comme exercice ni comme concept dans l'app pour l'instant (`IntervalsConcept` reste orphelin).

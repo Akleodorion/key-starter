@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_starter/features/note_recognition/domain/entities/tempo_timeline.dart';
+import 'package:key_starter/core/utils/tempo_timeline.dart';
 
 void main() {
   const sut = TempoTimeline(bpm: 60, noteCount: 10);

@@ -5,19 +5,23 @@ import 'package:key_starter/core/theme/app_colors.dart';
 import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
 import 'package:key_starter/core/widgets/primary_button.dart';
-import 'package:key_starter/features/chord_recognition/domain/entities/chord_inversion.dart';
-import 'package:key_starter/features/chord_recognition/presentation/pages/simple_chord_exercise_page.dart';
-import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_config.dart';
-import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_settings_notifier.dart';
-import 'package:key_starter/features/chord_recognition/presentation/widgets/simple_chord_settings_card.dart';
+import 'package:key_starter/features/chord_recognition/presentation/pages/chord_tempo_exercise_page.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_bpm_notifier.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_config.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_settings_notifier.dart';
+import 'package:key_starter/features/chord_recognition/presentation/widgets/chord_tempo_range_section.dart';
+import 'package:key_starter/features/chord_recognition/presentation/widgets/chord_tempo_settings_card.dart';
 
-class SimpleChordPage extends ConsumerWidget {
-  const SimpleChordPage({super.key});
+class ChordTempoPage extends ConsumerWidget {
+  const ChordTempoPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColorTheme.of(context);
-    final chordCount = ref.watch(simpleChordSettingsProvider).noteCount;
+    final config = ChordTempoExerciseConfig(
+      settings: ref.watch(chordTempoSettingsProvider),
+      bpm: ref.watch(chordTempoBpmProvider),
+    );
 
     return Scaffold(
       backgroundColor: colors.bg,
@@ -34,9 +38,11 @@ class SimpleChordPage extends ConsumerWidget {
                     children: [
                       ConceptTopBar(title: 'Accords'),
                       SizedBox(height: 32),
-                      DisplayText('Accords simples'),
+                      DisplayText('Tempo'),
                       SizedBox(height: 32),
-                      SimpleChordSettingsCard(),
+                      ChordTempoSettingsCard(),
+                      SizedBox(height: 24),
+                      ChordTempoRangeSection(),
                     ],
                   ),
                 ),
@@ -47,12 +53,7 @@ class SimpleChordPage extends ConsumerWidget {
                 color: AppColors.chordsFg,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => SimpleChordExercisePage(
-                      config: SimpleChordExerciseConfig(
-                        chordCount: chordCount,
-                        inversions: const {ChordInversion.rootPosition},
-                      ),
-                    ),
+                    builder: (_) => ChordTempoExercisePage(config: config),
                   ),
                 ),
               ),

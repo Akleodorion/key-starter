@@ -3,24 +3,25 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/widgets/midi_only_exercise_frame.dart';
-import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_config.dart';
-import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_notifier.dart';
-import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_state.dart';
-import 'package:key_starter/features/chord_recognition/presentation/widgets/simple_chord_running_view.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_config.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_notifier.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/chord_tempo_exercise_state.dart';
+import 'package:key_starter/features/chord_recognition/presentation/widgets/chord_tempo_running_view.dart';
+import 'package:key_starter/features/session/domain/entities/timing_offset.dart';
 import 'package:key_starter/features/session/presentation/pages/recap_page.dart';
 
-class SimpleChordExercisePage extends ConsumerStatefulWidget {
-  final SimpleChordExerciseConfig config;
+class ChordTempoExercisePage extends ConsumerStatefulWidget {
+  final ChordTempoExerciseConfig config;
 
-  const SimpleChordExercisePage({super.key, required this.config});
+  const ChordTempoExercisePage({super.key, required this.config});
 
   @override
-  ConsumerState<SimpleChordExercisePage> createState() =>
-      _SimpleChordExercisePageState();
+  ConsumerState<ChordTempoExercisePage> createState() =>
+      _ChordTempoExercisePageState();
 }
 
-class _SimpleChordExercisePageState
-    extends ConsumerState<SimpleChordExercisePage> {
+class _ChordTempoExercisePageState
+    extends ConsumerState<ChordTempoExercisePage> {
   bool _handingOffToRecap = false;
 
   @override
@@ -44,25 +45,23 @@ class _SimpleChordExercisePageState
   Widget build(BuildContext context) {
     final colors = AppColorTheme.of(context);
     final config = widget.config;
-    final exerciseState = ref.watch(simpleChordExerciseProvider(config));
+    final exerciseState = ref.watch(chordTempoExerciseProvider(config));
 
-    ref.listen(simpleChordExerciseProvider(config), (_, next) {
-      if (next is! SimpleChordExerciseCompleted || !mounted) return;
+    ref.listen(chordTempoExerciseProvider(config), (_, next) {
+      if (next is! ChordTempoExerciseCompleted || !mounted) return;
       _handingOffToRecap = true;
       final navigator = Navigator.of(context);
       navigator.pushReplacement(
         MaterialPageRoute(
           builder: (_) => RecapPage(
-            exerciseLabel: config.isInversionPractice
-                ? 'Lecture · renversements simples'
-                : 'Lecture · accords simples',
+            exerciseLabel: 'Accords · tempo',
             correctCount: next.correctCount,
             totalNotes: next.totalChords,
-            avgResponseMs: next.avgResponseMs,
+            timingOffset: TimingOffset(averageMs: next.avgTimingOffsetMs),
             bestStreak: next.bestStreak,
             onRetry: () => navigator.pushReplacement(
               MaterialPageRoute(
-                builder: (_) => SimpleChordExercisePage(config: config),
+                builder: (_) => ChordTempoExercisePage(config: config),
               ),
             ),
           ),
@@ -71,17 +70,21 @@ class _SimpleChordExercisePageState
     });
 
     return MidiOnlyExerciseFrame(
+      onPause: () =>
+          ref.read(chordTempoExerciseProvider(config).notifier).pause(),
+      onResume: () =>
+          ref.read(chordTempoExerciseProvider(config).notifier).resume(),
       child: Scaffold(
         backgroundColor: colors.bg,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: switch (exerciseState) {
-              SimpleChordExerciseRunning() => SimpleChordRunningView(
+              ChordTempoExerciseRunning() => ChordTempoRunningView(
                 running: exerciseState,
                 config: config,
               ),
-              SimpleChordExerciseCompleted() => const SizedBox.shrink(),
+              ChordTempoExerciseCompleted() => const SizedBox.shrink(),
             },
           ),
         ),

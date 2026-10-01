@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/features/chord_recognition/domain/entities/chord_inversion.dart';
+import 'package:key_starter/features/chord_recognition/domain/entities/chord_prompt.dart';
+import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_config.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_notifier.dart';
 import 'package:key_starter/features/chord_recognition/presentation/providers/simple_chord_exercise_state.dart';
 import 'package:key_starter/core/input/input_source_provider.dart';
@@ -21,28 +24,31 @@ const _rootPositionChordsInOctave4 = [
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const chordCount = 10;
+  const config = SimpleChordExerciseConfig(
+    chordCount: 10,
+    inversions: {ChordInversion.rootPosition},
+  );
   late ProviderContainer container;
 
   setUp(() {
     container = ProviderContainer();
-    container.listen(simpleChordExerciseProvider(chordCount), (_, _) {});
+    container.listen(simpleChordExerciseProvider(config), (_, _) {});
   });
 
   tearDown(() => container.dispose());
 
   SimpleChordExerciseRunning readRunningState() =>
-      container.read(simpleChordExerciseProvider(chordCount))
+      container.read(simpleChordExerciseProvider(config))
           as SimpleChordExerciseRunning;
 
   List<int> expectedChordShiftedBy(int semitones) =>
-      _rootPositionChordsInOctave4[readRunningState().currentRootIndex]
+      _rootPositionChordsInOctave4[readRunningState().currentChord.rootIndex]
           .map((midiNumber) => midiNumber + semitones)
           .toList();
 
   Future<void> play(List<int> midiNumbers) async {
     container
-        .read(simpleChordExerciseProvider(chordCount).notifier)
+        .read(simpleChordExerciseProvider(config).notifier)
         .simulateMidi(midiNumbers);
     await Future<void>.delayed(const Duration(milliseconds: 150));
   }
@@ -54,7 +60,7 @@ void main() {
   );
 
   Future<void> answer({required bool correctly}) async {
-    final rootIndex = readRunningState().currentRootIndex;
+    final rootIndex = readRunningState().currentChord.rootIndex;
     final playedRootIndex = correctly ? rootIndex : (rootIndex + 1) % 7;
     await play(_rootPositionChordsInOctave4[playedRootIndex]);
     await waitForNextChord();
@@ -64,23 +70,23 @@ void main() {
     group('build', () {
       test('ne tire jamais deux fois le même accord de suite', () {
         //arrange
-        const longChordCount = 100;
-        container.listen(
-          simpleChordExerciseProvider(longChordCount),
-          (_, _) {},
+        const longConfig = SimpleChordExerciseConfig(
+          chordCount: 100,
+          inversions: {ChordInversion.rootPosition},
         );
+        container.listen(simpleChordExerciseProvider(longConfig), (_, _) {});
 
         //act
-        final rootIndexes =
-            (container.read(simpleChordExerciseProvider(longChordCount))
+        final chords =
+            (container.read(simpleChordExerciseProvider(longConfig))
                     as SimpleChordExerciseRunning)
-                .rootIndexes;
+                .chords;
 
         //assert
-        for (var position = 1; position < rootIndexes.length; position++) {
+        for (var position = 1; position < chords.length; position++) {
           expect(
-            rootIndexes[position],
-            isNot(rootIndexes[position - 1]),
+            chords[position],
+            isNot(chords[position - 1]),
             reason: 'répétition aux positions ${position - 1} et $position',
           );
         }
@@ -136,7 +142,8 @@ void main() {
 
       test('compte faux un autre accord', () async {
         //arrange
-        final otherRootIndex = (readRunningState().currentRootIndex + 1) % 7;
+        final otherRootIndex =
+            (readRunningState().currentChord.rootIndex + 1) % 7;
 
         //act
         await play(_rootPositionChordsInOctave4[otherRootIndex]);
@@ -217,7 +224,7 @@ void main() {
           }
 
           //assert
-          final state = container.read(simpleChordExerciseProvider(chordCount));
+          final state = container.read(simpleChordExerciseProvider(config));
           expect(state, isA<SimpleChordExerciseCompleted>());
           final completed = state as SimpleChordExerciseCompleted;
           expect(completed.correctCount, 6);
@@ -230,7 +237,10 @@ void main() {
         'calcule le temps de réponse moyen depuis l\'affichage de chaque accord',
         () async {
           //arrange
-          const twoChords = 2;
+          const twoChords = SimpleChordExerciseConfig(
+            chordCount: 2,
+            inversions: {ChordInversion.rootPosition},
+          );
           var currentTime = DateTime(2026);
           final clockContainer = ProviderContainer(
             overrides: [
@@ -249,7 +259,8 @@ void main() {
           List<int> currentChord() =>
               _rootPositionChordsInOctave4[(clockContainer.read(provider)
                       as SimpleChordExerciseRunning)
-                  .currentRootIndex];
+                  .currentChord
+                  .rootIndex];
 
           //act
           currentTime = currentTime.add(const Duration(milliseconds: 1000));
@@ -268,6 +279,99 @@ void main() {
     });
   });
 
+  group('SimpleChordExerciseNotifier — renversements', () {
+    const bothInversions = SimpleChordExerciseConfig(
+      chordCount: 100,
+      inversions: {ChordInversion.first, ChordInversion.second},
+    );
+
+    SimpleChordExerciseRunning readInversionState() =>
+        container.read(simpleChordExerciseProvider(bothInversions))
+            as SimpleChordExerciseRunning;
+
+    Future<void> playInversion(List<int> midiNumbers) async {
+      container
+          .read(simpleChordExerciseProvider(bothInversions).notifier)
+          .simulateMidi(midiNumbers);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+
+    setUp(
+      () => container.listen(
+        simpleChordExerciseProvider(bothInversions),
+        (_, _) {},
+      ),
+    );
+
+    test(
+      'ne tire que les renversements choisis, jamais l\'état fondamental',
+      () {
+        //act
+        final inversions = readInversionState().chords
+            .map((chord) => chord.inversion)
+            .toSet();
+
+        //assert
+        expect(inversions, {ChordInversion.first, ChordInversion.second});
+      },
+    );
+
+    test('ne répète jamais deux fois de suite la même consigne', () {
+      //act
+      final chords = readInversionState().chords;
+
+      //assert
+      for (var position = 1; position < chords.length; position++) {
+        expect(chords[position], isNot(chords[position - 1]));
+      }
+    });
+
+    test('compte juste le renversement demandé, une octave plus bas', () async {
+      //arrange
+      final chord = readInversionState().currentChord;
+
+      //act
+      await playInversion(
+        chord.midiNumbers.map((midiNumber) => midiNumber - 12).toList(),
+      );
+
+      //assert
+      expect(readInversionState().noteState, NoteState.correct);
+    });
+
+    test('compte faux l\'état fondamental du même accord', () async {
+      //arrange
+      final chord = readInversionState().currentChord;
+      final rootPosition = ChordPrompt(
+        rootIndex: chord.rootIndex,
+        inversion: ChordInversion.rootPosition,
+      );
+
+      //act
+      await playInversion(rootPosition.midiNumbers);
+
+      //assert
+      expect(readInversionState().noteState, NoteState.wrong);
+    });
+
+    test('compte faux l\'autre renversement du même accord', () async {
+      //arrange
+      final chord = readInversionState().currentChord;
+      final otherInversion = ChordPrompt(
+        rootIndex: chord.rootIndex,
+        inversion: chord.inversion == ChordInversion.first
+            ? ChordInversion.second
+            : ChordInversion.first,
+      );
+
+      //act
+      await playInversion(otherInversion.midiNumbers);
+
+      //assert
+      expect(readInversionState().noteState, NoteState.wrong);
+    });
+  });
+
   group('SimpleChordExerciseNotifier — source d\'entrée', () {
     test('regroupe les notes de la source en un accord', () async {
       //arrange
@@ -276,21 +380,18 @@ void main() {
         overrides: [inputSourceProvider.overrideWithValue(inputSource)],
       );
       addTearDown(sourceContainer.dispose);
-      sourceContainer.listen(
-        simpleChordExerciseProvider(chordCount),
-        (_, _) {},
-      );
+      sourceContainer.listen(simpleChordExerciseProvider(config), (_, _) {});
       final running =
-          sourceContainer.read(simpleChordExerciseProvider(chordCount))
+          sourceContainer.read(simpleChordExerciseProvider(config))
               as SimpleChordExerciseRunning;
 
       //act
-      _rootPositionChordsInOctave4[running.currentRootIndex].forEach(
+      _rootPositionChordsInOctave4[running.currentChord.rootIndex].forEach(
         inputSource.play,
       );
       await Future<void>.delayed(const Duration(milliseconds: 150));
       final playedState =
-          sourceContainer.read(simpleChordExerciseProvider(chordCount))
+          sourceContainer.read(simpleChordExerciseProvider(config))
               as SimpleChordExerciseRunning;
 
       //assert

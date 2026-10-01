@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
@@ -6,13 +8,15 @@ import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/utils/staff_paint_utils.dart';
-import 'package:key_starter/features/note_recognition/domain/entities/tempo_timeline.dart';
+import 'package:key_starter/core/utils/tempo_timeline.dart';
 
-/// Une ligne fixe de l'exercice Tempo : clé, une note par temps, et la barre
-/// quand elle passe sur cette ligne. Une note qui vient d'être décidée gonfle
-/// (juste) ou tremble (fausse, ratée).
+/// Une ligne fixe d'un exercice Tempo : clé, une note ou un accord par temps,
+/// et la barre quand elle passe sur cette ligne. Un temps qui vient d'être
+/// décidé gonfle (juste) ou tremble (faux, raté).
 class TempoStaffLine extends StatefulWidget {
-  final List<int> noteSteps;
+  /// Degrés joués à chaque temps : un seul pour une note, plusieurs pour un
+  /// accord.
+  final List<List<int>> noteGroups;
   final List<NoteState> noteStates;
   final ClefMode clef;
 
@@ -22,7 +26,7 @@ class TempoStaffLine extends StatefulWidget {
 
   const TempoStaffLine({
     super.key,
-    required this.noteSteps,
+    required this.noteGroups,
     required this.noteStates,
     required this.clef,
     required this.barFraction,
@@ -68,11 +72,11 @@ class _TempoStaffLineState extends State<TempoStaffLine>
     return AnimatedBuilder(
       animation: Listenable.merge(_controllers),
       builder: (context, _) {
-        final noteCount = widget.noteSteps.length;
+        final noteCount = widget.noteGroups.length;
         return CustomPaint(
           size: Size(double.infinity, widget.height),
           painter: TempoStaffLinePainter(
-            noteSteps: widget.noteSteps,
+            noteGroups: widget.noteGroups,
             noteColors: List.generate(
               noteCount,
               (index) => switch (widget.noteStates[index]) {
@@ -100,10 +104,10 @@ class _TempoStaffLineState extends State<TempoStaffLine>
       noteFeedbackShift(widget.noteStates[index], _controllers[index].value);
 }
 
-/// Dessine la portée, la clé, les notes (chacune avec sa couleur, son échelle
-/// et son décalage horizontal) et la barre.
+/// Dessine la portée, la clé, les notes ou accords (chacun avec sa couleur,
+/// son échelle et son décalage horizontal, autour de son centre) et la barre.
 class TempoStaffLinePainter extends CustomPainter {
-  final List<int> noteSteps;
+  final List<List<int>> noteGroups;
   final List<Color> noteColors;
   final List<double> noteScales;
   final List<double> noteShifts;
@@ -113,7 +117,7 @@ class TempoStaffLinePainter extends CustomPainter {
   final double lineGap;
 
   const TempoStaffLinePainter({
-    required this.noteSteps,
+    required this.noteGroups,
     required this.noteColors,
     required this.noteScales,
     required this.noteShifts,
@@ -146,22 +150,30 @@ class TempoStaffLinePainter extends CustomPainter {
 
     final notesWidth = size.width - clefPanelWidth;
     final slotWidth = notesWidth / TempoTimeline.notesPerLine;
-    for (var index = 0; index < noteSteps.length; index++) {
+    for (var index = 0; index < noteGroups.length; index++) {
+      final steps = noteGroups[index];
       final noteX = clefPanelWidth + (index + 0.5) * slotWidth;
-      final noteY = staffYFor(
-        noteSteps[index],
+      final lowestY = staffYFor(
+        steps.reduce(min),
         clef: clef,
         staffTop: staffTop,
         lineGap: lineGap,
       );
+      final highestY = staffYFor(
+        steps.reduce(max),
+        clef: clef,
+        staffTop: staffTop,
+        lineGap: lineGap,
+      );
+      final noteY = (lowestY + highestY) / 2;
       canvas.save();
       canvas.translate(noteX + noteShifts[index], noteY);
       canvas.scale(noteScales[index]);
       canvas.translate(-noteX, -noteY);
-      paintNote(
+      paintChord(
         canvas,
         noteX: noteX,
-        step: noteSteps[index],
+        steps: steps,
         clef: clef,
         staffTop: staffTop,
         color: noteColors[index],
@@ -189,8 +201,16 @@ class TempoStaffLinePainter extends CustomPainter {
       old.clef != clef ||
       old.lineColor != lineColor ||
       old.lineGap != lineGap ||
-      !listEquals(old.noteSteps, noteSteps) ||
+      !_sameGroups(old.noteGroups, noteGroups) ||
       !listEquals(old.noteColors, noteColors) ||
       !listEquals(old.noteScales, noteScales) ||
       !listEquals(old.noteShifts, noteShifts);
+}
+
+bool _sameGroups(List<List<int>> first, List<List<int>> second) {
+  if (first.length != second.length) return false;
+  for (var index = 0; index < first.length; index++) {
+    if (!listEquals(first[index], second[index])) return false;
+  }
+  return true;
 }
