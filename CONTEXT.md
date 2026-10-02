@@ -59,7 +59,7 @@ Une plage continue de mesures travaillée d'un seul tenant, de la mesure X à la
 _Avoid_: Passage, extrait
 
 **Reprise**:
-Ce qui suit une section terminée avec au moins une erreur : un court message (« 2 erreurs · on reprend »), puis la section repart de X avec les mêmes réglages et les couleurs effacées. Une section terminée sans erreur mène à l'écran « Section réussie » (Recommencer ou Quitter vers la préparation).
+Ce qui suit toute section terminée, réussie ou non : un court message (« 2 erreurs · on reprend », « Sans erreur · on reprend »), puis la section repart de X avec les mêmes réglages et les couleurs effacées. On travaille la section en boucle ; on n'en sort que par la flèche retour de la page de jeu, qui ramène à la préparation.
 
 **Ligne de partition**:
 Deux mesures consécutives d'un morceau sur portée double, avec clés et accolade, barres de mesure et numéro de la première mesure (pas de chiffrage pour l'instant). Chaque mesure occupe la moitié de la ligne, même sur une dernière ligne incomplète, et chaque événement y est placé selon son temps. Deux lignes sont visibles : celle en cours en haut, la suivante en dessous ; elles remontent quand le repère passe à la ligne suivante. Une note jouée reste verte ou rouge.

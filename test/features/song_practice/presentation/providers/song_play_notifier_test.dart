@@ -351,7 +351,7 @@ void main() {
           final sut = readState();
 
           //assert
-          expect(sut, const SongPlayFinished());
+          expect(sut, const SongPlayRetrying(errorCount: 0));
         });
       });
 
@@ -401,28 +401,7 @@ void main() {
         },
       );
 
-      test(
-        'termine sur une réussite quand la section est jouée sans erreur',
-        () {
-          fakeAsync((async) {
-            //arrange
-            startSong(hands: HandSelection.rightOnly);
-
-            //act
-            for (final midiNumber in [e4, d4, c4]) {
-              inputSource.play(midiNumber);
-              inputSource.release(midiNumber);
-              async.elapse(noteAdvanceDelay);
-            }
-            final sut = readState();
-
-            //assert
-            expect(sut, const SongPlayFinished());
-          });
-        },
-      );
-
-      test('recommence au premier événement, sans erreur, avec restart', () {
+      test('reprend aussi la section quand elle est jouée sans erreur', () {
         fakeAsync((async) {
           //arrange
           startSong(hands: HandSelection.rightOnly);
@@ -431,15 +410,16 @@ void main() {
             inputSource.release(midiNumber);
             async.elapse(noteAdvanceDelay);
           }
+          final stateAtEnd = readState();
 
           //act
-          container.read(songPlayProvider(config).notifier).restart();
+          async.elapse(sectionRetryDelay);
           final sut = readRunning();
 
           //assert
-          expect(sut.currentEvent, song.events.first);
-          expect(sut.errorCount, 0);
-          expect(sut.noteState, NoteState.idle);
+          expect(stateAtEnd, const SongPlayRetrying(errorCount: 0));
+          expect(sut.currentEventIndex, 0);
+          expect(sut.judgedVerdicts, isEmpty);
         });
       });
     });

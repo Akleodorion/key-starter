@@ -57,8 +57,8 @@ const galaxyNote10Landscape = Size(869, 412);
 void main() {
   late FakeInputSource inputSource;
 
-  /// Ouvre la page de jeu par-dessus une page d'accueil, pour que Quitter
-  /// ait où revenir.
+  /// Ouvre la page de jeu par-dessus une page d'accueil, pour que la flèche
+  /// retour ait où revenir.
   Future<void> pumpPlayPage(
     WidgetTester tester, {
     required SongPlayConfig config,
@@ -163,33 +163,41 @@ void main() {
       },
     );
 
-    testWidgets('annonce la section réussie, puis Recommencer la relance', (
+    testWidgets(
+      'reprend aussi une section réussie, après un message sans erreur',
+      (tester) async {
+        //arrange
+        await pumpPlayPage(tester, config: configFor(5, 6));
+
+        //act
+        await play(tester, c4);
+        await play(tester, c4);
+        final successMessageCount = find
+            .text('Sans erreur · on reprend')
+            .evaluate()
+            .length;
+        final backArrowCountDuringMessage = find
+            .byIcon(Icons.arrow_back_rounded)
+            .evaluate()
+            .length;
+        await tester.pump(sectionRetryDelay);
+        await tester.pumpAndSettle();
+
+        //assert
+        expect(successMessageCount, 1);
+        expect(backArrowCountDuringMessage, 1);
+        expect(visibleFirstMeasureNumbers(tester), [5]);
+      },
+    );
+
+    testWidgets('revient à la préparation avec la flèche retour', (
       tester,
     ) async {
       //arrange
-      await pumpPlayPage(tester, config: configFor(5, 6));
+      await pumpPlayPage(tester, config: configFor(1, 6));
 
       //act
-      await play(tester, c4);
-      await play(tester, c4);
-      final successTitleCount = find.text('Section réussie').evaluate().length;
-      final sectionLabelCount = find.text('Mesures 5 à 6').evaluate().length;
-      await tester.tap(find.text('Recommencer'));
-      await tester.pumpAndSettle();
-
-      //assert
-      expect(successTitleCount, 1);
-      expect(sectionLabelCount, 1);
-      expect(visibleFirstMeasureNumbers(tester), [5]);
-    });
-
-    testWidgets('revient à la préparation avec Quitter', (tester) async {
-      //arrange
-      await pumpPlayPage(tester, config: configFor(6, 6));
-      await play(tester, c4);
-
-      //act
-      await tester.tap(find.text('Quitter'));
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
       await tester.pumpAndSettle();
 
       //assert

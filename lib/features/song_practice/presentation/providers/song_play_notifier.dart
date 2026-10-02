@@ -56,8 +56,9 @@ class SongPlayNotifier extends Notifier<SongPlayState> {
     _playablePosition = 0;
     _errorCount = 0;
     _judgedVerdicts = const {};
+    // La page de préparation empêche de lancer une section sans note à jouer.
     if (_playableEventIndices.isEmpty) {
-      return const SongPlayFinished();
+      return const SongPlayRetrying(errorCount: 0);
     }
     return _startEvent();
   }
@@ -147,27 +148,13 @@ class SongPlayNotifier extends Notifier<SongPlayState> {
     }
   }
 
-  // Une section ratée reprend du début après le message de reprise ; une
-  // section jouée sans erreur est réussie.
+  // Une section terminée reprend toujours du début après le message de
+  // reprise, réussie ou non : on n'en sort qu'en quittant la page.
   void _endSection() {
-    if (_errorCount == 0) {
-      state = const SongPlayFinished();
-      return;
-    }
     state = SongPlayRetrying(errorCount: _errorCount);
     _retryTimer = Timer(sectionRetryDelay, () {
       _retryTimer = null;
       state = _firstState();
     });
-  }
-
-  /// Reprend la section au premier événement, compteur d'erreurs à zéro.
-  void restart() {
-    _advanceTimer?.cancel();
-    _advanceTimer = null;
-    _retryTimer?.cancel();
-    _retryTimer = null;
-    _pressedDuringFeedback.clear();
-    state = _firstState();
   }
 }

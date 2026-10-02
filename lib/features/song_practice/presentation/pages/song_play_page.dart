@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
+import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/core/widgets/midi_only_exercise_frame.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_notifier.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_state.dart';
-import 'package:key_starter/features/song_practice/presentation/widgets/song_finished_view.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_play_running_view.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_retry_view.dart';
 
@@ -46,23 +46,24 @@ class _SongPlayPageState extends ConsumerState<SongPlayPage> {
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: switch (playState) {
-              SongPlayRunning() => SongPlayRunningView(
-                config: widget.config,
-                running: playState,
-              ),
-              SongPlayRetrying(:final errorCount) => SongRetryView(
-                errorCount: errorCount,
-              ),
-              SongPlayFinished() => SongFinishedView(
-                section: widget.config.section,
-                measureCount: widget.config.song.measureCount,
-                onRestart: () => ref
-                    .read(songPlayProvider(widget.config).notifier)
-                    .restart(),
-                onQuit: () => Navigator.of(context).pop(),
-              ),
-            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ConceptTopBar(title: widget.config.song.title),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: switch (playState) {
+                    SongPlayRunning() => SongPlayRunningView(
+                      config: widget.config,
+                      running: playState,
+                    ),
+                    SongPlayRetrying(:final errorCount) => SongRetryView(
+                      errorCount: errorCount,
+                    ),
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
