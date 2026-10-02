@@ -9,3 +9,8 @@ class UnsupportedSongException implements Exception {
 
   const UnsupportedSongException(this.reason);
 }
+
+/// Le fichier d'un morceau est introuvable ou n'est pas un MusicXML lisible.
+class SongFileException implements Exception {
+  const SongFileException();
+}

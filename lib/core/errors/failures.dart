@@ -24,3 +24,21 @@ class CacheFailure extends Failure {
   @override
   List<Object?> get props => [];
 }
+
+/// La partition contient un élément pas encore pris en charge ; [reason] est
+/// affichable à l'utilisateur.
+class UnsupportedSongFailure extends Failure {
+  final String reason;
+
+  const UnsupportedSongFailure(this.reason);
+
+  @override
+  List<Object?> get props => [reason];
+}
+
+class SongFileFailure extends Failure {
+  const SongFileFailure();
+
+  @override
+  List<Object?> get props => [];
+}
