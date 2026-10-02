@@ -22,7 +22,9 @@ import '../../../../core/input/fake_input_source.dart';
 class _EmptySongRepository implements SongRepository {
   @override
   Future<Either<Failure, Song>> loadSong(BundledSong bundledSong) async =>
-      Right(Song(title: bundledSong.title, measureCount: 0, events: const []));
+      Right(
+        Song(title: bundledSong.title, measures: const [], events: const []),
+      );
 }
 
 void main() {

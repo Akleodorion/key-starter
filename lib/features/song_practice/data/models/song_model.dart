@@ -2,6 +2,7 @@ import 'package:key_starter/core/errors/exceptions.dart';
 import 'package:key_starter/core/models/two_staff_event.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
 import 'package:xml/xml.dart';
 
 const _stepLetters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -9,7 +10,7 @@ const _stepLetters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 class SongModel extends Song {
   const SongModel({
     required super.title,
-    required super.measureCount,
+    required super.measures,
     required super.events,
   });
 
@@ -21,6 +22,7 @@ class SongModel extends Song {
     _rejectUnsupported(document);
     final measures = document.findAllElements('measure').toList();
     final eventsByOnset = <int, _SongEventBuilder>{};
+    final songMeasures = <SongMeasure>[];
     var measureStart = 0;
 
     for (var measureIndex = 0; measureIndex < measures.length; measureIndex++) {
@@ -55,13 +57,20 @@ class SongModel extends Song {
         }
         if (cursor > longestCursor) longestCursor = cursor;
       }
+      songMeasures.add(
+        SongMeasure(
+          number: measureIndex + 1,
+          startDivisions: measureStart,
+          durationDivisions: longestCursor,
+        ),
+      );
       measureStart += longestCursor;
     }
 
     final onsets = eventsByOnset.keys.toList()..sort();
     return SongModel(
       title: title,
-      measureCount: measures.length,
+      measures: songMeasures,
       events: [for (final onset in onsets) eventsByOnset[onset]!.build()],
     );
   }

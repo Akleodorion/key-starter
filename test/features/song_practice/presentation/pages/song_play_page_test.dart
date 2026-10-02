@@ -8,6 +8,7 @@ import 'package:key_starter/core/theme/app_theme.dart';
 import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
 import 'package:key_starter/features/song_practice/presentation/pages/song_play_page.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
@@ -17,7 +18,10 @@ import '../../../../core/input/fake_input_source.dart';
 const config = SongPlayConfig(
   song: Song(
     title: 'Essai',
-    measureCount: 2,
+    measures: [
+      SongMeasure(number: 1, startDivisions: 0, durationDivisions: 8),
+      SongMeasure(number: 2, startDivisions: 8, durationDivisions: 8),
+    ],
     events: [
       SongEvent(
         measureNumber: 2,

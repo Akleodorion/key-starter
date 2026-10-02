@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/errors/exceptions.dart';
 import 'package:key_starter/core/models/two_staff_event.dart';
 import 'package:key_starter/features/song_practice/data/models/song_model.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
 
 /// Partition MusicXML minimale d'une partie piano à deux portées, en Do
 /// majeur et 4/4 (unité : la croche), dont les mesures sont [measures].
@@ -164,7 +165,10 @@ void main() {
         final sut = SongModel.fromMusicXml(xml, title: 'Essai');
 
         //assert
-        expect(sut.measureCount, 2);
+        expect(sut.measures, const [
+          SongMeasure(number: 1, startDivisions: 0, durationDivisions: 8),
+          SongMeasure(number: 2, startDivisions: 8, durationDivisions: 8),
+        ]);
         expect(sut.events.map((event) => event.onsetDivisions), [0, 8, 12]);
         expect(sut.events.map((event) => event.measureNumber), [1, 2, 2]);
       });
@@ -319,6 +323,13 @@ void main() {
 
           //assert
           expect(sut.measureCount, 16);
+          expect(sut.measures.map((measure) => measure.startDivisions), [
+            for (var index = 0; index < 16; index++) index * 8,
+          ]);
+          expect(
+            sut.measures.map((measure) => measure.durationDivisions),
+            everyElement(8),
+          );
           expect(sut.events, hasLength(62));
           expect(
             sut.events.first.notes,

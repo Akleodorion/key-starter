@@ -10,6 +10,7 @@ import 'package:key_starter/core/theme/app_theme.dart';
 import 'package:key_starter/features/song_practice/domain/entities/bundled_song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
 import 'package:key_starter/features/song_practice/domain/repositories/song_repository.dart';
 import 'package:key_starter/features/song_practice/domain/usecases/load_song_usecase.dart';
 import 'package:key_starter/features/song_practice/presentation/pages/song_play_page.dart';
@@ -22,7 +23,7 @@ import '../../../../core/input/fake_input_source.dart';
 
 const song = Song(
   title: 'Ode à la joie',
-  measureCount: 1,
+  measures: [SongMeasure(number: 1, startDivisions: 0, durationDivisions: 8)],
   events: [
     SongEvent(
       measureNumber: 1,

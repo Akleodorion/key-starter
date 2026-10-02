@@ -7,6 +7,7 @@ import 'package:key_starter/core/models/two_staff_event.dart';
 import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_notifier.dart';
@@ -23,7 +24,10 @@ const e4 = 64;
 /// Mesure 1 : Mi4 + quinte Do3/Sol3, puis Ré4 ; mesure 2 : Sol3 seul, puis Do4.
 const song = Song(
   title: 'Essai',
-  measureCount: 2,
+  measures: [
+    SongMeasure(number: 1, startDivisions: 0, durationDivisions: 8),
+    SongMeasure(number: 2, startDivisions: 8, durationDivisions: 8),
+  ],
   events: [
     SongEvent(
       measureNumber: 1,
