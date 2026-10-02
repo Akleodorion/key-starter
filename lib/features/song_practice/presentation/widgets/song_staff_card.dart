@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
-import 'package:key_starter/features/song_practice/presentation/widgets/two_staff_flashcard_staff_widget.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
+import 'package:key_starter/features/song_practice/presentation/widgets/song_staff_widget.dart';
 
-class TwoStaffFlashcardStaffCard extends StatelessWidget {
-  const TwoStaffFlashcardStaffCard({super.key});
+class SongStaffCard extends StatelessWidget {
+  final SongPlayConfig config;
+
+  const SongStaffCard({super.key, required this.config});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +20,7 @@ class TwoStaffFlashcardStaffCard extends StatelessWidget {
         border: Border.all(color: colors.line),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const TwoStaffFlashcardStaffWidget(),
+      child: SongStaffWidget(config: config),
     );
   }
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/models/concepts/songs_concept.dart';
-import 'package:key_starter/core/models/exercises/two_hand_test_exercise.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/widgets/concept_header.dart';
 import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/core/widgets/midi_only_entry_card.dart';
-import 'package:key_starter/features/song_practice/presentation/pages/two_staff_flashcard_page.dart';
+import 'package:key_starter/features/song_practice/domain/entities/bundled_song.dart';
+import 'package:key_starter/features/song_practice/presentation/models/song_card_entry.dart';
+import 'package:key_starter/features/song_practice/presentation/pages/song_setup_page.dart';
 
 class SongPracticeConceptPage extends StatelessWidget {
   const SongPracticeConceptPage({super.key});
@@ -28,10 +29,11 @@ class SongPracticeConceptPage extends StatelessWidget {
                 const ConceptHeader(concept: SongsConcept()),
                 const SizedBox(height: 32),
                 MidiOnlyEntryCard(
-                  entry: const TwoHandTestExercise(),
+                  entry: SongCardEntry(odeToJoy),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const TwoStaffFlashcardPage(),
+                      builder: (_) =>
+                          const SongSetupPage(bundledSong: odeToJoy),
                     ),
                   ),
                 ),

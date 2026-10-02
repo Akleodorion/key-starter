@@ -16,23 +16,28 @@ import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 ///
 /// Chaque groupe est écrit sur sa propre portée, les deux à la même abscisse
 /// puisqu'ils se jouent ensemble ; chaque portée prend la couleur de son
-/// propre état. L'événement gonfle si tout est juste, tremble sinon.
+/// propre état, ou du gris si elle n'est affichée que pour la lecture.
+/// L'événement gonfle si tout est juste, tremble sinon.
 ///
-/// Les sous-classes fournissent l'événement et l'état de chaque portée.
+/// Les sous-classes fournissent l'événement et l'état de chaque portée, et
+/// peuvent griser une portée via [isStaffMuted].
 ///
 /// ```dart
-/// class TwoStaffFlashcardStaffWidget extends GrandStaffWidget {
-///   const TwoStaffFlashcardStaffWidget({super.key});
+/// class SongStaffWidget extends GrandStaffWidget {
+///   const SongStaffWidget({super.key, required this.config});
 ///
 ///   @override
-///   TwoStaffEvent? event(WidgetRef ref) => _running(ref)?.event;
+///   TwoStaffEvent? event(WidgetRef ref) => _running(ref)?.currentEvent.notes;
 ///
 ///   @override
 ///   NoteState noteState(WidgetRef ref, ClefMode clef) { ... }
+///
+///   @override
+///   bool isStaffMuted(WidgetRef ref, ClefMode clef) => ...;
 /// }
 /// ```
 ///
-/// Voir aussi : [TwoStaffFlashcardStaffWidget]
+/// Voir aussi : [SongStaffWidget]
 abstract class GrandStaffWidget extends ConsumerWidget {
   /// Hauteur du widget ; null = toute la hauteur disponible.
   final double? height;
@@ -44,6 +49,10 @@ abstract class GrandStaffWidget extends ConsumerWidget {
 
   /// État visuel du groupe de notes de la portée [clef].
   NoteState noteState(WidgetRef ref, ClefMode clef);
+
+  /// Vrai si la portée [clef] est affichée pour la lecture seulement
+  /// (grisée, non jugée) ; aucune par défaut.
+  bool isStaffMuted(WidgetRef ref, ClefMode clef) => false;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,6 +79,8 @@ abstract class GrandStaffWidget extends ConsumerWidget {
             bassSteps: currentEvent?.bassSteps ?? const [],
             trebleState: trebleState,
             bassState: bassState,
+            trebleMuted: isStaffMuted(ref, ClefMode.treble),
+            bassMuted: isStaffMuted(ref, ClefMode.bass),
             lineColor: lineColor,
             eventScale: eventScale,
             eventShift: eventShift,
@@ -87,6 +98,8 @@ class GrandStaffPainter extends CustomPainter {
   final List<int> bassSteps;
   final NoteState trebleState;
   final NoteState bassState;
+  final bool trebleMuted;
+  final bool bassMuted;
   final Color lineColor;
   final double eventScale;
   final double eventShift;
@@ -96,6 +109,8 @@ class GrandStaffPainter extends CustomPainter {
     required this.bassSteps,
     required this.trebleState,
     required this.bassState,
+    this.trebleMuted = false,
+    this.bassMuted = false,
     required this.lineColor,
     this.eventScale = 1,
     this.eventShift = 0,
@@ -170,7 +185,7 @@ class GrandStaffPainter extends CustomPainter {
       steps: trebleSteps,
       clef: ClefMode.treble,
       staffTop: trebleTop,
-      color: _colorFor(trebleState),
+      color: _colorFor(trebleState, isMuted: trebleMuted),
       lineGap: lineGap,
     );
     paintChord(
@@ -179,17 +194,19 @@ class GrandStaffPainter extends CustomPainter {
       steps: bassSteps,
       clef: ClefMode.bass,
       staffTop: bassTop,
-      color: _colorFor(bassState),
+      color: _colorFor(bassState, isMuted: bassMuted),
       lineGap: lineGap,
     );
     canvas.restore();
   }
 
-  Color _colorFor(NoteState state) => switch (state) {
-    NoteState.correct => AppColors.stateGreen,
-    NoteState.wrong => AppColors.stateRed,
-    NoteState.idle => lineColor,
-  };
+  Color _colorFor(NoteState state, {required bool isMuted}) => isMuted
+      ? lineColor.withValues(alpha: 0.3)
+      : switch (state) {
+          NoteState.correct => AppColors.stateGreen,
+          NoteState.wrong => AppColors.stateRed,
+          NoteState.idle => lineColor,
+        };
 
   /// Trait vertical qui relie les deux portées, et l'accolade à sa gauche.
   void _paintBrace(
@@ -242,5 +259,7 @@ class GrandStaffPainter extends CustomPainter {
       old.bassSteps != bassSteps ||
       old.trebleState != trebleState ||
       old.bassState != bassState ||
+      old.trebleMuted != trebleMuted ||
+      old.bassMuted != bassMuted ||
       old.lineColor != lineColor;
 }

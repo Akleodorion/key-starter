@@ -274,8 +274,8 @@ void main() {
         //arrange
         final xml = scoreWith([
           '<note><grace/><pitch><step>D</step><octave>4</octave></pitch>'
-                  '<voice>1</voice><staff>1</staff></note>' +
-              note('C', 4, duration: 8),
+              '<voice>1</voice><staff>1</staff></note>'
+              '${note('C', 4, duration: 8)}',
         ]);
 
         //act
