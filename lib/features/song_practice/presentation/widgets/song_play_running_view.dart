@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:key_starter/core/widgets/concept_top_bar.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_state.dart';
-import 'package:key_starter/features/song_practice/presentation/widgets/song_measure_label.dart';
-import 'package:key_starter/features/song_practice/presentation/widgets/song_staff_card.dart';
+import 'package:key_starter/features/song_practice/presentation/widgets/song_score_card.dart';
 
 class SongPlayRunningView extends StatelessWidget {
   final SongPlayConfig config;
@@ -21,13 +20,10 @@ class SongPlayRunningView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ConceptTopBar(title: config.song.title),
-        const SizedBox(height: 4),
-        SongMeasureLabel(
-          measureNumber: running.currentEvent.measureNumber,
-          measureCount: config.song.measureCount,
-        ),
         const SizedBox(height: 8),
-        Expanded(child: SongStaffCard(config: config)),
+        Expanded(
+          child: SongScoreCard(config: config, running: running),
+        ),
       ],
     );
   }

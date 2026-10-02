@@ -207,3 +207,48 @@ void paintNote(
   color: color,
   lineGap: lineGap,
 );
+
+/// Dessine le trait vertical qui relie les portées d'un système, entre [top]
+/// et [bottom] à l'abscisse [x], et l'accolade à sa gauche.
+void paintBrace(
+  Canvas canvas, {
+  required double x,
+  required double top,
+  required double bottom,
+  required Color color,
+  double lineGap = staffLineGap,
+}) {
+  final systemLinePaint = Paint()
+    ..color = color.withValues(alpha: 0.85)
+    ..strokeWidth = lineGap * 0.11;
+  canvas.drawLine(Offset(x, top), Offset(x, bottom), systemLinePaint);
+
+  final braceX = x - lineGap * 0.5;
+  final middle = (top + bottom) / 2;
+  final span = bottom - top;
+  final bracePath = Path()
+    ..moveTo(braceX, top)
+    ..cubicTo(
+      braceX - lineGap * 0.9,
+      top + span * 0.1,
+      braceX + lineGap * 0.1,
+      middle - span * 0.15,
+      braceX - lineGap * 0.8,
+      middle,
+    )
+    ..cubicTo(
+      braceX + lineGap * 0.1,
+      middle + span * 0.15,
+      braceX - lineGap * 0.9,
+      bottom - span * 0.1,
+      braceX,
+      bottom,
+    );
+  canvas.drawPath(
+    bracePath,
+    Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = lineGap * 0.25,
+  );
+}

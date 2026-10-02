@@ -54,6 +54,14 @@ Le milieu entre la note de clé de fa attendue la plus haute et la note de clé 
 Une pièce à travailler, lue depuis sa partition MusicXML (fichier `.mxl` exporté par MuseScore) : une partie piano sur deux portées, en Do majeur, une voix par portée. Une partition qui contient un élément pas encore pris en charge (altérations, armure, notes liées, triolets, ornements, plusieurs voix ou parties) est refusée avec sa raison plutôt que jouée faux. Sans tempo pour l'instant : on joue un événement après l'autre ; juste ou faux, la couleur s'affiche puis on passe au suivant, sans attendre le relâchement. La fin du morceau donne le nombre d'événements faux.
 _Avoid_: Chanson, partition (le fichier, pas la pièce)
 
+**Ligne de partition**:
+Deux mesures consécutives d'un morceau sur portée double, avec clés et accolade, barres de mesure et numéro de la première mesure (pas de chiffrage pour l'instant). Chaque mesure occupe la moitié de la ligne, même sur une dernière ligne incomplète, et chaque événement y est placé selon son temps. Deux lignes sont visibles : celle en cours en haut, la suivante en dessous ; elles remontent quand le repère passe à la ligne suivante. Une note jouée reste verte ou rouge.
+_Avoid_: Système (terme de gravure, à éviter à l'écran)
+
+**Repère**:
+Le trait vertical posé sur l'événement à jouer d'un morceau. Sans tempo, il saute d'un événement au suivant ; il deviendra la barre qui avance au tempo.
+_Avoid_: Curseur, barre (réservée au tempo)
+
 **Événement de morceau**:
 Un événement deux portées daté : sa mesure, son instant d'attaque, et les notes de chaque portée qui commencent à cet instant (une note encore tenue n'en fait pas partie). La durée écrite de chaque groupe est conservée pour le dessin des figures de notes à venir.
 
