@@ -38,17 +38,42 @@ Le court délai (démarré à la réception du premier Note On MIDI d'une étape
 Règle de validation d'un groupe de notes : l'ensemble des notes jouées pendant la fenêtre de détection doit être identique à l'ensemble des notes cibles — ni note manquante, ni note en trop. Toute note en trop invalide l'étape.
 
 **Événement deux portées**:
-Ce qui se joue à un même instant sur une portée double : un groupe de notes écrit en clé de sol et un groupe écrit en clé de fa, chacun de 0 à n notes (note seule, accord, ou rien). Un morceau sera une suite d'événements datés ; le Test deux mains n'en tire qu'un à la fois, une note ou un accord par portée. Chaque portée est jugée en correspondance exacte, et l'événement n'est juste que si les deux le sont.
+Ce qui se joue à un même instant sur une portée double : un groupe de notes écrit en clé de sol et un groupe écrit en clé de fa, chacun de 0 à n notes (note seule, accord, ou rien). Un morceau en est une suite datée (voir Événement de morceau). Chaque portée est jugée en correspondance exacte, et l'événement n'est juste que si les deux le sont.
 _Avoid_: Double note, intervalle
 
 **Main droite / Main gauche**:
 Libellés affichés pour la partie écrite en clé de sol / en clé de fa. C'est la portée qui définit la main, pas la main réellement utilisée (le clavier ne la connaît pas) ; les croisements de mains sont ignorés. Dans le code : `treble` / `bass`.
 
 **Touches tenues**:
-Règle de déclenchement du jugement sans tempo : l'événement est jugé dès que le nombre de touches enfoncées en même temps atteint le nombre de notes attendues, quel que soit l'ordre d'attaque des mains. Relâcher une touche avant d'y arriver juge l'événement sur toutes les touches jouées jusque-là (donc faux). Remplace la fenêtre de détection quand il n'y a pas de tempo ; avec un tempo, la fenêtre de détection reste la règle.
+Règle de déclenchement du jugement sans tempo : l'événement est jugé dès que le nombre de touches enfoncées en même temps atteint le nombre de notes attendues, quel que soit l'ordre d'attaque des mains. Relâcher une touche avant d'y arriver juge l'événement sur toutes les touches jouées jusque-là (donc faux). Seules comptent les touches enfoncées depuis le début de l'événement : une touche tenue depuis l'événement précédent (une ronde à la main gauche pendant que la main droite avance) est ignorée. Remplace la fenêtre de détection quand il n'y a pas de tempo ; avec un tempo, la fenêtre de détection reste la règle.
 
 **Point de partage**:
 Le milieu entre la note de clé de fa attendue la plus haute et la note de clé de sol attendue la plus basse. Une touche attendue est attribuée à sa portée ; toute autre touche (fausse, ou noire) va à la clé de sol au-dessus du point de partage, à la clé de fa en dessous. Sert à dire quelle main s'est trompée.
+
+**Morceau**:
+Une pièce à travailler, lue depuis sa partition MusicXML (fichier `.mxl` exporté par MuseScore) : une partie piano sur deux portées, en Do majeur, une voix par portée. Une partition qui contient un élément pas encore pris en charge (altérations, armure, notes liées, triolets, ornements, plusieurs voix ou parties) est refusée avec sa raison plutôt que jouée faux. Sans tempo pour l'instant : on joue un événement après l'autre ; juste ou faux, la couleur s'affiche puis on passe au suivant, sans attendre le relâchement. On travaille toujours une section (par défaut le morceau entier).
+_Avoid_: Chanson, partition (le fichier, pas la pièce)
+
+**Section**:
+Une plage continue de mesures travaillée d'un seul tenant, de la mesure X à la mesure Y (jamais deux plages séparées), choisie sur la page de préparation ; le morceau entier est la section qui va de la première à la dernière mesure. Toute la partition reste affichée, la section sur un fond violet très clair ; on commence au premier événement de X et on s'arrête après le dernier de Y.
+_Avoid_: Passage, extrait
+
+**Reprise**:
+Ce qui suit toute section terminée, réussie ou non : un court message (« 2 erreurs · on reprend », « Sans erreur · on reprend »), puis la section repart de X avec les mêmes réglages et les couleurs effacées. On travaille la section en boucle ; on n'en sort que par la flèche retour de la page de jeu, qui ramène à la préparation.
+
+**Ligne de partition**:
+Deux mesures consécutives d'un morceau sur portée double, avec clés et accolade, barres de mesure et numéro de la première mesure (pas de chiffrage pour l'instant). Chaque mesure occupe la moitié de la ligne, même sur une dernière ligne incomplète, et chaque événement y est placé selon son temps. Deux lignes sont visibles : celle en cours en haut, la suivante en dessous ; elles remontent quand le repère passe à la ligne suivante. Une note jouée reste verte ou rouge.
+_Avoid_: Système (terme de gravure, à éviter à l'écran)
+
+**Repère**:
+Le trait vertical posé sur l'événement à jouer d'un morceau. Sans tempo, il saute d'un événement au suivant ; il deviendra la barre qui avance au tempo.
+_Avoid_: Curseur, barre (réservée au tempo)
+
+**Événement de morceau**:
+Un événement deux portées daté : sa mesure, son instant d'attaque, et les notes de chaque portée qui commencent à cet instant (une note encore tenue n'en fait pas partie). La durée écrite de chaque groupe est conservée pour le dessin des figures de notes à venir.
+
+**Mode une main**:
+Travail d'un morceau à la main droite seule ou à la main gauche seule (choisi sur la page de préparation, deux mains par défaut). L'autre portée reste affichée en gris, sans être jugée ; les événements où seule l'autre main joue sont sautés ; toute touche en plus de la main choisie est fausse.
 
 **Source d'entrée**:
 D'où l'app reçoit ce que l'élève joue : **MIDI** (un clavier connecté) ou **Micro** (le son du synthé ou du piano capté par le téléphone). Choisie automatiquement, jamais par l'utilisateur : MIDI dès qu'un clavier est connecté, Micro sinon, « Aucune entrée » si ni l'un ni l'autre n'est disponible. Bascule à chaud pendant un exercice. Le MIDI est la référence de précision ; le Micro est un repli, réservé aux exercices sur une seule note (Notes simples, Flashcard, Défilement) — Accords, Accords simples et Tempo exigent le MIDI.

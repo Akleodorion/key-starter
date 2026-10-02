@@ -4,7 +4,7 @@ import 'package:key_starter/core/widgets/ui_text.dart';
 class PrimaryButton extends StatelessWidget {
   final String label;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const PrimaryButton({
     super.key,
