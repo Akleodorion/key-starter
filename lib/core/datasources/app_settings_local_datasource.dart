@@ -80,3 +80,29 @@ class AppSettingsLocalDataSourceImpl implements AppSettingsLocalDataSource {
   Future<void> saveShowNoteAid(bool showNoteAid) =>
       preferences.setBool(_showNoteAidKey, showNoteAid);
 }
+
+/// Implémentation de [AppSettingsLocalDataSource] qui ne garde les réglages
+/// qu'en mémoire : valeur par défaut du provider, pour les tests et tant que
+/// `main()` ne branche pas la sauvegarde.
+class InMemoryAppSettingsLocalDataSource implements AppSettingsLocalDataSource {
+  @override
+  ThemeMode themeMode = ThemeMode.system;
+
+  @override
+  NoteLanguage notationLanguage = NoteLanguage.fr;
+
+  @override
+  bool showNoteAid = false;
+
+  @override
+  Future<void> saveThemeMode(ThemeMode themeMode) async =>
+      this.themeMode = themeMode;
+
+  @override
+  Future<void> saveNotationLanguage(NoteLanguage language) async =>
+      notationLanguage = language;
+
+  @override
+  Future<void> saveShowNoteAid(bool showNoteAid) async =>
+      this.showNoteAid = showNoteAid;
+}

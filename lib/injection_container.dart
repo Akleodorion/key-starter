@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:key_starter/core/datasources/app_settings_local_datasource.dart';
 import 'package:key_starter/features/session/data/datasources/session_local_datasource.dart';
 import 'package:key_starter/features/session/data/repositories/session_repository_impl.dart';
 import 'package:key_starter/features/session/domain/repositories/session_repository.dart';
@@ -16,6 +17,11 @@ final sl = GetIt.instance;
 Future<void> initDependencies() async {
   final prefs = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => prefs);
+
+  // Réglages de l'app
+  sl.registerLazySingleton<AppSettingsLocalDataSource>(
+    () => AppSettingsLocalDataSourceImpl(preferences: sl()),
+  );
 
   // Session
   sl.registerLazySingleton<SessionLocalDataSource>(
