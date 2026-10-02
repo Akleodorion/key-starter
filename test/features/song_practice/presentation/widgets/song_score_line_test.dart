@@ -7,6 +7,7 @@ import 'package:key_starter/core/utils/two_staff_judgement.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_section.dart';
 import 'package:key_starter/features/song_practice/presentation/layout/score_line_note.dart';
 import 'package:key_starter/features/song_practice/presentation/layout/song_line_layout.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_score_line.dart';
@@ -41,6 +42,8 @@ const correctTrebleWrongBass = TwoStaffVerdict(
   bass: StaffPartVerdict(isCorrect: false, playedMidiNumbers: {48}),
 );
 
+const wholeSong = SongSection(firstMeasureNumber: 1, lastMeasureNumber: 2);
+
 void main() {
   group('SongScoreLine', () {
     testWidgets(
@@ -63,6 +66,7 @@ void main() {
                 feedbackState: NoteState.idle,
                 trebleMuted: false,
                 bassMuted: false,
+                section: wholeSong,
                 height: 150,
               ),
             ),
@@ -123,6 +127,7 @@ void main() {
               feedbackState: NoteState.idle,
               trebleMuted: false,
               bassMuted: true,
+              section: wholeSong,
               height: 150,
             ),
           ),
@@ -138,6 +143,45 @@ void main() {
       expect(sut.bassMuted, isTrue);
       expect(sut.notes.first.bassState, NoteState.idle);
       expect(sut.notes.first.trebleState, NoteState.correct);
+    });
+
+    testWidgets('teinte seulement les mesures de la section sur cette ligne', (
+      tester,
+    ) async {
+      //arrange
+      final line = layoutSongLines(song, measuresPerLine: 2).single;
+
+      //act
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SongScoreLine(
+              line: line,
+              song: song,
+              measuresPerLine: 2,
+              judgedVerdicts: const {},
+              currentEventIndex: 2,
+              feedbackState: NoteState.idle,
+              trebleMuted: false,
+              bassMuted: false,
+              section: const SongSection(
+                firstMeasureNumber: 2,
+                lastMeasureNumber: 5,
+              ),
+              height: 150,
+            ),
+          ),
+        ),
+      );
+
+      //assert
+      final sut = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((customPaint) => customPaint.painter)
+          .whereType<SongScoreLinePainter>()
+          .single;
+      expect(sut.sectionSlots, [1]);
     });
   });
 }

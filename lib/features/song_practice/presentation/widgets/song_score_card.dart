@@ -35,6 +35,7 @@ class SongScoreCard extends StatelessWidget {
           feedbackState: running.noteState,
           trebleMuted: config.hands == HandSelection.leftOnly,
           bassMuted: config.hands == HandSelection.rightOnly,
+          section: config.section,
           lineHeight: constraints.maxHeight / 2,
         ),
       ),

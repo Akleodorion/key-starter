@@ -9,45 +9,63 @@ import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_section.dart';
 import 'package:key_starter/features/song_practice/presentation/pages/song_play_page.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_play_notifier.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_score_line.dart';
 
 import '../../../../core/input/fake_input_source.dart';
 
 const c4 = 60;
+const d4 = 62;
 
 /// Six mesures (trois lignes), un Do 4 au premier temps de chaque mesure.
-final config = SongPlayConfig(
-  song: Song(
-    title: 'Essai',
-    measures: [
-      for (var index = 0; index < 6; index++)
-        SongMeasure(
-          number: index + 1,
-          startDivisions: index * 8,
-          durationDivisions: 8,
-        ),
-    ],
-    events: [
-      for (var index = 0; index < 6; index++)
-        SongEvent(
-          measureNumber: index + 1,
-          onsetDivisions: index * 8,
-          notes: const TwoStaffEvent(trebleSteps: [0], bassSteps: []),
-        ),
-    ],
-  ),
-  hands: HandSelection.both,
+final song = Song(
+  title: 'Essai',
+  measures: [
+    for (var index = 0; index < 6; index++)
+      SongMeasure(
+        number: index + 1,
+        startDivisions: index * 8,
+        durationDivisions: 8,
+      ),
+  ],
+  events: [
+    for (var index = 0; index < 6; index++)
+      SongEvent(
+        measureNumber: index + 1,
+        onsetDivisions: index * 8,
+        notes: const TwoStaffEvent(trebleSteps: [0], bassSteps: []),
+      ),
+  ],
 );
+
+SongPlayConfig configFor(int firstMeasure, int lastMeasure) => SongPlayConfig(
+  song: song,
+  hands: HandSelection.both,
+  section: SongSection(
+    firstMeasureNumber: firstMeasure,
+    lastMeasureNumber: lastMeasure,
+  ),
+);
+
+const iPhoneSeLandscape = Size(667, 375);
+const galaxyNote10Landscape = Size(869, 412);
 
 void main() {
   late FakeInputSource inputSource;
 
-  Future<void> pumpPlayPage(WidgetTester tester) async {
+  /// Ouvre la page de jeu par-dessus une page d'accueil, pour que Quitter
+  /// ait où revenir.
+  Future<void> pumpPlayPage(
+    WidgetTester tester, {
+    required SongPlayConfig config,
+    Size screenSize = iPhoneSeLandscape,
+  }) async {
     tester.view.devicePixelRatio = 2;
-    tester.view.physicalSize = const Size(667, 375) * 2;
+    tester.view.physicalSize = screenSize * 2;
     addTearDown(tester.view.reset);
     inputSource = FakeInputSource();
     await tester.pumpWidget(
@@ -58,15 +76,24 @@ void main() {
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: SongPlayPage(config: config),
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => SongPlayPage(config: config)),
+              ),
+              child: const Text('Préparation'),
+            ),
+          ),
         ),
       ),
     );
+    await tester.tap(find.text('Préparation'));
+    await tester.pumpAndSettle();
   }
 
-  Future<void> playC4(WidgetTester tester) async {
-    inputSource.play(c4);
-    inputSource.release(c4);
+  Future<void> play(WidgetTester tester, int midiNumber) async {
+    inputSource.play(midiNumber);
+    inputSource.release(midiNumber);
     await tester.pump(noteAdvanceDelay);
     await tester.pump();
   }
@@ -77,55 +104,97 @@ void main() {
       .toList();
 
   group('SongPlayPage', () {
-    testWidgets(
-      'affiche deux lignes de partition, sans dépasser sur un petit téléphone en paysage',
-      (tester) async {
-        //act
-        await pumpPlayPage(tester);
+    for (final (device, screenSize) in [
+      ('un iPhone SE', iPhoneSeLandscape),
+      ('un Galaxy Note 10', galaxyNote10Landscape),
+    ]) {
+      testWidgets(
+        'affiche deux lignes de partition, sans dépasser sur $device en paysage',
+        (tester) async {
+          //act
+          await pumpPlayPage(
+            tester,
+            config: configFor(1, 6),
+            screenSize: screenSize,
+          );
 
-        //assert
-        expect(tester.takeException(), isNull);
-        expect(visibleFirstMeasureNumbers(tester), [1, 3]);
-      },
-    );
+          //assert
+          expect(tester.takeException(), isNull);
+          expect(visibleFirstMeasureNumbers(tester), [1, 3]);
+        },
+      );
+    }
 
     testWidgets('fait défiler la partition au fil de l\'avancement', (
       tester,
     ) async {
       //arrange
-      await pumpPlayPage(tester);
+      await pumpPlayPage(tester, config: configFor(1, 6));
 
       //act
-      await playC4(tester);
-      await playC4(tester);
+      await play(tester, c4);
+      await play(tester, c4);
       await tester.pumpAndSettle();
 
       //assert
       expect(visibleFirstMeasureNumbers(tester), [3, 5]);
     });
 
-    testWidgets('affiche la fin du morceau avec les erreurs, puis recommence', (
+    testWidgets(
+      'annonce la reprise d\'une section ratée puis revient à sa première ligne',
+      (tester) async {
+        //arrange
+        await pumpPlayPage(tester, config: configFor(4, 6));
+
+        //act
+        await play(tester, d4);
+        await play(tester, c4);
+        await play(tester, c4);
+        final retryMessageCount = find
+            .text('1 erreur · on reprend')
+            .evaluate()
+            .length;
+        await tester.pump(sectionRetryDelay);
+        await tester.pumpAndSettle();
+
+        //assert
+        expect(retryMessageCount, 1);
+        expect(visibleFirstMeasureNumbers(tester), [3, 5]);
+      },
+    );
+
+    testWidgets('annonce la section réussie, puis Recommencer la relance', (
       tester,
     ) async {
       //arrange
-      await pumpPlayPage(tester);
+      await pumpPlayPage(tester, config: configFor(5, 6));
 
       //act
-      for (var index = 0; index < 5; index++) {
-        await playC4(tester);
-      }
-      inputSource.play(62);
-      await tester.pump(noteAdvanceDelay);
-      await tester.pump();
-      final finishedTitleCount = find.text('Morceau terminé').evaluate().length;
-      final errorLabelCount = find.text('1 erreur').evaluate().length;
+      await play(tester, c4);
+      await play(tester, c4);
+      final successTitleCount = find.text('Section réussie').evaluate().length;
+      final sectionLabelCount = find.text('Mesures 5 à 6').evaluate().length;
       await tester.tap(find.text('Recommencer'));
       await tester.pumpAndSettle();
 
       //assert
-      expect(finishedTitleCount, 1);
-      expect(errorLabelCount, 1);
-      expect(visibleFirstMeasureNumbers(tester), [1, 3]);
+      expect(successTitleCount, 1);
+      expect(sectionLabelCount, 1);
+      expect(visibleFirstMeasureNumbers(tester), [5]);
+    });
+
+    testWidgets('revient à la préparation avec Quitter', (tester) async {
+      //arrange
+      await pumpPlayPage(tester, config: configFor(6, 6));
+      await play(tester, c4);
+
+      //act
+      await tester.tap(find.text('Quitter'));
+      await tester.pumpAndSettle();
+
+      //assert
+      expect(find.byType(SongPlayPage), findsNothing);
+      expect(find.text('Préparation'), findsOneWidget);
     });
   });
 }

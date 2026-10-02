@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/note_state.dart';
 import 'package:key_starter/core/utils/two_staff_judgement.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_section.dart';
 import 'package:key_starter/features/song_practice/presentation/layout/song_line_layout.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_score_line.dart';
 
@@ -24,6 +25,7 @@ class SongScoreLines extends StatelessWidget {
   final NoteState feedbackState;
   final bool trebleMuted;
   final bool bassMuted;
+  final SongSection section;
   final double lineHeight;
 
   const SongScoreLines({
@@ -34,6 +36,7 @@ class SongScoreLines extends StatelessWidget {
     required this.feedbackState,
     required this.trebleMuted,
     required this.bassMuted,
+    required this.section,
     required this.lineHeight,
   });
 
@@ -88,6 +91,7 @@ class SongScoreLines extends StatelessWidget {
                         feedbackState: feedbackState,
                         trebleMuted: trebleMuted,
                         bassMuted: bassMuted,
+                        section: section,
                         height: lineHeight,
                       ),
                     ),

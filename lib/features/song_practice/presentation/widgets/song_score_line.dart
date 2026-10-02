@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
 import 'package:key_starter/core/enums/note_state.dart';
@@ -8,12 +9,14 @@ import 'package:key_starter/core/utils/staff_paint_utils.dart';
 import 'package:key_starter/core/utils/two_staff_judgement.dart';
 import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_section.dart';
 import 'package:key_starter/features/song_practice/presentation/layout/score_line_note.dart';
 import 'package:key_starter/features/song_practice/presentation/layout/song_line_layout.dart';
 
 /// Une ligne de partition sur portée double : clés et accolade, barres de
-/// mesure, numéro de la première mesure, chaque événement à sa place et
-/// coloré selon son verdict, et le repère sur l'événement en cours. Celui-ci
+/// mesure, numéro de la première mesure, fond teinté derrière les mesures de
+/// la section travaillée, chaque événement à sa place et coloré selon son
+/// verdict, et le repère sur l'événement en cours. Celui-ci
 /// gonfle (juste) ou tremble (faux) quand il vient d'être jugé.
 class SongScoreLine extends StatelessWidget {
   final SongLine line;
@@ -27,6 +30,7 @@ class SongScoreLine extends StatelessWidget {
   final NoteState feedbackState;
   final bool trebleMuted;
   final bool bassMuted;
+  final SongSection section;
   final double height;
 
   const SongScoreLine({
@@ -39,6 +43,7 @@ class SongScoreLine extends StatelessWidget {
     required this.feedbackState,
     required this.trebleMuted,
     required this.bassMuted,
+    required this.section,
     required this.height,
   });
 
@@ -65,6 +70,10 @@ class SongScoreLine extends StatelessWidget {
         builder: (context, eventScale, eventShift) => CustomPaint(
           painter: SongScoreLinePainter(
             notes: notes,
+            sectionSlots: [
+              for (var slot = 0; slot < line.measureCount; slot++)
+                if (section.contains(line.measures[slot].number)) slot,
+            ],
             cursorPosition: cursorPosition,
             firstMeasureNumber: line.firstMeasureNumber,
             measureCount: line.measureCount,
@@ -106,6 +115,9 @@ class SongScoreLine extends StatelessWidget {
 /// barres de mesure, le numéro de mesure, les événements et le repère.
 class SongScoreLinePainter extends CustomPainter {
   final List<ScoreLineNote> notes;
+
+  /// Places, dans la ligne, des mesures de la section travaillée.
+  final List<int> sectionSlots;
   final double? cursorPosition;
   final int firstMeasureNumber;
   final int measureCount;
@@ -118,6 +130,7 @@ class SongScoreLinePainter extends CustomPainter {
 
   const SongScoreLinePainter({
     required this.notes,
+    required this.sectionSlots,
     required this.cursorPosition,
     required this.firstMeasureNumber,
     required this.measureCount,
@@ -141,6 +154,20 @@ class SongScoreLinePainter extends CustomPainter {
     final notesLeft = staffLeft + lineGap * 5;
     final measureWidth = (size.width - lineGap - notesLeft) / measuresPerLine;
     final staffRight = notesLeft + measureWidth * measureCount;
+
+    final sectionPaint = Paint()
+      ..color = AppColors.songsTint.withValues(alpha: 0.7);
+    for (final slot in sectionSlots) {
+      canvas.drawRect(
+        Rect.fromLTRB(
+          notesLeft + slot * measureWidth,
+          trebleTop - lineGap,
+          notesLeft + (slot + 1) * measureWidth,
+          systemBottom + lineGap,
+        ),
+        sectionPaint,
+      );
+    }
 
     for (final (clef, staffTop) in [
       (ClefMode.treble, trebleTop),
@@ -284,6 +311,7 @@ class SongScoreLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(SongScoreLinePainter old) =>
       old.notes != notes ||
+      !listEquals(old.sectionSlots, sectionSlots) ||
       old.cursorPosition != cursorPosition ||
       old.firstMeasureNumber != firstMeasureNumber ||
       old.measureCount != measureCount ||

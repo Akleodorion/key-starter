@@ -51,8 +51,15 @@ Règle de déclenchement du jugement sans tempo : l'événement est jugé dès q
 Le milieu entre la note de clé de fa attendue la plus haute et la note de clé de sol attendue la plus basse. Une touche attendue est attribuée à sa portée ; toute autre touche (fausse, ou noire) va à la clé de sol au-dessus du point de partage, à la clé de fa en dessous. Sert à dire quelle main s'est trompée.
 
 **Morceau**:
-Une pièce à travailler, lue depuis sa partition MusicXML (fichier `.mxl` exporté par MuseScore) : une partie piano sur deux portées, en Do majeur, une voix par portée. Une partition qui contient un élément pas encore pris en charge (altérations, armure, notes liées, triolets, ornements, plusieurs voix ou parties) est refusée avec sa raison plutôt que jouée faux. Sans tempo pour l'instant : on joue un événement après l'autre ; juste ou faux, la couleur s'affiche puis on passe au suivant, sans attendre le relâchement. La fin du morceau donne le nombre d'événements faux.
+Une pièce à travailler, lue depuis sa partition MusicXML (fichier `.mxl` exporté par MuseScore) : une partie piano sur deux portées, en Do majeur, une voix par portée. Une partition qui contient un élément pas encore pris en charge (altérations, armure, notes liées, triolets, ornements, plusieurs voix ou parties) est refusée avec sa raison plutôt que jouée faux. Sans tempo pour l'instant : on joue un événement après l'autre ; juste ou faux, la couleur s'affiche puis on passe au suivant, sans attendre le relâchement. On travaille toujours une section (par défaut le morceau entier).
 _Avoid_: Chanson, partition (le fichier, pas la pièce)
+
+**Section**:
+Une plage continue de mesures travaillée d'un seul tenant, de la mesure X à la mesure Y (jamais deux plages séparées), choisie sur la page de préparation ; le morceau entier est la section qui va de la première à la dernière mesure. Toute la partition reste affichée, la section sur un fond violet très clair ; on commence au premier événement de X et on s'arrête après le dernier de Y.
+_Avoid_: Passage, extrait
+
+**Reprise**:
+Ce qui suit une section terminée avec au moins une erreur : un court message (« 2 erreurs · on reprend »), puis la section repart de X avec les mêmes réglages et les couleurs effacées. Une section terminée sans erreur mène à l'écran « Section réussie » (Recommencer ou Quitter vers la préparation).
 
 **Ligne de partition**:
 Deux mesures consécutives d'un morceau sur portée double, avec clés et accolade, barres de mesure et numéro de la première mesure (pas de chiffrage pour l'instant). Chaque mesure occupe la moitié de la ligne, même sur une dernière ligne incomplète, et chaque événement y est placé selon son temps. Deux lignes sont visibles : celle en cours en haut, la suivante en dessous ; elles remontent quand le repère passe à la ligne suivante. Une note jouée reste verte ou rouge.

@@ -92,6 +92,7 @@ void main() {
   Future<void> pumpSetupPage(
     WidgetTester tester, {
     Size screenSize = galaxyNote10Portrait,
+    double textScale = 1,
   }) async {
     tester.view.devicePixelRatio = 2;
     tester.view.physicalSize = screenSize * 2;
@@ -101,6 +102,12 @@ void main() {
         container: container,
         child: MaterialApp(
           theme: AppTheme.light(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
           home: const SongSetupPage(bundledSong: odeToJoy),
         ),
       ),
@@ -132,13 +139,13 @@ void main() {
       ('paysage', galaxyNote10Landscape),
     ]) {
       testWidgets(
-        'tient sans dépassement sur un Galaxy Note 10 en $orientation',
+        'tient sans dépassement sur un Galaxy Note 10 en $orientation, police agrandie à 130 %',
         (tester) async {
           //arrange
           container = createContainer();
 
           //act
-          await pumpSetupPage(tester, screenSize: screenSize);
+          await pumpSetupPage(tester, screenSize: screenSize, textScale: 1.3);
 
           //assert
           expect(tester.takeException(), isNull);

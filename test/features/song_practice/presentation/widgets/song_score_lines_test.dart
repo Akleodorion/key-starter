@@ -6,6 +6,7 @@ import 'package:key_starter/core/theme/app_theme.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_section.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_score_line.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_score_lines.dart';
 
@@ -47,6 +48,10 @@ void main() {
           feedbackState: NoteState.idle,
           trebleMuted: false,
           bassMuted: false,
+          section: const SongSection(
+            firstMeasureNumber: 1,
+            lastMeasureNumber: 6,
+          ),
           lineHeight: lineHeight,
         ),
       ),
