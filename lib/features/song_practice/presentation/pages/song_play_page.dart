@@ -8,6 +8,7 @@ import 'package:key_starter/features/song_practice/presentation/providers/song_p
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_state.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_finished_view.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_play_running_view.dart';
+import 'package:key_starter/features/song_practice/presentation/widgets/song_retry_view.dart';
 
 class SongPlayPage extends ConsumerStatefulWidget {
   final SongPlayConfig config;
@@ -50,11 +51,16 @@ class _SongPlayPageState extends ConsumerState<SongPlayPage> {
                 config: widget.config,
                 running: playState,
               ),
-              SongPlayFinished(:final errorCount) => SongFinishedView(
+              SongPlayRetrying(:final errorCount) => SongRetryView(
                 errorCount: errorCount,
+              ),
+              SongPlayFinished() => SongFinishedView(
+                section: widget.config.section,
+                measureCount: widget.config.song.measureCount,
                 onRestart: () => ref
                     .read(songPlayProvider(widget.config).notifier)
                     .restart(),
+                onQuit: () => Navigator.of(context).pop(),
               ),
             },
           ),

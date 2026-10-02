@@ -54,11 +54,21 @@ class SongPlayRunning extends SongPlayState {
   ];
 }
 
-class SongPlayFinished extends SongPlayState {
+/// La section vient de se terminer avec des erreurs : elle va reprendre du
+/// début avec les mêmes réglages.
+class SongPlayRetrying extends SongPlayState {
   final int errorCount;
 
-  const SongPlayFinished({required this.errorCount});
+  const SongPlayRetrying({required this.errorCount});
 
   @override
   List<Object?> get props => [errorCount];
+}
+
+/// La section a été jouée en entier sans erreur.
+class SongPlayFinished extends SongPlayState {
+  const SongPlayFinished();
+
+  @override
+  List<Object?> get props => [];
 }

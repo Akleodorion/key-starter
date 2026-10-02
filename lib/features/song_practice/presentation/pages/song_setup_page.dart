@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/errors/failures.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/widgets/concept_top_bar.dart';
-import 'package:key_starter/core/widgets/display_text.dart';
 import 'package:key_starter/features/song_practice/domain/entities/bundled_song.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_providers.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_load_error_view.dart';
@@ -31,9 +30,7 @@ class SongSetupPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const ConceptTopBar(title: 'Morceaux'),
-              const SizedBox(height: 32),
-              DisplayText(bundledSong.title),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               Expanded(
                 child: switch (songResult) {
                   AsyncData(:final value) => value.fold(
@@ -42,7 +39,8 @@ class SongSetupPage extends ConsumerWidget {
                           ? failure.reason
                           : _unreadableSongMessage,
                     ),
-                    (song) => SongSetupFormView(song: song),
+                    (song) =>
+                        SongSetupFormView(bundledSong: bundledSong, song: song),
                   ),
                   AsyncError() => const SongLoadErrorView(
                     message: _unreadableSongMessage,

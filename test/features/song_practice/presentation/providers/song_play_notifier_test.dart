@@ -8,6 +8,7 @@ import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_section.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_notifier.dart';
@@ -61,8 +62,14 @@ void main() {
 
   // Appelé dans fakeAsync : le notifier doit naître dans la zone simulée
   // pour que ses timers suivent l'horloge du test.
-  void startSong({HandSelection hands = HandSelection.both}) {
-    config = SongPlayConfig(song: song, hands: hands);
+  void startSong({
+    HandSelection hands = HandSelection.both,
+    SongSection section = const SongSection(
+      firstMeasureNumber: 1,
+      lastMeasureNumber: 2,
+    ),
+  }) {
+    config = SongPlayConfig(song: song, hands: hands, section: section);
     inputSource = FakeInputSource();
     container = ProviderContainer(
       overrides: [inputSourceProvider.overrideWithValue(inputSource)],
@@ -307,30 +314,119 @@ void main() {
       );
     });
 
-    group('fin du morceau', () {
-      test('termine après le dernier événement avec le nombre d\'erreurs', () {
+    group('section', () {
+      test('commence au premier événement de la première mesure', () {
         fakeAsync((async) {
           //arrange
-          startSong(hands: HandSelection.rightOnly);
+          //act
+          startSong(
+            section: const SongSection(
+              firstMeasureNumber: 2,
+              lastMeasureNumber: 2,
+            ),
+          );
+          final sut = readRunning();
+
+          //assert
+          expect(sut.currentEventIndex, 2);
+        });
+      });
+
+      test('s\'arrête après le dernier événement de la dernière mesure', () {
+        fakeAsync((async) {
+          //arrange
+          startSong(
+            section: const SongSection(
+              firstMeasureNumber: 1,
+              lastMeasureNumber: 1,
+            ),
+          );
 
           //act
-          for (final midiNumber in [e4, e4, c4]) {
-            inputSource.play(midiNumber);
-            inputSource.release(midiNumber);
-            async.elapse(noteAdvanceDelay);
-          }
+          [e4, c3, g3].forEach(inputSource.play);
+          [e4, c3, g3].forEach(inputSource.release);
+          async.elapse(noteAdvanceDelay);
+          inputSource.play(d4);
+          async.elapse(noteAdvanceDelay);
           final sut = readState();
 
           //assert
-          expect(sut, const SongPlayFinished(errorCount: 1));
+          expect(sut, const SongPlayFinished());
         });
       });
+
+      test('ne retient que les événements de la main choisie', () {
+        fakeAsync((async) {
+          //arrange
+          //act
+          startSong(
+            hands: HandSelection.rightOnly,
+            section: const SongSection(
+              firstMeasureNumber: 2,
+              lastMeasureNumber: 2,
+            ),
+          );
+          final sut = readRunning();
+
+          //assert
+          expect(sut.currentEventIndex, 3);
+        });
+      });
+    });
+
+    group('fin de section', () {
+      test(
+        'annonce une reprise avec le nombre d\'erreurs, puis recommence la section sans couleurs',
+        () {
+          fakeAsync((async) {
+            //arrange
+            startSong(hands: HandSelection.rightOnly);
+            for (final midiNumber in [e4, e4, c4]) {
+              inputSource.play(midiNumber);
+              inputSource.release(midiNumber);
+              async.elapse(noteAdvanceDelay);
+            }
+            final stateAtEnd = readState();
+
+            //act
+            async.elapse(sectionRetryDelay);
+            final sut = readRunning();
+
+            //assert
+            expect(stateAtEnd, const SongPlayRetrying(errorCount: 1));
+            expect(sut.currentEventIndex, 0);
+            expect(sut.errorCount, 0);
+            expect(sut.judgedVerdicts, isEmpty);
+          });
+        },
+      );
+
+      test(
+        'termine sur une réussite quand la section est jouée sans erreur',
+        () {
+          fakeAsync((async) {
+            //arrange
+            startSong(hands: HandSelection.rightOnly);
+
+            //act
+            for (final midiNumber in [e4, d4, c4]) {
+              inputSource.play(midiNumber);
+              inputSource.release(midiNumber);
+              async.elapse(noteAdvanceDelay);
+            }
+            final sut = readState();
+
+            //assert
+            expect(sut, const SongPlayFinished());
+          });
+        },
+      );
 
       test('recommence au premier événement, sans erreur, avec restart', () {
         fakeAsync((async) {
           //arrange
           startSong(hands: HandSelection.rightOnly);
-          for (final midiNumber in [d4, d4, c4]) {
+          for (final midiNumber in [e4, d4, c4]) {
             inputSource.play(midiNumber);
             inputSource.release(midiNumber);
             async.elapse(noteAdvanceDelay);
