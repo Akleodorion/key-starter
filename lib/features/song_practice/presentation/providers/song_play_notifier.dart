@@ -20,21 +20,26 @@ final songPlayProvider = NotifierProvider.autoDispose
 
 class SongPlayNotifier extends Notifier<SongPlayState> {
   final SongPlayConfig _config;
-  int _eventIndex = 0;
+  int _playablePosition = 0;
+  int _errorCount = 0;
+  Map<int, TwoStaffVerdict> _judgedVerdicts = const {};
   late HeldKeysTracker _tracker;
   Timer? _advanceTimer;
   final Set<int> _pressedDuringFeedback = {};
 
   SongPlayNotifier(this._config);
 
-  /// Événements où la main travaillée a au moins une note à jouer.
-  late final List<SongEvent> _playableEvents = _config.song.events
-      .where(
-        (event) =>
-            _expectedNotes(event).trebleSteps.isNotEmpty ||
-            _expectedNotes(event).bassSteps.isNotEmpty,
-      )
-      .toList();
+  /// Indices, dans le morceau, des événements où la main travaillée a au
+  /// moins une note à jouer.
+  late final List<int> _playableEventIndices = [
+    for (var index = 0; index < _config.song.events.length; index++)
+      if (_hasExpectedNotes(_config.song.events[index])) index,
+  ];
+
+  bool _hasExpectedNotes(SongEvent event) {
+    final expected = _expectedNotes(event);
+    return expected.trebleSteps.isNotEmpty || expected.bassSteps.isNotEmpty;
+  }
 
   /// Notes jugées pour [event] : celles des mains travaillées seulement.
   TwoStaffEvent _expectedNotes(SongEvent event) => switch (_config.hands) {
@@ -63,21 +68,28 @@ class SongPlayNotifier extends Notifier<SongPlayState> {
   }
 
   SongPlayState _firstState() {
-    _eventIndex = 0;
-    if (_playableEvents.isEmpty) return const SongPlayFinished(errorCount: 0);
-    return _startEvent(errorCount: 0);
+    _playablePosition = 0;
+    _errorCount = 0;
+    _judgedVerdicts = const {};
+    if (_playableEventIndices.isEmpty) {
+      return const SongPlayFinished(errorCount: 0);
+    }
+    return _startEvent();
   }
 
-  SongPlayRunning _startEvent({required int errorCount}) {
-    final event = _playableEvents[_eventIndex];
+  SongPlayRunning _startEvent() {
+    final eventIndex = _playableEventIndices[_playablePosition];
+    final event = _config.song.events[eventIndex];
     final expected = _expectedNotes(event);
     _tracker = HeldKeysTracker(
       expectedKeyCount: expected.trebleSteps.length + expected.bassSteps.length,
     );
     return SongPlayRunning(
+      currentEventIndex: eventIndex,
       currentEvent: event,
       noteState: NoteState.idle,
-      errorCount: errorCount,
+      errorCount: _errorCount,
+      judgedVerdicts: _judgedVerdicts,
     );
   }
 
@@ -114,27 +126,32 @@ class SongPlayNotifier extends Notifier<SongPlayState> {
   void _judge(SongPlayRunning currentState, Set<int> playedMidiNumbers) {
     final expected = _expectedNotes(currentState.currentEvent);
     final verdict = judgeTwoStaffEvent(expected, playedMidiNumbers);
-    final errorCount = currentState.errorCount + (verdict.isCorrect ? 0 : 1);
+    if (!verdict.isCorrect) _errorCount++;
+    _judgedVerdicts = {
+      ..._judgedVerdicts,
+      currentState.currentEventIndex: verdict,
+    };
     state = currentState.copyWith(
       noteState: verdict.isCorrect ? NoteState.correct : NoteState.wrong,
       verdict: verdict,
-      errorCount: errorCount,
+      errorCount: _errorCount,
+      judgedVerdicts: _judgedVerdicts,
     );
-    _advanceTimer = Timer(noteAdvanceDelay, () => _advance(errorCount));
+    _advanceTimer = Timer(noteAdvanceDelay, _advance);
   }
 
   // Les touches enfoncées pendant le retour visuel sont rejouées sur
   // l'événement suivant, pour qu'un passage rapide ne perde aucune note.
-  void _advance(int errorCount) {
+  void _advance() {
     _advanceTimer = null;
-    _eventIndex++;
+    _playablePosition++;
     final pendingPresses = Set.of(_pressedDuringFeedback);
     _pressedDuringFeedback.clear();
-    if (_eventIndex >= _playableEvents.length) {
-      state = SongPlayFinished(errorCount: errorCount);
+    if (_playablePosition >= _playableEventIndices.length) {
+      state = SongPlayFinished(errorCount: _errorCount);
       return;
     }
-    state = _startEvent(errorCount: errorCount);
+    state = _startEvent();
     for (final midiNumber in pendingPresses) {
       final currentState = state;
       if (currentState is! SongPlayRunning ||

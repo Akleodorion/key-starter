@@ -92,6 +92,66 @@ void main() {
       });
     });
 
+    group('partition', () {
+      test('expose l\'indice de l\'événement en cours dans le morceau', () {
+        fakeAsync((async) {
+          //arrange
+          startSong();
+          final initialIndex = readRunning().currentEventIndex;
+
+          //act
+          [e4, c3, g3].forEach(inputSource.play);
+          async.elapse(noteAdvanceDelay);
+          final sut = readRunning();
+
+          //assert
+          expect(initialIndex, 0);
+          expect(sut.currentEventIndex, 1);
+        });
+      });
+
+      test('garde le verdict de chaque événement déjà joué', () {
+        fakeAsync((async) {
+          //arrange
+          startSong();
+          [e4, c3, g3].forEach(inputSource.play);
+          [e4, c3, g3].forEach(inputSource.release);
+          async.elapse(noteAdvanceDelay);
+
+          //act
+          inputSource.play(c4);
+          async.elapse(noteAdvanceDelay);
+          final sut = readRunning();
+
+          //assert
+          expect(sut.judgedVerdicts.keys, [0, 1]);
+          expect(sut.judgedVerdicts[0]!.isCorrect, isTrue);
+          expect(sut.judgedVerdicts[1]!.isCorrect, isFalse);
+        });
+      });
+
+      test(
+        'saute dans l\'indice les événements de l\'autre main en mode une main',
+        () {
+          fakeAsync((async) {
+            //arrange
+            startSong(hands: HandSelection.rightOnly);
+            inputSource.play(e4);
+            inputSource.release(e4);
+            async.elapse(noteAdvanceDelay);
+
+            //act
+            inputSource.play(d4);
+            async.elapse(noteAdvanceDelay);
+            final sut = readRunning();
+
+            //assert
+            expect(sut.currentEventIndex, 3);
+          });
+        },
+      );
+    });
+
     group('input', () {
       test(
         'colore juste puis passe à l\'événement suivant après le délai, touches encore tenues',
