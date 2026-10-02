@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:key_starter/core/models/concepts/chords_concept.dart';
 import 'package:key_starter/core/models/concepts/intervals_concept.dart';
 import 'package:key_starter/core/models/concepts/notes_concept.dart';
+import 'package:key_starter/core/models/concepts/songs_concept.dart';
 import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/utils/feedback_utils.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
@@ -9,6 +10,7 @@ import 'package:key_starter/core/widgets/entry_card.dart';
 import 'package:key_starter/core/widgets/midi_only_entry_card.dart';
 import 'package:key_starter/features/chord_recognition/presentation/pages/chord_concept_page.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/note_concept_page.dart';
+import 'package:key_starter/features/song_practice/presentation/pages/song_practice_concept_page.dart';
 import 'package:key_starter/presentation/widgets/home_top_bar.dart';
 
 class HomePage extends StatelessWidget {
@@ -48,6 +50,15 @@ class HomePage extends StatelessWidget {
                 EntryCard(
                   entry: const IntervalsConcept(),
                   onTap: () => showFeatureUnavailableToast(context),
+                ),
+                const SizedBox(height: 12),
+                MidiOnlyEntryCard(
+                  entry: const SongsConcept(),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const SongPracticeConceptPage(),
+                    ),
+                  ),
                 ),
               ],
             ),

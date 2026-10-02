@@ -33,4 +33,7 @@ abstract final class AppColors {
   static const Color intervalsFg = Color(0xFF0E8A6A);
   static const Color intervalsTint = Color(0xFFDCEFE6);
   static const Color intervalsSoft = Color(0xFFECF6F1);
+
+  static const Color songsFg = Color(0xFF7A3FC4);
+  static const Color songsTint = Color(0xFFEDE3FA);
 }
