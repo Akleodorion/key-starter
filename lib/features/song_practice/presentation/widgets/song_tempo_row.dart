@@ -1,23 +1,26 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_tempo_notifier.dart';
-import 'package:key_starter/presentation/widgets/settings_stepper_layout.dart';
+import 'package:key_starter/presentation/widgets/settings_text_stepper_row.dart';
 
-/// Réglage du tempo d'un morceau : Libre, puis de 40 à 120 noires par minute.
-class SongTempoRow extends ConsumerWidget {
+/// Implémentation de [SettingsTextStepperRow] liée à [songTempoProvider].
+class SongTempoRow extends SettingsTextStepperRow {
   const SongTempoRow({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bpm = ref.watch(songTempoProvider);
-    final notifier = ref.read(songTempoProvider.notifier);
+  String get label => 'Tempo';
 
-    return SettingsStepperLayout(
-      label: 'Tempo',
-      description: bpm == null ? 'sans tempo' : 'noires par minute',
-      valueText: bpm?.toString() ?? 'Libre',
-      onDecrement: notifier.decrement,
-      onIncrement: notifier.increment,
-    );
-  }
+  @override
+  String? get description => 'noires par minute';
+
+  @override
+  String valueText(WidgetRef ref) =>
+      ref.watch(songTempoProvider)?.toString() ?? 'Libre';
+
+  @override
+  void onDecrement(WidgetRef ref) =>
+      ref.read(songTempoProvider.notifier).decrement();
+
+  @override
+  void onIncrement(WidgetRef ref) =>
+      ref.read(songTempoProvider.notifier).increment();
 }
