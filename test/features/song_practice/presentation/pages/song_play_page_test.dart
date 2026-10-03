@@ -14,6 +14,7 @@ import 'package:key_starter/features/song_practice/presentation/pages/song_play_
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_notifier.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_tempo_play_notifier.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_score_line.dart';
 
 import '../../../../core/input/fake_input_source.dart';
@@ -21,9 +22,11 @@ import '../../../../core/input/fake_input_source.dart';
 const c4 = 60;
 const d4 = 62;
 
-/// Six mesures (trois lignes), un Do 4 au premier temps de chaque mesure.
+/// Six mesures de 4/4 (trois lignes), un Do 4 au premier temps de chaque
+/// mesure ; à 60 BPM, une mesure dure 4 s.
 final song = Song(
   title: 'Essai',
+  divisionsPerQuarter: 2,
   measures: [
     for (var index = 0; index < 6; index++)
       SongMeasure(
@@ -42,20 +45,24 @@ final song = Song(
   ],
 );
 
-SongPlayConfig configFor(int firstMeasure, int lastMeasure) => SongPlayConfig(
-  song: song,
-  hands: HandSelection.both,
-  section: SongSection(
-    firstMeasureNumber: firstMeasure,
-    lastMeasureNumber: lastMeasure,
-  ),
-);
+SongPlayConfig configFor(int firstMeasure, int lastMeasure, {int? bpm}) =>
+    SongPlayConfig(
+      song: song,
+      hands: HandSelection.both,
+      section: SongSection(
+        firstMeasureNumber: firstMeasure,
+        lastMeasureNumber: lastMeasure,
+      ),
+      bpm: bpm,
+    );
 
 const iPhoneSeLandscape = Size(667, 375);
 const galaxyNote10Landscape = Size(869, 412);
 
 void main() {
   late FakeInputSource inputSource;
+  final startTime = DateTime(2026, 10, 3);
+  var clockElapsed = Duration.zero;
 
   /// Ouvre la page de jeu par-dessus une page d'accueil, pour que la flèche
   /// retour ait où revenir.
@@ -68,11 +75,19 @@ void main() {
     tester.view.physicalSize = screenSize * 2;
     addTearDown(tester.view.reset);
     inputSource = FakeInputSource();
+    clockElapsed = Duration.zero;
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           inputSourceProvider.overrideWithValue(inputSource),
           activeInputSourceKindProvider.overrideWithValue(InputSourceKind.midi),
+          if (config.bpm != null)
+            songTempoPlayProvider(config).overrideWith(
+              () => SongTempoPlayNotifier(
+                config,
+                now: () => startTime.add(clockElapsed),
+              ),
+            ),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
@@ -88,7 +103,26 @@ void main() {
       ),
     );
     await tester.tap(find.text('Préparation'));
-    await tester.pumpAndSettle();
+    if (config.bpm == null) {
+      await tester.pumpAndSettle();
+    } else {
+      // La barre redessine la page à chaque image : pas de pumpAndSettle.
+      // Horloge du morceau et timers avancent ensemble, transition comprise.
+      await tester.pump();
+      for (var step = 0; step < 4; step++) {
+        clockElapsed += const Duration(milliseconds: 100);
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+  }
+
+  /// Fait avancer l'horloge du morceau au tempo et celle des timers.
+  Future<void> advance(WidgetTester tester, Duration duration) async {
+    const frame = Duration(milliseconds: 100);
+    for (var step = Duration.zero; step < duration; step += frame) {
+      clockElapsed += frame;
+      await tester.pump(frame);
+    }
   }
 
   Future<void> play(WidgetTester tester, int midiNumber) async {
@@ -189,6 +223,89 @@ void main() {
         expect(visibleFirstMeasureNumbers(tester), [5]);
       },
     );
+
+    testWidgets('n\'affiche pas de tempo en mode Libre', (tester) async {
+      //act
+      await pumpPlayPage(tester, config: configFor(1, 6));
+
+      //assert
+      expect(find.text('= 60'), findsNothing);
+    });
+
+    group('au tempo', () {
+      testWidgets('arrête le tempo en revenant à la préparation', (
+        tester,
+      ) async {
+        //arrange
+        final config = configFor(1, 6, bpm: 60);
+        await pumpPlayPage(tester, config: config);
+
+        //act
+        await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump();
+
+        //assert
+        final container = ProviderScope.containerOf(
+          tester.element(find.text('Préparation')),
+        );
+        expect(container.exists(songTempoPlayProvider(config)), isFalse);
+      });
+
+      testWidgets(
+        'affiche le tempo, le décompte puis deux lignes sans dépasser',
+        (tester) async {
+          //arrange
+          await pumpPlayPage(tester, config: configFor(1, 6, bpm: 60));
+          final countInBeforeStart = find.text('4').evaluate().length;
+
+          //act
+          await advance(tester, const Duration(seconds: 1));
+
+          //assert
+          expect(tester.takeException(), isNull);
+          expect(find.text('= 60'), findsOneWidget);
+          expect(countInBeforeStart, 1);
+          expect(find.text('3'), findsOneWidget);
+          expect(visibleFirstMeasureNumbers(tester), [1, 3]);
+        },
+      );
+
+      testWidgets('fait défiler la partition au passage de la barre', (
+        tester,
+      ) async {
+        //arrange
+        await pumpPlayPage(tester, config: configFor(1, 6, bpm: 60));
+
+        //act
+        await advance(tester, const Duration(milliseconds: 12500));
+
+        //assert
+        expect(visibleFirstMeasureNumbers(tester), [3, 5]);
+      });
+
+      testWidgets(
+        'annonce la reprise au bout de la section puis refait le décompte',
+        (tester) async {
+          //arrange
+          await pumpPlayPage(tester, config: configFor(5, 6, bpm: 60));
+
+          //act
+          await advance(tester, const Duration(seconds: 12));
+          final retryMessageCount = find
+              .text('2 erreurs · on reprend')
+              .evaluate()
+              .length;
+          await advance(tester, sectionRetryDelay);
+
+          //assert
+          expect(retryMessageCount, 1);
+          expect(find.text('4'), findsOneWidget);
+          expect(visibleFirstMeasureNumbers(tester), [5]);
+        },
+      );
+    });
 
     testWidgets('revient à la préparation avec la flèche retour', (
       tester,

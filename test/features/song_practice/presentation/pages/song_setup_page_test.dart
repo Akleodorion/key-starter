@@ -18,6 +18,7 @@ import 'package:key_starter/features/song_practice/presentation/pages/song_play_
 import 'package:key_starter/features/song_practice/presentation/pages/song_setup_page.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection_notifier.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_providers.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_tempo_notifier.dart';
 
@@ -123,6 +124,22 @@ void main() {
     await tester.pump();
   }
 
+  /// Lance la page de jeu et renvoie sa configuration, puis la quitte pour
+  /// arrêter l'horloge du tempo.
+  Future<SongPlayConfig> startedConfig(WidgetTester tester) async {
+    await tester.tap(find.text('Commencer'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    final config = tester
+        .widget<SongPlayPage>(find.byType(SongPlayPage))
+        .config;
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    return config;
+  }
+
   bool isStartEnabled(WidgetTester tester) =>
       tester
           .widget<FilledButton>(
@@ -184,16 +201,14 @@ void main() {
         await chooseMeasures(tester, 2, 4);
 
         //act
-        await tester.tap(find.text('Commencer'));
-        await tester.pumpAndSettle();
+        final startedPlayConfig = await startedConfig(tester);
 
         //assert
         expect(defaultLabelCount, 1);
-        final playPage = tester.widget<SongPlayPage>(find.byType(SongPlayPage));
-        expect(playPage.config.hands, HandSelection.leftOnly);
-        expect(playPage.config.song, song);
+        expect(startedPlayConfig.hands, HandSelection.leftOnly);
+        expect(startedPlayConfig.song, song);
         expect(
-          playPage.config.section,
+          startedPlayConfig.section,
           const SongSection(firstMeasureNumber: 2, lastMeasureNumber: 4),
         );
       },
@@ -209,12 +224,10 @@ void main() {
       //act
       await tester.tap(find.byIcon(Icons.add_rounded));
       await tester.pump();
-      await tester.tap(find.text('Commencer'));
-      await tester.pumpAndSettle();
+      final startedPlayConfig = await startedConfig(tester);
 
       //assert
-      final playPage = tester.widget<SongPlayPage>(find.byType(SongPlayPage));
-      expect(playPage.config.bpm, 65);
+      expect(startedPlayConfig.bpm, 65);
     });
 
     testWidgets('passe en Libre sous 40 et lance le morceau sans tempo', (
@@ -230,12 +243,10 @@ void main() {
         await tester.tap(find.byIcon(Icons.remove_rounded));
         await tester.pump();
       }
-      await tester.tap(find.text('Commencer'));
-      await tester.pumpAndSettle();
+      final startedPlayConfig = await startedConfig(tester);
 
       //assert
-      final playPage = tester.widget<SongPlayPage>(find.byType(SongPlayPage));
-      expect(playPage.config.bpm, isNull);
+      expect(startedPlayConfig.bpm, isNull);
     });
 
     testWidgets('affiche Libre quand le tempo est libre', (tester) async {
