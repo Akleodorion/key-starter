@@ -1,14 +1,18 @@
 import 'package:equatable/equatable.dart';
 import 'package:key_starter/core/enums/note_state.dart';
+import 'package:key_starter/features/song_practice/domain/entities/staff_notation.dart';
 
 /// Un événement tel qu'il est dessiné sur une ligne de partition : sa
-/// position (0 à 1), ses notes et l'état affiché de chaque portée.
+/// position (0 à 1), ses notes, leur notation et l'état affiché de chaque
+/// portée.
 class ScoreLineNote extends Equatable {
   final double position;
   final List<int> trebleSteps;
   final List<int> bassSteps;
   final NoteState trebleState;
   final NoteState bassState;
+  final StaffNotation? trebleNotation;
+  final StaffNotation? bassNotation;
 
   const ScoreLineNote({
     required this.position,
@@ -16,6 +20,8 @@ class ScoreLineNote extends Equatable {
     required this.bassSteps,
     required this.trebleState,
     required this.bassState,
+    this.trebleNotation,
+    this.bassNotation,
   });
 
   @override
@@ -25,5 +31,7 @@ class ScoreLineNote extends Equatable {
     bassSteps,
     trebleState,
     bassState,
+    trebleNotation,
+    bassNotation,
   ];
 }

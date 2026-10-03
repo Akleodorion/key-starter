@@ -13,7 +13,9 @@ import 'package:key_starter/core/widgets/note_feedback_motion.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_section.dart';
 import 'package:key_starter/features/song_practice/presentation/layout/score_line_note.dart';
+import 'package:key_starter/features/song_practice/presentation/layout/score_line_rest.dart';
 import 'package:key_starter/features/song_practice/presentation/layout/song_line_layout.dart';
+import 'package:key_starter/features/song_practice/presentation/painting/song_figure_painting.dart';
 
 /// Une ligne de partition sur portée double : clés et accolade, barres de
 /// mesure, numéro de la première mesure, fond teinté derrière les mesures de
@@ -78,6 +80,14 @@ class SongScoreLine extends StatelessWidget {
         builder: (context, eventScale, eventShift) => CustomPaint(
           painter: SongScoreLinePainter(
             notes: notes,
+            rests: [
+              for (final placedRest in line.rests)
+                ScoreLineRest(
+                  position: placedRest.position,
+                  isBass: song.rests[placedRest.restIndex].isBass,
+                  value: song.rests[placedRest.restIndex].value,
+                ),
+            ],
             sectionSlots: [
               for (var slot = 0; slot < line.measureCount; slot++)
                 if (section.contains(line.measures[slot].number)) slot,
@@ -105,10 +115,13 @@ class SongScoreLine extends StatelessWidget {
         : staffVerdict.isCorrect
         ? NoteState.correct
         : NoteState.wrong;
+    final event = song.events[eventIndex];
     return ScoreLineNote(
       position: position,
       trebleSteps: notes.trebleSteps,
       bassSteps: notes.bassSteps,
+      trebleNotation: event.trebleNotation,
+      bassNotation: event.bassNotation,
       trebleState: trebleMuted || notes.trebleSteps.isEmpty
           ? NoteState.idle
           : stateOf(verdict?.treble),
@@ -120,9 +133,11 @@ class SongScoreLine extends StatelessWidget {
 }
 
 /// Dessine la ligne : deux portées reliées par l'accolade, leurs clés, les
-/// barres de mesure, le numéro de mesure, les événements et le repère.
+/// barres de mesure, le numéro de mesure, les figures de notes et de
+/// silences, et le repère.
 class SongScoreLinePainter extends CustomPainter {
   final List<ScoreLineNote> notes;
+  final List<ScoreLineRest> rests;
 
   /// Places, dans la ligne, des mesures de la section travaillée.
   final List<int> sectionSlots;
@@ -138,6 +153,7 @@ class SongScoreLinePainter extends CustomPainter {
 
   const SongScoreLinePainter({
     required this.notes,
+    this.rests = const [],
     required this.sectionSlots,
     required this.cursorPosition,
     required this.firstMeasureNumber,
@@ -240,35 +256,25 @@ class SongScoreLinePainter extends CustomPainter {
       );
     }
 
-    for (final note in notes) {
-      final x = noteX(note.position);
-      final isCurrent = note.position == cursor;
-      canvas.save();
-      if (isCurrent) {
-        final centerY = (trebleTop + systemBottom) / 2;
-        canvas.translate(x + eventShift, centerY);
-        canvas.scale(eventScale);
-        canvas.translate(-x, -centerY);
-      }
-      paintChord(
+    for (final (isBass, staffTop, isMuted) in [
+      (false, trebleTop, trebleMuted),
+      (true, bassTop, bassMuted),
+    ]) {
+      paintStaffFigures(
         canvas,
-        noteX: x,
-        steps: note.trebleSteps,
-        clef: ClefMode.treble,
-        staffTop: trebleTop,
-        color: _colorFor(note.trebleState, isMuted: trebleMuted),
+        notes: notes,
+        rests: rests,
+        isBass: isBass,
+        staffTop: staffTop,
         lineGap: lineGap,
+        noteX: noteX,
+        colorFor: (state) => _colorFor(state, isMuted: isMuted),
+        restColor: _colorFor(NoteState.idle, isMuted: isMuted),
+        currentPosition: cursor,
+        eventScale: eventScale,
+        eventShift: eventShift,
+        centerY: (trebleTop + systemBottom) / 2,
       );
-      paintChord(
-        canvas,
-        noteX: x,
-        steps: note.bassSteps,
-        clef: ClefMode.bass,
-        staffTop: bassTop,
-        color: _colorFor(note.bassState, isMuted: bassMuted),
-        lineGap: lineGap,
-      );
-      canvas.restore();
     }
   }
 
@@ -320,6 +326,7 @@ class SongScoreLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(SongScoreLinePainter old) =>
       old.notes != notes ||
+      !listEquals(old.rests, rests) ||
       !listEquals(old.sectionSlots, sectionSlots) ||
       old.cursorPosition != cursorPosition ||
       old.firstMeasureNumber != firstMeasureNumber ||
