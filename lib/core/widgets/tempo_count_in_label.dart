@@ -6,17 +6,18 @@ import 'package:key_starter/core/widgets/display_text.dart';
 /// null.
 class TempoCountInLabel extends StatelessWidget {
   final int? beat;
+  final Color color;
 
-  const TempoCountInLabel({super.key, required this.beat});
+  const TempoCountInLabel({
+    super.key,
+    required this.beat,
+    this.color = AppColors.notesFg,
+  });
 
   @override
   Widget build(BuildContext context) {
     final currentBeat = beat;
     if (currentBeat == null) return const SizedBox.shrink();
-    return DisplayText(
-      currentBeat.toString(),
-      size: 96,
-      color: AppColors.notesFg,
-    );
+    return DisplayText(currentBeat.toString(), size: 96, color: color);
   }
 }

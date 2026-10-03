@@ -15,13 +15,16 @@ const _visibleLineCount = 2;
 const _scrollDuration = Duration(milliseconds: 300);
 
 /// La partition d'un morceau, deux lignes visibles : celle de l'événement en
-/// cours en haut, la suivante en dessous. Quand le repère passe à la ligne
-/// suivante, les lignes remontent : celle du haut s'efface et la nouvelle
-/// apparaît en bas.
+/// cours (ou de la barre du tempo) en haut, la suivante en dessous. Quand le
+/// repère ou la barre passe à la ligne suivante, les lignes remontent : celle
+/// du haut s'efface et la nouvelle apparaît en bas.
 class SongScoreLines extends StatelessWidget {
   final Song song;
   final Map<int, TwoStaffVerdict> judgedVerdicts;
-  final int currentEventIndex;
+  final int? currentEventIndex;
+
+  /// Position de la barre du tempo ; null sans tempo.
+  final ({int lineIndex, double fraction})? bar;
   final NoteState feedbackState;
   final bool trebleMuted;
   final bool bassMuted;
@@ -32,7 +35,8 @@ class SongScoreLines extends StatelessWidget {
     super.key,
     required this.song,
     required this.judgedVerdicts,
-    required this.currentEventIndex,
+    this.currentEventIndex,
+    this.bar,
     required this.feedbackState,
     required this.trebleMuted,
     required this.bassMuted,
@@ -43,14 +47,16 @@ class SongScoreLines extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lines = layoutSongLines(song, measuresPerLine: songMeasuresPerLine);
-    final currentLineIndex = max(
-      0,
-      lines.indexWhere(
-        (line) => line.events.any(
-          (placedEvent) => placedEvent.eventIndex == currentEventIndex,
-        ),
-      ),
-    );
+    final currentLineIndex =
+        bar?.lineIndex ??
+        max(
+          0,
+          lines.indexWhere(
+            (line) => line.events.any(
+              (placedEvent) => placedEvent.eventIndex == currentEventIndex,
+            ),
+          ),
+        );
 
     return SizedBox(
       height: lineHeight * _visibleLineCount,
@@ -87,6 +93,9 @@ class SongScoreLines extends StatelessWidget {
                         judgedVerdicts: judgedVerdicts,
                         currentEventIndex: lineIndex == currentLineIndex
                             ? currentEventIndex
+                            : null,
+                        barPosition: lineIndex == currentLineIndex
+                            ? bar?.fraction
                             : null,
                         feedbackState: feedbackState,
                         trebleMuted: trebleMuted,

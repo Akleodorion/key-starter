@@ -107,6 +107,43 @@ void main() {
       },
     );
 
+    testWidgets('dessine la barre du tempo à sa position dans la ligne', (
+      tester,
+    ) async {
+      //arrange
+      final line = layoutSongLines(song, measuresPerLine: 2).single;
+
+      //act
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SongScoreLine(
+              line: line,
+              song: song,
+              measuresPerLine: 2,
+              judgedVerdicts: const {},
+              currentEventIndex: null,
+              barPosition: 0.3,
+              feedbackState: NoteState.idle,
+              trebleMuted: false,
+              bassMuted: false,
+              section: wholeSong,
+              height: 150,
+            ),
+          ),
+        ),
+      );
+
+      //assert
+      final sut = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((customPaint) => customPaint.painter)
+          .whereType<SongScoreLinePainter>()
+          .single;
+      expect(sut.cursorPosition, 0.3);
+    });
+
     testWidgets('grise la portée de la main non travaillée, sans la juger', (
       tester,
     ) async {

@@ -15,6 +15,11 @@ class SongPlayRunningView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SongScoreCard(config: config, running: running);
+    return SongScoreCard(
+      config: config,
+      judgedVerdicts: running.judgedVerdicts,
+      currentEventIndex: running.currentEventIndex,
+      feedbackState: running.noteState,
+    );
   }
 }

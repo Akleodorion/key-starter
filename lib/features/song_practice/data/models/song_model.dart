@@ -12,6 +12,9 @@ class SongModel extends Song {
     required super.title,
     required super.measures,
     required super.events,
+    super.divisionsPerQuarter,
+    super.beatsPerMeasure,
+    super.beatUnit,
   });
 
   /// Lit une partition MusicXML (score-partwise) d'une partie piano à deux
@@ -68,10 +71,17 @@ class SongModel extends Song {
     }
 
     final onsets = eventsByOnset.keys.toList()..sort();
+    final time = document.findAllElements('time').firstOrNull;
     return SongModel(
       title: title,
       measures: songMeasures,
       events: [for (final onset in onsets) eventsByOnset[onset]!.build()],
+      divisionsPerQuarter: _intOf(
+        document.findAllElements('divisions').firstOrNull,
+        orElse: 1,
+      ),
+      beatsPerMeasure: _intOf(time?.getElement('beats'), orElse: 4),
+      beatUnit: _intOf(time?.getElement('beat-type'), orElse: 4),
     );
   }
 }
@@ -141,6 +151,25 @@ void _rejectUnsupported(XmlDocument document) {
       "Une seule voix par portée est prise en charge pour l'instant.",
     );
   }
+  final timeSignatures = {
+    for (final time in document.findAllElements('time'))
+      '${time.getElement('beats')?.innerText}/'
+          '${time.getElement('beat-type')?.innerText}',
+  };
+  if (timeSignatures.length > 1) {
+    throw const UnsupportedSongException(
+      'Les changements de chiffrage ne sont pas encore pris en charge.',
+    );
+  }
+  final divisionValues = {
+    for (final divisions in document.findAllElements('divisions'))
+      divisions.innerText,
+  };
+  if (divisionValues.length > 1) {
+    throw const UnsupportedSongException(
+      "Les changements d'unité de durée ne sont pas encore pris en charge.",
+    );
+  }
   final hasAccidental = document
       .findAllElements('alter')
       .any((alter) => double.parse(alter.innerText) != 0);
@@ -158,6 +187,9 @@ void _rejectUnsupported(XmlDocument document) {
     );
   }
 }
+
+int _intOf(XmlElement? element, {required int orElse}) =>
+    element == null ? orElse : int.parse(element.innerText);
 
 int _duration(XmlElement element) =>
     int.parse(element.getElement('duration')!.innerText);
