@@ -15,6 +15,18 @@ class SongRepositoryImpl implements SongRepository {
   SongRepositoryImpl({required this.dataSource});
 
   @override
+  Future<Either<Failure, List<BundledSong>>> listSongs() async {
+    final songs = [
+      for (final assetPath in await dataSource.listSongAssetPaths())
+        BundledSong(
+          title: await _titleOf(assetPath) ?? _titleFromFileName(assetPath),
+          assetPath: assetPath,
+        ),
+    ]..sort((first, second) => first.title.compareTo(second.title));
+    return Right(songs);
+  }
+
+  @override
   Future<Either<Failure, Song>> loadSong(BundledSong bundledSong) async {
     try {
       final xml = await dataSource.loadMusicXml(bundledSong.assetPath);
@@ -28,5 +40,27 @@ class SongRepositoryImpl implements SongRepository {
     } on XmlException {
       return const Left(SongFileFailure());
     }
+  }
+
+  Future<String?> _titleOf(String assetPath) async {
+    try {
+      return SongModel.titleFromMusicXml(
+        await dataSource.loadMusicXml(assetPath),
+      );
+    } on SongFileException {
+      return null;
+    } on XmlException {
+      return null;
+    }
+  }
+
+  /// `assets/songs/sans_titre.mxl` → « Sans titre ».
+  String _titleFromFileName(String assetPath) {
+    final words = assetPath
+        .split('/')
+        .last
+        .replaceAll(RegExp(r'\.mxl$'), '')
+        .replaceAll('_', ' ');
+    return words.isEmpty ? words : words[0].toUpperCase() + words.substring(1);
   }
 }

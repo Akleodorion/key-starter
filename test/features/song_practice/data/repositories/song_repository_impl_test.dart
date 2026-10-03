@@ -29,7 +29,7 @@ void main() {
 
   group('SongRepositoryImpl', () {
     group('loadSong', () {
-      test('renvoie le morceau lu, sous le titre du catalogue', () async {
+      test('renvoie le morceau lu, sous le titre de sa partition', () async {
         //arrange
         when(dataSource.loadMusicXml(bundledSong.assetPath)).thenAnswer(
           (_) async => File(
@@ -83,6 +83,76 @@ void main() {
         //assert
         expect(result, const Left<Failure, Song>(SongFileFailure()));
       });
+    });
+
+    group('listSongs', () {
+      String scoreTitled(String title) =>
+          '<score-partwise><work><work-title>$title</work-title></work>'
+          '<part-list/><part id="P1"/></score-partwise>';
+
+      test(
+        'liste chaque morceau sous le titre de sa partition, par ordre alphabétique',
+        () async {
+          //arrange
+          when(dataSource.listSongAssetPaths()).thenAnswer(
+            (_) async => [
+              'assets/songs/ode_to_joy.mxl',
+              'assets/songs/local/song_of_storms.mxl',
+            ],
+          );
+          when(
+            dataSource.loadMusicXml('assets/songs/ode_to_joy.mxl'),
+          ).thenAnswer((_) async => scoreTitled('Ode à la joie'));
+          when(
+            dataSource.loadMusicXml('assets/songs/local/song_of_storms.mxl'),
+          ).thenAnswer((_) async => scoreTitled('Song of Storms'));
+
+          //act
+          final result = await sut.listSongs();
+
+          //assert
+          expect(result.getOrElse(() => throw StateError('échec')), const [
+            BundledSong(
+              title: 'Ode à la joie',
+              assetPath: 'assets/songs/ode_to_joy.mxl',
+            ),
+            BundledSong(
+              title: 'Song of Storms',
+              assetPath: 'assets/songs/local/song_of_storms.mxl',
+            ),
+          ]);
+        },
+      );
+
+      test(
+        'prend le nom du fichier quand la partition n\'a pas de titre ou est illisible',
+        () async {
+          //arrange
+          when(dataSource.listSongAssetPaths()).thenAnswer(
+            (_) async => [
+              'assets/songs/sans_titre.mxl',
+              'assets/songs/abime.mxl',
+            ],
+          );
+          when(
+            dataSource.loadMusicXml('assets/songs/sans_titre.mxl'),
+          ).thenAnswer((_) async => '<score-partwise/>');
+          when(
+            dataSource.loadMusicXml('assets/songs/abime.mxl'),
+          ).thenThrow(const SongFileException());
+
+          //act
+          final result = await sut.listSongs();
+
+          //assert
+          expect(
+            result
+                .getOrElse(() => throw StateError('échec'))
+                .map((song) => song.title),
+            ['Abime', 'Sans titre'],
+          );
+        },
+      );
     });
   });
 }

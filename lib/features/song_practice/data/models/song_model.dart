@@ -44,6 +44,11 @@ class SongModel extends Song {
     super.beatUnit,
   });
 
+  /// Titre écrit dans une partition MusicXML (œuvre, sinon mouvement), ou
+  /// null, même si le reste de la partition n'est pas pris en charge.
+  static String? titleFromMusicXml(String xml) =>
+      _title(XmlDocument.parse(xml));
+
   /// Lit une partition MusicXML (score-partwise) d'une partie piano à deux
   /// portées. Le titre est celui de l'œuvre, sinon du mouvement, sinon
   /// [fallbackTitle]. Lève [UnsupportedSongException] si elle contient un
