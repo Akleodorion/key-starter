@@ -18,7 +18,9 @@ class SongRepositoryImpl implements SongRepository {
   Future<Either<Failure, Song>> loadSong(BundledSong bundledSong) async {
     try {
       final xml = await dataSource.loadMusicXml(bundledSong.assetPath);
-      return Right(SongModel.fromMusicXml(xml, title: bundledSong.title));
+      return Right(
+        SongModel.fromMusicXml(xml, fallbackTitle: bundledSong.title),
+      );
     } on UnsupportedSongException catch (exception) {
       return Left(UnsupportedSongFailure(exception.reason));
     } on SongFileException {

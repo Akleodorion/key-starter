@@ -2,29 +2,62 @@ import 'package:key_starter/core/errors/exceptions.dart';
 import 'package:key_starter/core/models/two_staff_event.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
+import 'package:key_starter/features/song_practice/domain/entities/note_value.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
+import 'package:key_starter/features/song_practice/domain/entities/song_rest.dart';
+import 'package:key_starter/features/song_practice/domain/entities/staff_notation.dart';
 import 'package:xml/xml.dart';
 
 const _stepLetters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+const _noteTypesByName = {
+  'breve': NoteType.breve,
+  'whole': NoteType.whole,
+  'half': NoteType.half,
+  'quarter': NoteType.quarter,
+  'eighth': NoteType.eighth,
+  '16th': NoteType.sixteenth,
+  '32nd': NoteType.thirtySecond,
+  '64th': NoteType.sixtyFourth,
+  '128th': NoteType.oneHundredTwentyEighth,
+  '256th': NoteType.twoHundredFiftySixth,
+  '512th': NoteType.fiveHundredTwelfth,
+  '1024th': NoteType.oneThousandTwentyFourth,
+};
+
+const _beamMarksByName = {
+  'begin': BeamMark.begin,
+  'continue': BeamMark.continued,
+  'end': BeamMark.end,
+  'forward hook': BeamMark.forwardHook,
+  'backward hook': BeamMark.backwardHook,
+};
 
 class SongModel extends Song {
   const SongModel({
     required super.title,
     required super.measures,
     required super.events,
+    super.rests,
     super.divisionsPerQuarter,
     super.beatsPerMeasure,
     super.beatUnit,
   });
 
   /// Lit une partition MusicXML (score-partwise) d'une partie piano à deux
-  /// portées. Lève [UnsupportedSongException] si elle contient un élément
-  /// que l'app ne sait pas encore jouer juste.
-  factory SongModel.fromMusicXml(String xml, {required String title}) {
+  /// portées. Le titre est celui de l'œuvre, sinon du mouvement, sinon
+  /// [fallbackTitle]. Lève [UnsupportedSongException] si elle contient un
+  /// élément que l'app ne sait pas encore jouer juste.
+  factory SongModel.fromMusicXml(String xml, {required String fallbackTitle}) {
     final document = XmlDocument.parse(xml);
     _rejectUnsupported(document);
+    final divisionsPerQuarter = _intOf(
+      document.findAllElements('divisions').firstOrNull,
+      orElse: 1,
+    );
     final measures = document.findAllElements('measure').toList();
     final eventsByOnset = <int, _SongEventBuilder>{};
+    final rests = <SongRest>[];
     final songMeasures = <SongMeasure>[];
     var measureStart = 0;
 
@@ -42,7 +75,9 @@ class SongModel extends Song {
             final duration = _duration(element);
             final isChordNote = element.getElement('chord') != null;
             if (!isChordNote) previousNoteOnset = cursor;
+            final isBass = element.getElement('staff')?.innerText == '2';
             final pitch = element.getElement('pitch');
+            final restElement = element.getElement('rest');
             if (pitch != null) {
               final onset = measureStart + previousNoteOnset;
               eventsByOnset
@@ -51,10 +86,22 @@ class SongModel extends Song {
                     () => _SongEventBuilder(measureIndex + 1, onset),
                   )
                   .add(
-                    isBass: element.getElement('staff')?.innerText == '2',
+                    isBass: isBass,
                     step: _diatonicStep(pitch),
                     duration: duration,
+                    notation: _staffNotation(element, divisionsPerQuarter),
                   );
+            } else if (restElement != null) {
+              rests.add(
+                SongRest(
+                  measureNumber: measureIndex + 1,
+                  onsetDivisions: measureStart + previousNoteOnset,
+                  isBass: isBass,
+                  value: restElement.getAttribute('measure') == 'yes'
+                      ? null
+                      : _noteValue(element, divisionsPerQuarter),
+                ),
+              );
             }
             if (!isChordNote) cursor += duration;
         }
@@ -73,17 +120,68 @@ class SongModel extends Song {
     final onsets = eventsByOnset.keys.toList()..sort();
     final time = document.findAllElements('time').firstOrNull;
     return SongModel(
-      title: title,
+      title: _title(document) ?? fallbackTitle,
       measures: songMeasures,
       events: [for (final onset in onsets) eventsByOnset[onset]!.build()],
-      divisionsPerQuarter: _intOf(
-        document.findAllElements('divisions').firstOrNull,
-        orElse: 1,
-      ),
+      rests: rests,
+      divisionsPerQuarter: divisionsPerQuarter,
       beatsPerMeasure: _intOf(time?.getElement('beats'), orElse: 4),
       beatUnit: _intOf(time?.getElement('beat-type'), orElse: 4),
     );
   }
+}
+
+String? _title(XmlDocument document) {
+  for (final elementName in ['work-title', 'movement-title']) {
+    final title = document
+        .findAllElements(elementName)
+        .firstOrNull
+        ?.innerText
+        .trim();
+    if (title != null && title.isNotEmpty) return title;
+  }
+  return null;
+}
+
+StaffNotation _staffNotation(XmlElement note, int divisionsPerQuarter) =>
+    StaffNotation(
+      value: _noteValue(note, divisionsPerQuarter),
+      stemDirection: switch (note.getElement('stem')?.innerText) {
+        'up' => StemDirection.up,
+        'down' => StemDirection.down,
+        _ => null,
+      },
+      beams: [
+        for (final beam in note.findElements('beam'))
+          ?_beamMarksByName[beam.innerText.trim()],
+      ],
+    );
+
+/// Valeur écrite d'une note ou d'un silence : sa figure (`<type>`) et ses
+/// points, ou, sans `<type>`, la figure dont la durée correspond.
+NoteValue _noteValue(XmlElement note, int divisionsPerQuarter) {
+  final typeName = note.getElement('type')?.innerText.trim();
+  if (typeName == 'long' || typeName == 'maxima') {
+    throw const UnsupportedSongException(
+      'Les longues et les maximes ne sont pas prises en charge.',
+    );
+  }
+  final noteType = _noteTypesByName[typeName];
+  final dotCount = note.findElements('dot').length;
+  if (noteType != null) return NoteValue(noteType, dotCount: dotCount);
+
+  final quarters = _duration(note) / divisionsPerQuarter;
+  for (final candidateType in NoteType.values) {
+    for (var dots = 0; dots <= 3; dots++) {
+      final dottedQuarters = candidateType.quarters * (2 - 1 / (1 << dots));
+      if ((dottedQuarters - quarters).abs() < 1e-9) {
+        return NoteValue(candidateType, dotCount: dots);
+      }
+    }
+  }
+  throw const UnsupportedSongException(
+    'Une durée de note ne correspond à aucune figure.',
+  );
 }
 
 class _SongEventBuilder {
@@ -93,16 +191,26 @@ class _SongEventBuilder {
   final List<int> bassSteps = [];
   int trebleDurationDivisions = 0;
   int bassDurationDivisions = 0;
+  StaffNotation? trebleNotation;
+  StaffNotation? bassNotation;
 
   _SongEventBuilder(this.measureNumber, this.onsetDivisions);
 
-  void add({required bool isBass, required int step, required int duration}) {
+  // Les notes d'un accord partagent la notation de la première.
+  void add({
+    required bool isBass,
+    required int step,
+    required int duration,
+    required StaffNotation notation,
+  }) {
     if (isBass) {
       bassSteps.add(step);
       bassDurationDivisions = duration;
+      bassNotation ??= notation;
     } else {
       trebleSteps.add(step);
       trebleDurationDivisions = duration;
+      trebleNotation ??= notation;
     }
   }
 
@@ -112,6 +220,8 @@ class _SongEventBuilder {
     notes: TwoStaffEvent(trebleSteps: trebleSteps, bassSteps: bassSteps),
     trebleDurationDivisions: trebleDurationDivisions,
     bassDurationDivisions: bassDurationDivisions,
+    trebleNotation: trebleNotation,
+    bassNotation: bassNotation,
   );
 }
 

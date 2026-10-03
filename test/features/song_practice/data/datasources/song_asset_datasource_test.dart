@@ -78,7 +78,7 @@ void main() {
         final xml = await sut.loadMusicXml(odeToJoy.assetPath);
 
         //assert
-        final song = SongModel.fromMusicXml(xml, title: odeToJoy.title);
+        final song = SongModel.fromMusicXml(xml, fallbackTitle: odeToJoy.title);
         expect(song.measureCount, 16);
         expect(song.events, hasLength(62));
       });
