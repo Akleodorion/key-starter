@@ -15,9 +15,11 @@ import 'package:key_starter/features/song_practice/presentation/providers/playab
 import 'package:key_starter/features/song_practice/presentation/providers/section_selection_notifier.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_hand_selection_row.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_tempo_notifier.dart';
 import 'package:key_starter/features/song_practice/presentation/widgets/song_section_range_row.dart';
+import 'package:key_starter/features/song_practice/presentation/widgets/song_tempo_row.dart';
 
-/// Réglages du morceau (mains, plage de mesures) qui défilent si la hauteur
+/// Réglages du morceau (mains, plage de mesures, tempo) qui défilent si la hauteur
 /// manque, et le bouton Commencer toujours visible en bas.
 class SongSetupFormView extends ConsumerWidget {
   final BundledSong bundledSong;
@@ -33,6 +35,7 @@ class SongSetupFormView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColorTheme.of(context);
     final hands = ref.watch(handSelectionProvider);
+    final bpm = ref.watch(songTempoProvider);
     final section =
         ref.watch(sectionSelectionProvider(bundledSong)) ??
         SongSection(
@@ -71,6 +74,8 @@ class SongSetupFormView extends ConsumerWidget {
                         section: section,
                         measureCount: song.measureCount,
                       ),
+                      Divider(height: 1, thickness: 1, color: colors.line),
+                      const SongTempoRow(),
                     ],
                   ),
                 ),
@@ -100,6 +105,7 @@ class SongSetupFormView extends ConsumerWidget {
                         song: song,
                         hands: hands,
                         section: section,
+                        bpm: bpm,
                       ),
                     ),
                   ),

@@ -8,12 +8,16 @@ class SongPlayConfig extends Equatable {
   final HandSelection hands;
   final SongSection section;
 
+  /// Tempo en noires par minute ; null = Libre (sans tempo).
+  final int? bpm;
+
   const SongPlayConfig({
     required this.song,
     required this.hands,
     required this.section,
+    this.bpm,
   });
 
   @override
-  List<Object?> get props => [song, hands, section];
+  List<Object?> get props => [song, hands, section, bpm];
 }

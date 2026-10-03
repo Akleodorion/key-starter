@@ -19,6 +19,7 @@ import 'package:key_starter/features/song_practice/presentation/pages/song_setup
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection_notifier.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_providers.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_tempo_notifier.dart';
 
 import '../../../../core/input/fake_input_source.dart';
 
@@ -197,6 +198,59 @@ void main() {
         );
       },
     );
+
+    testWidgets('propose 60 noires par minute par défaut et lance ce tempo', (
+      tester,
+    ) async {
+      //arrange
+      container = createContainer();
+      await pumpSetupPage(tester);
+
+      //act
+      await tester.tap(find.byIcon(Icons.add_rounded));
+      await tester.pump();
+      await tester.tap(find.text('Commencer'));
+      await tester.pumpAndSettle();
+
+      //assert
+      final playPage = tester.widget<SongPlayPage>(find.byType(SongPlayPage));
+      expect(playPage.config.bpm, 65);
+    });
+
+    testWidgets('passe en Libre sous 40 et lance le morceau sans tempo', (
+      tester,
+    ) async {
+      //arrange
+      container = createContainer();
+      await pumpSetupPage(tester);
+      expect(find.text('60'), findsOneWidget);
+
+      //act
+      for (var step = 0; step < 5; step++) {
+        await tester.tap(find.byIcon(Icons.remove_rounded));
+        await tester.pump();
+      }
+      await tester.tap(find.text('Commencer'));
+      await tester.pumpAndSettle();
+
+      //assert
+      final playPage = tester.widget<SongPlayPage>(find.byType(SongPlayPage));
+      expect(playPage.config.bpm, isNull);
+    });
+
+    testWidgets('affiche Libre quand le tempo est libre', (tester) async {
+      //arrange
+      container = createContainer();
+      for (var step = 0; step < 5; step++) {
+        container.read(songTempoProvider.notifier).decrement();
+      }
+
+      //act
+      await pumpSetupPage(tester);
+
+      //assert
+      expect(find.text('Libre'), findsOneWidget);
+    });
 
     testWidgets(
       'désactive Commencer quand la main choisie n\'a aucune note dans la plage',
