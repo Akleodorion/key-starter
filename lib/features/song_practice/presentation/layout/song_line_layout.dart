@@ -71,3 +71,29 @@ SongLine _layoutLine(
           ),
   ],
 );
+
+/// Ligne de la partition qui contient le temps [divisions] (compté depuis le
+/// début du morceau) et sa position dans la ligne, de 0 (début) à 1 (fin),
+/// pour des lignes de [measuresPerLine] mesures. La fin de la dernière mesure
+/// reste au bout de sa ligne.
+({int lineIndex, double fraction}) songLinePositionAt(
+  Song song,
+  double divisions, {
+  required int measuresPerLine,
+}) {
+  var measureIndex = song.measures.lastIndexWhere(
+    (measure) => measure.startDivisions <= divisions,
+  );
+  if (measureIndex < 0) measureIndex = 0;
+  final measure = song.measures[measureIndex];
+  final fractionInMeasure =
+      ((divisions - measure.startDivisions) / measure.durationDivisions).clamp(
+        0.0,
+        1.0,
+      );
+  return (
+    lineIndex: measureIndex ~/ measuresPerLine,
+    fraction:
+        (measureIndex % measuresPerLine + fractionInMeasure) / measuresPerLine,
+  );
+}
