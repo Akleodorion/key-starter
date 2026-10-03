@@ -9,7 +9,7 @@ import 'package:key_starter/features/song_practice/domain/repositories/song_repo
 /// Contrat : renvoie le [Song] ou le [Failure] de [SongRepository.loadSong].
 ///
 /// ```dart
-/// final result = await LoadSongUseCase(repository: repository)(odeToJoy);
+/// final result = await LoadSongUseCase(repository: repository)(bundledSong);
 /// ```
 ///
 /// Voir aussi : [SongRepository]

@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/errors/exceptions.dart';
 import 'package:key_starter/features/song_practice/data/datasources/song_asset_datasource.dart';
 import 'package:key_starter/features/song_practice/data/models/song_model.dart';
-import 'package:key_starter/features/song_practice/domain/entities/bundled_song.dart';
+import 'package:key_starter/features/song_practice/domain/entities/note_value.dart';
 
 /// [AssetBundle] qui sert les octets fournis pour chaque chemin.
 class _InMemoryAssetBundle extends CachingAssetBundle {
@@ -75,12 +75,90 @@ void main() {
         final sut = SongAssetDataSourceImpl();
 
         //act
-        final xml = await sut.loadMusicXml(odeToJoy.assetPath);
+        final xml = await sut.loadMusicXml('assets/songs/ode_to_joy.mxl');
 
         //assert
-        final song = SongModel.fromMusicXml(xml, title: odeToJoy.title);
+        final song = SongModel.fromMusicXml(xml, fallbackTitle: 'Sans titre');
         expect(song.measureCount, 16);
         expect(song.events, hasLength(62));
+      });
+    });
+
+    group('démonstration Figures de notes', () {
+      test(
+        'contient toutes les figures, en notes et en silences, et des points',
+        () async {
+          //arrange
+          final sut = SongAssetDataSourceImpl();
+
+          //act
+          final xml = await sut.loadMusicXml(
+            'assets/songs/figures_de_notes.mxl',
+          );
+
+          //assert
+          final song = SongModel.fromMusicXml(xml, fallbackTitle: 'Sans titre');
+          expect(song.title, 'Figures de notes');
+          expect(song.beatsPerMeasure, 4);
+          expect(song.beatUnit, 2);
+          final noteValues = {
+            for (final event in song.events)
+              if (event.trebleNotation case final notation?) notation.value,
+          };
+          final restValues = {for (final rest in song.rests) ?rest.value};
+          expect(
+            noteValues.map((value) => value.type).toSet(),
+            NoteType.values.toSet(),
+          );
+          expect(
+            restValues.map((value) => value.type).toSet(),
+            NoteType.values.toSet(),
+          );
+          expect(noteValues.map((value) => value.dotCount).toSet(), {
+            0,
+            1,
+            2,
+            3,
+          });
+          expect(restValues.map((value) => value.dotCount).toSet(), {0, 1, 2});
+        },
+      );
+    });
+
+    group('listSongAssetPaths', () {
+      test(
+        'garde les .mxl des morceaux livrés et des morceaux locaux',
+        () async {
+          //arrange
+          final sut = SongAssetDataSourceImpl(
+            listAllAssetPaths: () async => [
+              'assets/fonts/Bravura.otf',
+              'assets/songs/ode_to_joy.mxl',
+              'assets/songs/local/.gitkeep',
+              'assets/songs/local/song_of_storms.mxl',
+            ],
+          );
+
+          //act
+          final paths = await sut.listSongAssetPaths();
+
+          //assert
+          expect(paths, [
+            'assets/songs/ode_to_joy.mxl',
+            'assets/songs/local/song_of_storms.mxl',
+          ]);
+        },
+      );
+
+      test('trouve l\'Ode à la joie dans les assets de l\'app', () async {
+        //arrange
+        final sut = SongAssetDataSourceImpl();
+
+        //act
+        final paths = await sut.listSongAssetPaths();
+
+        //assert
+        expect(paths, contains('assets/songs/ode_to_joy.mxl'));
       });
     });
   });
