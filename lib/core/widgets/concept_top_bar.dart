@@ -19,7 +19,16 @@ class ConceptTopBar extends StatelessWidget {
           icon: Icons.arrow_back_rounded,
           onTap: () => Navigator.of(context).pop(),
         ),
-        if (title != null) UiText(title!, size: 14, color: colors.text2),
+        if (title != null)
+          Flexible(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: UiText(title!, size: 14, color: colors.text2),
+              ),
+            ),
+          ),
         const InputSourcePill(),
       ],
     );
