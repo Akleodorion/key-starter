@@ -238,6 +238,15 @@ Do **not** document:
 - For Riverpod notifier tests: use `ProviderContainer` with `overrides` to inject mock use cases.
 - `thenAnswer((_) => Future<void>.value())` for void async stubs (not `thenAnswer((_) async {})`).
 
+### No overflow, ever
+Any change that creates or touches a layout (page, widget, text, padding, new row/column content) must be proven overflow-free before the PR. Christian tests on a Galaxy Note 10 with an enlarged system font.
+
+- The page test (or the `core/widgets/` widget test) includes a layout test pumped at **412 × 869 (portrait) and 869 × 412 (landscape)**, `devicePixelRatio = 2`, with `TextScaler.linear(1.3)`, asserting `expect(tester.takeException(), isNull)`. Use the `for (final (orientation, screenSize) in [...])` loop of `song_setup_page_test.dart` as the template.
+- Cover the worst realistic content, not just defaults: longest labels (e.g. `Sol 5`, `Aucune entrée` in the top bar), every state that changes the layout (running, paused, error, no input source).
+- A shared widget is fixed once, in the widget — not by tweaking each page that uses it.
+- Fix with layout that adapts (`Wrap`, `Flexible`, `FittedBox(fit: BoxFit.scaleDown)`, scrolling), never by shrinking fonts globally or clipping content.
+- Run the test red first when fixing an overflow, so the test is known to catch it.
+
 ## Flutter/Dart Version
 
 - Dart SDK: `>=3.7.2 <4.0.0`
