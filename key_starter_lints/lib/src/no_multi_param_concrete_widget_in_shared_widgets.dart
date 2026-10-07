@@ -1,5 +1,6 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/error/error.dart' hide LintCode;
 import 'package:analyzer/error/listener.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
@@ -50,6 +51,8 @@ class NoMultiParamConcreteWidgetInSharedWidgets extends DartLintRule {
         final expression = argument is NamedExpression
             ? argument.expression
             : argument;
+        if (_isCallback(expression)) continue;
+
         final providerName = _resolveProviderName(expression);
         if (providerName != null) providerNames.add(providerName);
       }
@@ -61,6 +64,19 @@ class NoMultiParamConcreteWidgetInSharedWidgets extends DartLintRule {
       }
     });
   }
+}
+
+/// An action passed to the widget (`onChanged: (value) => ref.read(...)`,
+/// `onPause: notifier.pause`, `isTempo ? () => ... : null`) rather than data:
+/// a callback that reads a provider is not a field the widget could watch
+/// itself.
+bool _isCallback(Expression expression) {
+  final type = expression.staticType;
+  if (type is FunctionType) return true;
+  return expression is FunctionExpression ||
+      (expression is ConditionalExpression &&
+          (_isCallback(expression.thenExpression) ||
+              _isCallback(expression.elseExpression)));
 }
 
 /// Finds the provider identifier this argument's value is derived from, be it
