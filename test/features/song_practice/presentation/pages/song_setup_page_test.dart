@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/errors/failures.dart';
 import 'package:key_starter/core/input/input_source_kind.dart';
 import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/models/two_staff_event.dart';
-import 'package:key_starter/core/theme/app_theme.dart';
 import 'package:key_starter/features/song_practice/domain/entities/bundled_song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_event.dart';
@@ -23,6 +23,7 @@ import 'package:key_starter/features/song_practice/presentation/providers/song_p
 import 'package:key_starter/features/song_practice/presentation/providers/song_tempo_notifier.dart';
 
 import '../../../../core/input/fake_input_source.dart';
+import '../../../../helpers/layout_test_helpers.dart';
 
 /// Quatre mesures ; la main gauche ne joue qu'aux mesures 1 et 4.
 const song = Song(
@@ -77,51 +78,35 @@ const odeToJoy = BundledSong(
   assetPath: 'assets/songs/ode_to_joy.mxl',
 );
 
-/// Galaxy Note 10 : environ 412 × 869 points.
-const galaxyNote10Portrait = Size(412, 869);
-const galaxyNote10Landscape = Size(869, 412);
-
 void main() {
   late ProviderContainer container;
+
+  List<Override> songOverrides({
+    Either<Failure, Song> result = const Right(song),
+  }) => [
+    inputSourceProvider.overrideWithValue(FakeInputSource()),
+    activeInputSourceKindProvider.overrideWithValue(InputSourceKind.midi),
+    loadSongUseCaseProvider.overrideWithValue(
+      LoadSongUseCase(repository: _StubSongRepository(result)),
+    ),
+  ];
 
   ProviderContainer createContainer({
     Either<Failure, Song> result = const Right(song),
   }) {
     final newContainer = ProviderContainer(
-      overrides: [
-        inputSourceProvider.overrideWithValue(FakeInputSource()),
-        activeInputSourceKindProvider.overrideWithValue(InputSourceKind.midi),
-        loadSongUseCaseProvider.overrideWithValue(
-          LoadSongUseCase(repository: _StubSongRepository(result)),
-        ),
-      ],
+      overrides: songOverrides(result: result),
     );
     addTearDown(newContainer.dispose);
     return newContainer;
   }
 
-  Future<void> pumpSetupPage(
-    WidgetTester tester, {
-    Size screenSize = galaxyNote10Portrait,
-    double textScale = 1,
-  }) async {
-    tester.view.devicePixelRatio = 2;
-    tester.view.physicalSize = screenSize * 2;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(textScale)),
-            child: child!,
-          ),
-          home: const SongSetupPage(bundledSong: odeToJoy),
-        ),
-      ),
+  Future<void> pumpSetupPage(WidgetTester tester) async {
+    await pumpOnScreen(
+      tester,
+      const SongSetupPage(bundledSong: odeToJoy),
+      container: container,
+      textScale: 1,
     );
     await tester.pumpAndSettle();
   }
@@ -161,25 +146,12 @@ void main() {
       null;
 
   group('SongSetupPage', () {
-    for (final (orientation, screenSize) in [
-      ('portrait', galaxyNote10Portrait),
-      ('paysage', galaxyNote10Landscape),
-    ]) {
-      testWidgets(
-        'tient sans dépassement sur un Galaxy Note 10 en $orientation, police agrandie à 130 %',
-        (tester) async {
-          //arrange
-          container = createContainer();
-
-          //act
-          await pumpSetupPage(tester, screenSize: screenSize, textScale: 1.3);
-
-          //assert
-          expect(tester.takeException(), isNull);
-          expect(find.text('Commencer'), findsOneWidget);
-        },
-      );
-    }
+    testNoOverflow(
+      'affiche la préparation',
+      () => const SongSetupPage(bundledSong: odeToJoy),
+      overrides: songOverrides,
+      arrange: (tester) => tester.pumpAndSettle(),
+    );
 
     testWidgets('propose les trois choix de main, deux mains par défaut', (
       tester,

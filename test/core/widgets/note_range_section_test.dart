@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:key_starter/core/theme/app_theme.dart';
 
+import '../../helpers/layout_test_helpers.dart';
 import 'fake_note_range_section.dart';
 
 void main() {
@@ -12,30 +11,17 @@ void main() {
     sut = FakeNoteRangeSection();
   });
 
-  Future<void> pumpSection(WidgetTester tester, {double textScale = 1}) async {
-    tester.view.devicePixelRatio = 2;
-    tester.view.physicalSize = const Size(412, 869) * 2;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(textScale)),
-            child: child!,
-          ),
-          home: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: sut,
-            ),
+  Future<void> pumpSection(WidgetTester tester, {double textScale = 1}) =>
+      pumpOnScreen(
+        tester,
+        Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: sut,
           ),
         ),
-      ),
-    );
-  }
+        textScale: textScale,
+      );
 
   group('NoteRangeSection', () {
     testWidgets('affiche les deux bornes et la consigne par défaut', (
@@ -57,7 +43,7 @@ void main() {
       'passe le réglage « à » à la ligne plutôt que de déborder, police agrandie à 130 %',
       (tester) async {
         //act
-        await pumpSection(tester, textScale: 1.3);
+        await pumpSection(tester, textScale: enlargedTextScale);
 
         //assert
         expect(tester.takeException(), isNull);
