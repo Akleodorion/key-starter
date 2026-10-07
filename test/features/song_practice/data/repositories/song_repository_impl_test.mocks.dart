@@ -35,6 +35,14 @@ class MockSongAssetDataSource extends _i1.Mock
   }
 
   @override
+  _i3.Future<List<String>> listSongAssetPaths() =>
+      (super.noSuchMethod(
+            Invocation.method(#listSongAssetPaths, []),
+            returnValue: _i3.Future<List<String>>.value(<String>[]),
+          )
+          as _i3.Future<List<String>>);
+
+  @override
   _i3.Future<String> loadMusicXml(String? assetPath) =>
       (super.noSuchMethod(
             Invocation.method(#loadMusicXml, [assetPath]),

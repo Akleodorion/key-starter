@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Morceaux locaux, jamais versionnés (droits d'auteur)
+/assets/songs/local/*
+!/assets/songs/local/.gitkeep

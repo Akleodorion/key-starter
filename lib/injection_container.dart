@@ -9,6 +9,7 @@ import 'package:key_starter/features/session/domain/usecases/get_last_session_pa
 import 'package:key_starter/features/song_practice/data/datasources/song_asset_datasource.dart';
 import 'package:key_starter/features/song_practice/data/repositories/song_repository_impl.dart';
 import 'package:key_starter/features/song_practice/domain/repositories/song_repository.dart';
+import 'package:key_starter/features/song_practice/domain/usecases/list_songs_usecase.dart';
 import 'package:key_starter/features/song_practice/domain/usecases/load_song_usecase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,5 +42,6 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<SongRepository>(
     () => SongRepositoryImpl(dataSource: sl()),
   );
+  sl.registerFactory(() => ListSongsUseCase(repository: sl()));
   sl.registerFactory(() => LoadSongUseCase(repository: sl()));
 }

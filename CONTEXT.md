@@ -62,7 +62,7 @@ _Avoid_: Passage, extrait
 Ce qui suit toute section terminée, réussie ou non : un court message (« 2 erreurs · on reprend », « Sans erreur · on reprend »), puis la section repart de X avec les mêmes réglages et les couleurs effacées (au tempo, après un nouveau décompte). On travaille la section en boucle ; on n'en sort que par la flèche retour de la page de jeu, qui ramène à la préparation.
 
 **Ligne de partition**:
-Deux mesures consécutives d'un morceau sur portée double, avec clés et accolade, barres de mesure et numéro de la première mesure (pas de chiffrage pour l'instant). Chaque mesure occupe la moitié de la ligne, même sur une dernière ligne incomplète, et chaque événement y est placé selon son temps. Deux lignes sont visibles : celle en cours en haut, la suivante en dessous ; elles remontent quand le repère passe à la ligne suivante. Une note jouée reste verte ou rouge.
+Deux mesures consécutives d'un morceau sur portée double, avec clés et accolade, barres de mesure et numéro de la première mesure (pas de chiffrage pour l'instant). Chaque mesure occupe la moitié de la ligne, même sur une dernière ligne incomplète. Chaque élément (note ou silence) y est placé selon son temps, mais jamais à moins d'un douzième de mesure du suivant : les écarts plus larges cèdent la place, et une mesure trop pleine est répartie également. Le repère et la barre suivent ce même placement, donc la barre croise chaque note à son instant mais n'avance pas à vitesse constante à l'écran. Deux lignes sont visibles : celle en cours en haut, la suivante en dessous ; elles remontent quand le repère passe à la ligne suivante. Une note jouée reste verte ou rouge.
 _Avoid_: Système (terme de gravure, à éviter à l'écran)
 
 **Repère**:
@@ -80,7 +80,18 @@ _Avoid_: Curseur, repère (réservé au tempo Libre)
 Au tempo, l'intervalle de ±¼ de temps autour de l'instant d'un événement, chaque côté réduit à la moitié de l'écart avec l'événement voisin (les fenêtres ne se chevauchent jamais). Les touches jouées dedans sont regroupées : l'événement passe juste dès qu'elles correspondent exactement aux notes attendues, sinon il est jugé à la fermeture de la fenêtre (faux s'il manque une note, s'il y en a une de trop, ou s'il n'a pas été joué). Seule l'attaque compte, pas la durée tenue. Une touche jouée hors de toute fenêtre rend faux le prochain événement encore ouvert.
 
 **Événement de morceau**:
-Un événement deux portées daté : sa mesure, son instant d'attaque, et les notes de chaque portée qui commencent à cet instant (une note encore tenue n'en fait pas partie). La durée écrite de chaque groupe est conservée pour le dessin des figures de notes à venir.
+Un événement deux portées daté : sa mesure, son instant d'attaque, et les notes de chaque portée qui commencent à cet instant (une note encore tenue n'en fait pas partie). Chaque groupe garde sa figure, le sens de sa hampe et ses barres de ligature tels que la partition les écrit.
+
+**Figure**:
+La valeur écrite d'une note ou d'un silence : carrée, ronde, blanche, noire, croche, double, triple, quadruple croche, puis 128e, 256e, 512e et 1024e, avec autant de points que la partition en indique. Lue dans la partition (déduite de la durée si elle n'est pas écrite) ; longues et maximes sont refusées. Dessinée avec la police Bravura : tête, hampe dans le sens écrit (sinon selon la note la plus éloignée du milieu de la portée), crochets pour une note seule, barres de ligature et demi-barres d'après la partition, pente plafonnée à un demi-interligne. Tête, hampe, crochets et points prennent la couleur du verdict de leur portée ; une barre de ligature n'est colorée que si tout son groupe a le même verdict.
+_Avoid_: Durée (le temps joué, pas le signe écrit), rythme
+
+**Silence**:
+Une figure de silence d'une portée, à sa place dans le temps, jamais jugée : le repère et la barre passent dessus. Une mesure entière de silence se dessine comme une pause centrée dans la mesure, quel que soit le chiffrage. Toujours neutre (gris dans la main non travaillée).
+_Avoid_: Pause (réservé au silence d'une ronde ou de mesure entière)
+
+**Morceau local**:
+Une partition déposée dans `assets/songs/local/`, jamais versionnée (morceau sous droits, pour un usage personnel) : elle apparaît dans la liste des morceaux seulement sur une app construite avec le fichier présent. Les morceaux sont listés depuis les partitions livrées, chacun sous le titre écrit dans sa partition (sinon son nom de fichier), par ordre alphabétique.
 
 **Mode une main**:
 Travail d'un morceau à la main droite seule ou à la main gauche seule (choisi sur la page de préparation, deux mains par défaut). L'autre portée reste affichée en gris, sans être jugée ; les événements où seule l'autre main joue sont sautés ; toute touche en plus de la main choisie est fausse.

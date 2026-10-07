@@ -64,9 +64,18 @@ class _StubSongRepository implements SongRepository {
   _StubSongRepository(this.result);
 
   @override
+  Future<Either<Failure, List<BundledSong>>> listSongs() async =>
+      const Right([odeToJoy]);
+
+  @override
   Future<Either<Failure, Song>> loadSong(BundledSong bundledSong) async =>
       result;
 }
+
+const odeToJoy = BundledSong(
+  title: 'Ode à la joie',
+  assetPath: 'assets/songs/ode_to_joy.mxl',
+);
 
 /// Galaxy Note 10 : environ 412 × 869 points.
 const galaxyNote10Portrait = Size(412, 869);
