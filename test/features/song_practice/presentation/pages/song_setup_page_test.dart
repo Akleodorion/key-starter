@@ -18,7 +18,9 @@ import 'package:key_starter/features/song_practice/presentation/pages/song_play_
 import 'package:key_starter/features/song_practice/presentation/pages/song_setup_page.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/hand_selection_notifier.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_play_config.dart';
 import 'package:key_starter/features/song_practice/presentation/providers/song_providers.dart';
+import 'package:key_starter/features/song_practice/presentation/providers/song_tempo_notifier.dart';
 
 import '../../../../core/input/fake_input_source.dart';
 
@@ -122,6 +124,22 @@ void main() {
     await tester.pump();
   }
 
+  /// Lance la page de jeu et renvoie sa configuration, puis la quitte pour
+  /// arrêter l'horloge du tempo.
+  Future<SongPlayConfig> startedConfig(WidgetTester tester) async {
+    await tester.tap(find.text('Commencer'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    final config = tester
+        .widget<SongPlayPage>(find.byType(SongPlayPage))
+        .config;
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    return config;
+  }
+
   bool isStartEnabled(WidgetTester tester) =>
       tester
           .widget<FilledButton>(
@@ -183,20 +201,67 @@ void main() {
         await chooseMeasures(tester, 2, 4);
 
         //act
-        await tester.tap(find.text('Commencer'));
-        await tester.pumpAndSettle();
+        final startedPlayConfig = await startedConfig(tester);
 
         //assert
         expect(defaultLabelCount, 1);
-        final playPage = tester.widget<SongPlayPage>(find.byType(SongPlayPage));
-        expect(playPage.config.hands, HandSelection.leftOnly);
-        expect(playPage.config.song, song);
+        expect(startedPlayConfig.hands, HandSelection.leftOnly);
+        expect(startedPlayConfig.song, song);
         expect(
-          playPage.config.section,
+          startedPlayConfig.section,
           const SongSection(firstMeasureNumber: 2, lastMeasureNumber: 4),
         );
       },
     );
+
+    testWidgets('propose 60 noires par minute par défaut et lance ce tempo', (
+      tester,
+    ) async {
+      //arrange
+      container = createContainer();
+      await pumpSetupPage(tester);
+
+      //act
+      await tester.tap(find.byIcon(Icons.add_rounded));
+      await tester.pump();
+      final startedPlayConfig = await startedConfig(tester);
+
+      //assert
+      expect(startedPlayConfig.bpm, 65);
+    });
+
+    testWidgets('passe en Libre sous 40 et lance le morceau sans tempo', (
+      tester,
+    ) async {
+      //arrange
+      container = createContainer();
+      await pumpSetupPage(tester);
+      expect(find.text('60'), findsOneWidget);
+
+      //act
+      for (var step = 0; step < 5; step++) {
+        await tester.tap(find.byIcon(Icons.remove_rounded));
+        await tester.pump();
+      }
+      final startedPlayConfig = await startedConfig(tester);
+
+      //assert
+      expect(startedPlayConfig.bpm, isNull);
+    });
+
+    testWidgets('affiche Libre quand le tempo est libre', (tester) async {
+      //arrange
+      container = createContainer();
+      for (var step = 0; step < 5; step++) {
+        container.read(songTempoProvider.notifier).decrement();
+      }
+
+      //act
+      await pumpSetupPage(tester);
+
+      //assert
+      expect(find.text('Libre'), findsOneWidget);
+    });
 
     testWidgets(
       'désactive Commencer quand la main choisie n\'a aucune note dans la plage',

@@ -73,4 +73,30 @@ void main() {
       },
     );
   });
+
+  group('songLinePositionAt', () {
+    for (final (divisions, lineIndex, fraction) in [
+      (0.0, 0, 0.0),
+      (4.0, 0, 0.25),
+      (12.0, 0, 0.75),
+      (16.0, 1, 0.0),
+      (20.0, 1, 0.25),
+      (32.0, 1, 1.0),
+    ]) {
+      test(
+        'place le temps $divisions sur la ligne $lineIndex, à $fraction de sa largeur',
+        () {
+          //arrange
+          final song = songWithMeasures(4);
+
+          //act
+          final sut = songLinePositionAt(song, divisions, measuresPerLine: 2);
+
+          //assert
+          expect(sut.lineIndex, lineIndex);
+          expect(sut.fraction, closeTo(fraction, 1e-9));
+        },
+      );
+    }
+  });
 }

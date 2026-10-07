@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:key_starter/core/enums/clef_mode.dart';
@@ -16,8 +18,9 @@ import 'package:key_starter/features/song_practice/presentation/layout/song_line
 /// Une ligne de partition sur portée double : clés et accolade, barres de
 /// mesure, numéro de la première mesure, fond teinté derrière les mesures de
 /// la section travaillée, chaque événement à sa place et coloré selon son
-/// verdict, et le repère sur l'événement en cours. Celui-ci
-/// gonfle (juste) ou tremble (faux) quand il vient d'être jugé.
+/// verdict, et le repère sur l'événement en cours (ou la barre du tempo).
+/// L'événement en cours gonfle (juste) ou tremble (faux) quand il vient
+/// d'être jugé.
 class SongScoreLine extends StatelessWidget {
   final SongLine line;
   final Song song;
@@ -27,6 +30,10 @@ class SongScoreLine extends StatelessWidget {
   /// Indice dans le morceau de l'événement à jouer ; null s'il n'est pas
   /// sur cette ligne.
   final int? currentEventIndex;
+
+  /// Position de la barre du tempo dans cette ligne, de 0 à 1 ; null si elle
+  /// n'est pas sur cette ligne.
+  final double? barPosition;
   final NoteState feedbackState;
   final bool trebleMuted;
   final bool bassMuted;
@@ -40,6 +47,7 @@ class SongScoreLine extends StatelessWidget {
     required this.measuresPerLine,
     required this.judgedVerdicts,
     required this.currentEventIndex,
+    this.barPosition,
     required this.feedbackState,
     required this.trebleMuted,
     required this.bassMuted,
@@ -74,7 +82,7 @@ class SongScoreLine extends StatelessWidget {
               for (var slot = 0; slot < line.measureCount; slot++)
                 if (section.contains(line.measures[slot].number)) slot,
             ],
-            cursorPosition: cursorPosition,
+            cursorPosition: cursorPosition ?? barPosition,
             firstMeasureNumber: line.firstMeasureNumber,
             measureCount: line.measureCount,
             measuresPerLine: measuresPerLine,
@@ -210,7 +218,8 @@ class SongScoreLinePainter extends CustomPainter {
 
     double noteX(double position) {
       final measureSlots = position * measuresPerLine;
-      final slot = measureSlots.floor();
+      // La fin de la dernière mesure reste dans la ligne.
+      final slot = min(measureSlots.floor(), measuresPerLine - 1);
       final fractionInMeasure = measureSlots - slot;
       final leftPadding = lineGap * 1.8;
       final rightPadding = lineGap * 1.2;

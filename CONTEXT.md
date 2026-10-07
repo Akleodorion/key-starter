@@ -45,13 +45,13 @@ _Avoid_: Double note, intervalle
 Libellés affichés pour la partie écrite en clé de sol / en clé de fa. C'est la portée qui définit la main, pas la main réellement utilisée (le clavier ne la connaît pas) ; les croisements de mains sont ignorés. Dans le code : `treble` / `bass`.
 
 **Touches tenues**:
-Règle de déclenchement du jugement sans tempo : l'événement est jugé dès que le nombre de touches enfoncées en même temps atteint le nombre de notes attendues, quel que soit l'ordre d'attaque des mains. Relâcher une touche avant d'y arriver juge l'événement sur toutes les touches jouées jusque-là (donc faux). Seules comptent les touches enfoncées depuis le début de l'événement : une touche tenue depuis l'événement précédent (une ronde à la main gauche pendant que la main droite avance) est ignorée. Remplace la fenêtre de détection quand il n'y a pas de tempo ; avec un tempo, la fenêtre de détection reste la règle.
+Règle de déclenchement du jugement sans tempo : l'événement est jugé dès que le nombre de touches enfoncées en même temps atteint le nombre de notes attendues, quel que soit l'ordre d'attaque des mains. Relâcher une touche avant d'y arriver juge l'événement sur toutes les touches jouées jusque-là (donc faux). Seules comptent les touches enfoncées depuis le début de l'événement : une touche tenue depuis l'événement précédent (une ronde à la main gauche pendant que la main droite avance) est ignorée. Remplace la fenêtre de détection quand il n'y a pas de tempo ; avec un tempo, c'est la Fenêtre d'événement qui s'applique.
 
 **Point de partage**:
 Le milieu entre la note de clé de fa attendue la plus haute et la note de clé de sol attendue la plus basse. Une touche attendue est attribuée à sa portée ; toute autre touche (fausse, ou noire) va à la clé de sol au-dessus du point de partage, à la clé de fa en dessous. Sert à dire quelle main s'est trompée.
 
 **Morceau**:
-Une pièce à travailler, lue depuis sa partition MusicXML (fichier `.mxl` exporté par MuseScore) : une partie piano sur deux portées, en Do majeur, une voix par portée. Une partition qui contient un élément pas encore pris en charge (altérations, armure, notes liées, triolets, ornements, plusieurs voix ou parties) est refusée avec sa raison plutôt que jouée faux. Sans tempo pour l'instant : on joue un événement après l'autre ; juste ou faux, la couleur s'affiche puis on passe au suivant, sans attendre le relâchement. On travaille toujours une section (par défaut le morceau entier).
+Une pièce à travailler, lue depuis sa partition MusicXML (fichier `.mxl` exporté par MuseScore) : une partie piano sur deux portées, en Do majeur, une voix par portée. Une partition qui contient un élément pas encore pris en charge (altérations, armure, notes liées, triolets, ornements, plusieurs voix ou parties, changement de chiffrage) est refusée avec sa raison plutôt que jouée faux ; sans chiffrage, elle est lue en 4/4. Se joue en tempo **Libre** (on joue un événement après l'autre ; juste ou faux, la couleur s'affiche puis on passe au suivant, sans attendre le relâchement) ou **au tempo** choisi sur la page de préparation (voir Barre). On travaille toujours une section (par défaut le morceau entier).
 _Avoid_: Chanson, partition (le fichier, pas la pièce)
 
 **Section**:
@@ -59,15 +59,25 @@ Une plage continue de mesures travaillée d'un seul tenant, de la mesure X à la
 _Avoid_: Passage, extrait
 
 **Reprise**:
-Ce qui suit toute section terminée, réussie ou non : un court message (« 2 erreurs · on reprend », « Sans erreur · on reprend »), puis la section repart de X avec les mêmes réglages et les couleurs effacées. On travaille la section en boucle ; on n'en sort que par la flèche retour de la page de jeu, qui ramène à la préparation.
+Ce qui suit toute section terminée, réussie ou non : un court message (« 2 erreurs · on reprend », « Sans erreur · on reprend »), puis la section repart de X avec les mêmes réglages et les couleurs effacées (au tempo, après un nouveau décompte). On travaille la section en boucle ; on n'en sort que par la flèche retour de la page de jeu, qui ramène à la préparation.
 
 **Ligne de partition**:
 Deux mesures consécutives d'un morceau sur portée double, avec clés et accolade, barres de mesure et numéro de la première mesure (pas de chiffrage pour l'instant). Chaque mesure occupe la moitié de la ligne, même sur une dernière ligne incomplète, et chaque événement y est placé selon son temps. Deux lignes sont visibles : celle en cours en haut, la suivante en dessous ; elles remontent quand le repère passe à la ligne suivante. Une note jouée reste verte ou rouge.
 _Avoid_: Système (terme de gravure, à éviter à l'écran)
 
 **Repère**:
-Le trait vertical posé sur l'événement à jouer d'un morceau. Sans tempo, il saute d'un événement au suivant ; il deviendra la barre qui avance au tempo.
+Le trait vertical posé sur l'événement à jouer d'un morceau en tempo Libre : il saute d'un événement au suivant.
 _Avoid_: Curseur, barre (réservée au tempo)
+
+**Tempo d'un morceau**:
+La vitesse de jeu choisie sur la page de préparation, en noires par minute : Libre, ou de 40 à 120 par pas de 5 (60 par défaut), gardée le temps de la session pour tous les morceaux. Le fichier MusicXML ne fixe pas le tempo. Affiché « ♩ = 60 » à côté du titre pendant le jeu.
+
+**Barre**:
+Au tempo, le trait vertical qui glisse sur la partition à vitesse constante, du début de la mesure X à la fin de la mesure Y. Elle part après un **décompte** d'une mesure (4, 3, 2, 1 en 4/4) et croise chaque événement à l'instant où il doit être joué ; les lignes remontent quand elle passe à la ligne suivante. Au bout de la section : reprise, puis nouveau décompte. Clavier débranché, elle s'arrête ; au rebranchement, la section repart du décompte.
+_Avoid_: Curseur, repère (réservé au tempo Libre)
+
+**Fenêtre d'événement**:
+Au tempo, l'intervalle de ±¼ de temps autour de l'instant d'un événement, chaque côté réduit à la moitié de l'écart avec l'événement voisin (les fenêtres ne se chevauchent jamais). Les touches jouées dedans sont regroupées : l'événement passe juste dès qu'elles correspondent exactement aux notes attendues, sinon il est jugé à la fermeture de la fenêtre (faux s'il manque une note, s'il y en a une de trop, ou s'il n'a pas été joué). Seule l'attaque compte, pas la durée tenue. Une touche jouée hors de toute fenêtre rend faux le prochain événement encore ouvert.
 
 **Événement de morceau**:
 Un événement deux portées daté : sa mesure, son instant d'attaque, et les notes de chaque portée qui commencent à cet instant (une note encore tenue n'en fait pas partie). La durée écrite de chaque groupe est conservée pour le dessin des figures de notes à venir.

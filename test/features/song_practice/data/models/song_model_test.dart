@@ -6,14 +6,21 @@ import 'package:key_starter/core/models/two_staff_event.dart';
 import 'package:key_starter/features/song_practice/data/models/song_model.dart';
 import 'package:key_starter/features/song_practice/domain/entities/song_measure.dart';
 
+const commonTime = '<time><beats>4</beats><beat-type>4</beat-type></time>';
+
 /// Partition MusicXML minimale d'une partie piano à deux portées, en Do
 /// majeur et 4/4 (unité : la croche), dont les mesures sont [measures].
-String scoreWith(List<String> measures, {String attributes = ''}) {
+String scoreWith(
+  List<String> measures, {
+  String attributes = '',
+  int divisions = 2,
+  String time = commonTime,
+}) {
   final measureElements = [
     for (var index = 0; index < measures.length; index++)
       '<measure number="${index + 1}">'
-          '${index == 0 ? '<attributes><divisions>2</divisions><key><fifths>0</fifths></key>'
-                    '<time><beats>4</beats><beat-type>4</beat-type></time><staves>2</staves>$attributes</attributes>' : ''}'
+          '${index == 0 ? '<attributes><divisions>$divisions</divisions><key><fifths>0</fifths></key>'
+                    '$time<staves>2</staves>$attributes</attributes>' : ''}'
           '${measures[index]}'
           '</measure>',
   ].join();
@@ -310,6 +317,71 @@ void main() {
         );
       });
 
+      test('lit les divisions de noire et le chiffrage', () {
+        //arrange
+        final xml = scoreWith(
+          [note('C', 4, duration: 12)],
+          divisions: 4,
+          time: '<time><beats>3</beats><beat-type>4</beat-type></time>',
+        );
+
+        //act
+        final sut = SongModel.fromMusicXml(xml, title: 'Essai');
+
+        //assert
+        expect(sut.divisionsPerQuarter, 4);
+        expect(sut.beatsPerMeasure, 3);
+        expect(sut.beatUnit, 4);
+      });
+
+      test('prend 4/4 quand la partition n\'a pas de chiffrage', () {
+        //arrange
+        final xml = scoreWith([note('C', 4, duration: 8)], time: '');
+
+        //act
+        final sut = SongModel.fromMusicXml(xml, title: 'Essai');
+
+        //assert
+        expect(sut.beatsPerMeasure, 4);
+        expect(sut.beatUnit, 4);
+      });
+
+      test('refuse un changement de chiffrage en cours de morceau', () {
+        //arrange
+        final xml = scoreWith([
+          note('C', 4, duration: 8),
+          '<attributes><time><beats>3</beats><beat-type>4</beat-type></time></attributes>'
+              '${note('D', 4, duration: 6)}',
+        ]);
+
+        //act
+        //assert
+        expect(
+          () => SongModel.fromMusicXml(xml, title: 'Essai'),
+          throwsUnsupported(
+            'Les changements de chiffrage ne sont pas encore pris en charge.',
+          ),
+        );
+      });
+
+      test('refuse un changement de divisions en cours de morceau', () {
+        //arrange
+        final xml = scoreWith([
+          note('C', 4, duration: 8),
+          '<attributes><divisions>4</divisions></attributes>'
+              '${note('D', 4, duration: 16)}',
+        ]);
+
+        //act
+        //assert
+        expect(
+          () => SongModel.fromMusicXml(xml, title: 'Essai'),
+          throwsUnsupported(
+            'Les changements d\'unité de durée ne sont pas encore pris en charge.',
+          ),
+        );
+      });
+
       test(
         'lit l\'Ode à la joie : 16 mesures, 62 événements, la main gauche seule en mesure 12',
         () {
@@ -322,6 +394,9 @@ void main() {
           final sut = SongModel.fromMusicXml(xml, title: 'Ode à la joie');
 
           //assert
+          expect(sut.divisionsPerQuarter, 2);
+          expect(sut.beatsPerMeasure, 4);
+          expect(sut.beatUnit, 4);
           expect(sut.measureCount, 16);
           expect(sut.measures.map((measure) => measure.startDivisions), [
             for (var index = 0; index < 16; index++) index * 8,
