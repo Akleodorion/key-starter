@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:key_starter/core/models/concepts/chord_charts_concept.dart';
 import 'package:key_starter/core/models/concepts/chords_concept.dart';
 import 'package:key_starter/core/models/concepts/intervals_concept.dart';
 import 'package:key_starter/core/models/concepts/notes_concept.dart';
@@ -8,6 +9,7 @@ import 'package:key_starter/core/utils/feedback_utils.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
 import 'package:key_starter/core/widgets/entry_card.dart';
 import 'package:key_starter/core/widgets/midi_only_entry_card.dart';
+import 'package:key_starter/features/chord_chart/presentation/pages/chord_chart_concept_page.dart';
 import 'package:key_starter/features/chord_recognition/presentation/pages/chord_concept_page.dart';
 import 'package:key_starter/features/note_recognition/presentation/pages/note_concept_page.dart';
 import 'package:key_starter/features/song_practice/presentation/pages/song_practice_concept_page.dart';
@@ -57,6 +59,15 @@ class HomePage extends StatelessWidget {
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const SongPracticeConceptPage(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                MidiOnlyEntryCard(
+                  entry: const ChordChartsConcept(),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ChordChartConceptPage(),
                     ),
                   ),
                 ),

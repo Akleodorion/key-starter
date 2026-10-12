@@ -36,4 +36,7 @@ abstract final class AppColors {
 
   static const Color songsFg = Color(0xFF7A3FC4);
   static const Color songsTint = Color(0xFFEDE3FA);
+
+  static const Color chordChartsFg = Color(0xFFA0680C);
+  static const Color chordChartsTint = Color(0xFFF8EBD2);
 }
