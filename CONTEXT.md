@@ -9,7 +9,7 @@ Concept générique : un ensemble d'au moins une note à jouer simultanément po
 _Avoid_: Accord (réservé aux triades diatoniques 3 notes), Note (réservé au cas particulier d'un groupe à 1 note)
 
 **Accord**:
-Une triade diatonique : fondamentale + tierce + quinte, en ne prenant que les notes naturelles de la gamme de Do majeur (aucune altération). La qualité (majeur/mineur/diminué) est entièrement déterminée par le degré de la fondamentale — ce n'est pas un réglage indépendant.
+Une triade diatonique : fondamentale + tierce + quinte, en ne prenant que les notes naturelles de la gamme de Do majeur (aucune altération). La qualité (majeur/mineur/diminué) est entièrement déterminée par le degré de la fondamentale — ce n'est pas un réglage indépendant. Vaut pour les exercices d'accords ; dans une grille, voir Accord de grille.
 _Avoid_: Intervalle
 
 **Fondamentale**:
@@ -18,7 +18,7 @@ _Avoid_: Racine, root, tonique (tonique a un sens harmonique plus large, réserv
 
 **Symbole d'accord**:
 Notation d'une consigne d'accord sans partition : une barre `|` devant le nom de la fondamentale (`|Do`, `|C`), pour la distinguer d'une consigne de note (`Do`). Suffixe `m` minuscule collé pour les fondamentales Ré, Mi, La et Si (`|Rém`, `|Dm`). Si reçoit `m` par choix pédagogique alors que sa triade est diminuée. Un renversement s'indique par son numéro entre parenthèses, collé après le suffixe : `|Do(1)`, `|Rém(2)`, `|Am(1)` ; sans parenthèses, c'est l'état fondamental. Convention propre à l'app (issue d'un cours de piano), pas un standard musical.
-_Avoid_: `°`, `dim`, « majeur »/« mineur » en toutes lettres, `|Do/Mi` (accord à basse imposée)
+_Avoid_: `°`, `dim`, « majeur »/« mineur » en toutes lettres, `|Do/Mi` dans les exercices d'accords (la basse imposée n'existe que dans une grille, voir Basse imposée)
 
 **État fondamental**:
 Un accord joué avec la fondamentale en bas et les trois notes empilées dans une seule octave (Do-Mi-Sol). L'octave de l'ensemble est libre dans les exercices sans partition ; renversements, accord étalé sur plusieurs octaves et notes doublées sont faux.
@@ -111,3 +111,27 @@ _Avoid_: Onset (en dehors du code)
 **Seuil d'écoute**:
 Le volume minimal (-55 dB) en dessous duquel un son n'est jamais pris pour une note au Micro. Fixe, non réglable par l'utilisateur ; le bruit de fond de la pièce peut le relever automatiquement, jamais l'abaisser.
 _Avoid_: Sensibilité, gain
+
+**Grille**:
+Une pièce à travailler par ses accords plutôt que par sa partition, telle que l'écrit un cours de piano : un titre, un nombre de temps par mesure, puis des lignes de mesures d'accords de grille (`|C |G |Am |F |`). La main droite plaque l'accord, la main gauche joue la basse. Lue depuis un fichier texte de `assets/grids/` (ou `assets/grids/local/`, jamais versionné, pour les grilles recopiées d'un cours) ; un fichier qui contient un élément pas encore pris en charge est refusé avec sa raison. Se joue en tempo Libre (une frappe par case, juste ou faux, puis la case suivante) et tourne en boucle.
+_Avoid_: Grille d'accords (seulement sur l'accueil), partition, morceau (réservé au MusicXML)
+
+**Case**:
+Un accord de grille dans une mesure, avec sa durée en temps. Une mesure d'un seul accord est une seule case. Pendant le jeu, la case en cours est surlignée, puis reste verte ou rouge.
+_Avoid_: Cellule, accord (seul : ambigu)
+
+**Accord de grille**:
+L'accord d'une case, écrit comme dans le cours : la fondamentale (`C`, `Am`), sans la barre `|` du symbole d'accord, puisque les barres de mesure l'entourent déjà. Affiché selon la notation choisie (`C` ou `Do`, `Am` ou `Lam`). Juste dès que les touches tenues contiennent toutes ses notes, dans n'importe quelle octave et n'importe quel renversement, avec la fondamentale en note la plus grave ; les doublures sont acceptées, une note étrangère est fausse.
+_Avoid_: Accord (réservé aux triades diatoniques des exercices), symbole d'accord
+
+**Basse imposée**:
+Dans un accord de grille `X/Y`, la note Y jouée à la main gauche sous l'accord X (`C/E` : Do majeur avec Mi à la basse). N'est pas un renversement : le renversement dit dans quel ordre la main droite empile l'accord, la basse imposée dit quelle note joue la main gauche.
+_Avoid_: Renversement, slash chord (en dehors du code)
+
+**Frappe**:
+Un instant où une main doit jouer dans une grille : l'accord à la main droite, la basse à la main gauche, ou les deux ensemble. En tempo Libre, une frappe par case.
+_Avoid_: Coup, attaque (réservé au Micro)
+
+**Motif**:
+Les positions de frappe de chaque main dans une mesure de grille, en croches (`1 & 2 &`), répétées à chaque mesure : par exemple la main gauche sur les temps et la main droite sur les contretemps.
+_Avoid_: Rythme, pattern (en dehors du code)
