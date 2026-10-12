@@ -6,19 +6,44 @@ import 'package:key_starter/core/theme/app_color_theme.dart';
 import 'package:key_starter/core/theme/app_colors.dart';
 import 'package:key_starter/core/utils/note_utils.dart';
 import 'package:key_starter/core/widgets/display_text.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/accidental.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_quality.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_symbol.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/note_letter.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/spelled_note.dart';
 import 'package:key_starter/features/chord_chart/presentation/models/chord_chart_cell_status.dart';
 
-/// Indice, dans les noms de notes, de chaque classe de note naturelle.
-const _naturalNoteIndexes = {0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6};
+/// Nom d'une note de grille avec son orthographe (`F♯`, `G♭`) ; [noteNames]
+/// suit l'ordre de [NoteLetter], de Do à Si.
+String _spelledNoteLabel(SpelledNote note, List<String> noteNames) {
+  final accidental = switch (note.accidental) {
+    Accidental.natural => '',
+    Accidental.sharp => '♯',
+    Accidental.flat => '♭',
+  };
+  return '${noteNames[note.letter.index]}$accidental';
+}
 
-/// Nom d'un accord de grille dans la notation choisie : `Am` ou `Lam`.
+/// Nom d'un accord de grille dans la notation choisie : `F♯m` ou `Fa♯m`.
 String chordChartLabel(ChordSymbol chord, NoteLanguage language) {
   final noteNames = language == NoteLanguage.fr ? noteNamesFr : noteNamesEn;
-  final root = noteNames[_naturalNoteIndexes[chord.rootPitchClass]!];
-  final suffix = chord.quality == ChordQuality.minor ? 'm' : '';
-  return '$root$suffix';
+  final root = _spelledNoteLabel(chord.root, noteNames);
+  final suffix = switch (chord.quality) {
+    ChordQuality.major => '',
+    ChordQuality.minor => 'm',
+    ChordQuality.dominantSeventh => '7',
+    ChordQuality.minorSeventh => 'm7',
+    ChordQuality.majorSeventh => 'maj7',
+    ChordQuality.suspendedSecond => 'sus2',
+    ChordQuality.suspendedFourth => 'sus4',
+  };
+  final inversion = chord.inversion;
+  final inversionLabel = inversion == null ? '' : '($inversion)';
+  final bass = chord.bass;
+  final bassLabel = bass == null
+      ? ''
+      : '/${_spelledNoteLabel(bass, noteNames)}';
+  return '$root$suffix$inversionLabel$bassLabel';
 }
 
 /// Une case de la grille : le nom de son accord, surligné quand c'est la case
