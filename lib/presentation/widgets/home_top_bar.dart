@@ -14,7 +14,16 @@ class HomeTopBar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const AppBrand(),
+        // Le nom se réduit plutôt que de déborder à côté de « Aucune entrée »
+        // quand la police est agrandie.
+        const Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: AppBrand(),
+          ),
+        ),
+        const SizedBox(width: 8),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
