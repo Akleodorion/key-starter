@@ -88,6 +88,8 @@ flutter:
   assets:
     - assets/songs/
     - assets/songs/local/
+    - assets/grids/
+    - assets/grids/local/
 
   fonts:
     - family: Bravura

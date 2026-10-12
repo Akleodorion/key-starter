@@ -47,3 +47,7 @@ app.*.map.json
 # Morceaux locaux, jamais versionnés (droits d'auteur)
 /assets/songs/local/*
 !/assets/songs/local/.gitkeep
+
+# Grilles locales, jamais versionnées (recopiées d'un cours)
+/assets/grids/local/*
+!/assets/grids/local/.gitkeep
