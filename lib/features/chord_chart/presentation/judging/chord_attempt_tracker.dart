@@ -14,13 +14,14 @@ class ChordAttemptPending extends ChordAttemptOutcome {
   const ChordAttemptPending();
 }
 
-/// Les touches tenues contiennent l'accord, fondamentale en bas.
+/// Les touches tenues contiennent l'accord, basse attendue en bas et
+/// renversement imposé respecté.
 class ChordAttemptCorrect extends ChordAttemptOutcome {
   const ChordAttemptCorrect();
 }
 
-/// Une note étrangère a été jouée, ou tout a été relâché avant que l'accord
-/// soit juste.
+/// Une note étrangère à l'accord et à sa basse imposée a été jouée, ou tout
+/// a été relâché avant que l'accord soit juste.
 class ChordAttemptWrong extends ChordAttemptOutcome {
   const ChordAttemptWrong();
 }
@@ -33,16 +34,21 @@ class ChordAttemptWrong extends ChordAttemptOutcome {
 /// l'accord.
 class ChordAttemptTracker {
   final ChordSymbol expected;
+  final Set<int> _admittedPitchClasses;
   final Set<int> _ignoredKeys;
   final Set<int> _heldKeys = {};
 
   ChordAttemptTracker({required this.expected, Set<int> alreadyHeld = const {}})
-    : _ignoredKeys = {...alreadyHeld};
+    : _admittedPitchClasses = {
+        ...expected.pitchClasses,
+        expected.bassPitchClass,
+      },
+      _ignoredKeys = {...alreadyHeld};
 
   ChordAttemptOutcome press(int midiNumber) {
     _ignoredKeys.remove(midiNumber);
     _heldKeys.add(midiNumber);
-    if (!expected.pitchClasses.contains(midiNumber % 12)) {
+    if (!_admittedPitchClasses.contains(midiNumber % 12)) {
       return const ChordAttemptWrong();
     }
     return _isComplete
@@ -61,10 +67,16 @@ class ChordAttemptTracker {
 
   bool get _isComplete {
     final heldPitchClasses = {for (final key in _heldKeys) key % 12};
-    final lowestKey = _heldKeys.reduce(
-      (lowest, key) => key < lowest ? key : lowest,
-    );
+    final keysFromLowest = _heldKeys.toList()..sort();
     return heldPitchClasses.containsAll(expected.pitchClasses) &&
-        lowestKey % 12 == expected.bassPitchClass;
+        keysFromLowest.first % 12 == expected.bassPitchClass &&
+        _hasExpectedInversion(keysFromLowest);
+  }
+
+  bool _hasExpectedInversion(List<int> keysFromLowest) {
+    final inversionPitchClass = expected.inversionPitchClass;
+    if (inversionPitchClass == null) return true;
+    return keysFromLowest.length > 1 &&
+        keysFromLowest[1] % 12 == inversionPitchClass;
   }
 }
