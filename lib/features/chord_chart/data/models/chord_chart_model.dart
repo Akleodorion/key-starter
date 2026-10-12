@@ -1,23 +1,47 @@
 import 'package:key_starter/core/errors/exceptions.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/accidental.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_bar.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_cell.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_quality.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_symbol.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/note_letter.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/spelled_note.dart';
 
 /// Grille lue depuis son fichier texte.
 class ChordChartModel extends ChordChart {
   static const _supportedBeatsPerBar = 4;
-  static const _rootPitchClasses = {
-    'C': 0,
-    'D': 2,
-    'E': 4,
-    'F': 5,
-    'G': 7,
-    'A': 9,
-    'B': 11,
+  static const _letters = {
+    'C': NoteLetter.c,
+    'D': NoteLetter.d,
+    'E': NoteLetter.e,
+    'F': NoteLetter.f,
+    'G': NoteLetter.g,
+    'A': NoteLetter.a,
+    'B': NoteLetter.b,
   };
-  static final _chordPattern = RegExp(r'^([A-G])(m?)$');
+  static const _accidentals = {
+    '': Accidental.natural,
+    '#': Accidental.sharp,
+    '♯': Accidental.sharp,
+    'b': Accidental.flat,
+    '♭': Accidental.flat,
+  };
+  static const _qualities = {
+    '': ChordQuality.major,
+    'm': ChordQuality.minor,
+    '7': ChordQuality.dominantSeventh,
+    'm7': ChordQuality.minorSeventh,
+    'maj7': ChordQuality.majorSeventh,
+    'sus2': ChordQuality.suspendedSecond,
+    'sus4': ChordQuality.suspendedFourth,
+  };
+  static final _chordPattern = RegExp(
+    r'^(?<rootLetter>[A-G])(?<rootAccidental>[#♯b♭]?)'
+    r'(?<quality>maj7|m7|m|7|sus2|sus4|)'
+    r'(?:\((?<inversion>[12])\))?'
+    r'(?:/(?<bassLetter>[A-G])(?<bassAccidental>[#♯b♭]?))?$',
+  );
 
   const ChordChartModel({
     required super.title,
@@ -115,11 +139,27 @@ class ChordChartModel extends ChordChart {
     if (match == null) {
       throw UnsupportedChordChartException('Accord inconnu : $symbol.');
     }
+    final inversion = match.namedGroup('inversion');
+    final bassLetter = match.namedGroup('bassLetter');
+    if (inversion != null && bassLetter != null) {
+      throw UnsupportedChordChartException(
+        'Un accord ne peut pas être à la fois renversé et à basse imposée '
+        '(« $symbol »).',
+      );
+    }
     return ChordSymbol(
-      rootPitchClass: _rootPitchClasses[match.group(1)]!,
-      quality: match.group(2)!.isEmpty
-          ? ChordQuality.major
-          : ChordQuality.minor,
+      root: _spelledNote(
+        match.namedGroup('rootLetter')!,
+        match.namedGroup('rootAccidental')!,
+      ),
+      quality: _qualities[match.namedGroup('quality')]!,
+      inversion: inversion == null ? null : int.parse(inversion),
+      bass: bassLetter == null
+          ? null
+          : _spelledNote(bassLetter, match.namedGroup('bassAccidental')!),
     );
   }
+
+  static SpelledNote _spelledNote(String letter, String accidental) =>
+      SpelledNote(_letters[letter]!, _accidentals[accidental]!);
 }

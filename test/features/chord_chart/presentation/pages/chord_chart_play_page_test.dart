@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/core/enums/note_language.dart';
@@ -9,12 +10,15 @@ import 'package:key_starter/core/input/input_source_provider.dart';
 import 'package:key_starter/core/providers/notation_language_provider.dart';
 import 'package:key_starter/core/utils/note_feedback_motion.dart';
 import 'package:key_starter/core/widgets/midi_only_entry_card.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/accidental.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/bundled_chord_chart.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_bar.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_cell.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_quality.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_symbol.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/note_letter.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/spelled_note.dart';
 import 'package:key_starter/features/chord_chart/domain/repositories/chord_chart_repository.dart';
 import 'package:key_starter/features/chord_chart/domain/usecases/list_chord_charts_usecase.dart';
 import 'package:key_starter/features/chord_chart/domain/usecases/load_chord_chart_usecase.dart';
@@ -38,15 +42,14 @@ const bundledChordChart = BundledChordChart(
   assetPath: 'assets/grids/douze_mesures.txt',
 );
 
-ChordChartBar wholeBar(int rootPitchClass, ChordQuality quality) =>
-    ChordChartBar(
-      cells: [
-        ChordChartCell(
-          chord: ChordSymbol(rootPitchClass: rootPitchClass, quality: quality),
-          beats: 4,
-        ),
-      ],
-    );
+ChordChartBar wholeBar(NoteLetter root, ChordQuality quality) => ChordChartBar(
+  cells: [
+    ChordChartCell(
+      chord: ChordSymbol(root: SpelledNote(root), quality: quality),
+      beats: 4,
+    ),
+  ],
+);
 
 /// Trois lignes de quatre mesures ; Mi majeur n'apparaît qu'en mesure 9,
 /// première de la troisième ligne.
@@ -55,15 +58,57 @@ final chart = ChordChart(
   beatsPerBar: 4,
   bars: [
     for (var line = 0; line < 2; line++) ...[
-      wholeBar(0, ChordQuality.major),
-      wholeBar(7, ChordQuality.major),
-      wholeBar(9, ChordQuality.minor),
-      wholeBar(5, ChordQuality.major),
+      wholeBar(NoteLetter.c, ChordQuality.major),
+      wholeBar(NoteLetter.g, ChordQuality.major),
+      wholeBar(NoteLetter.a, ChordQuality.minor),
+      wholeBar(NoteLetter.f, ChordQuality.major),
     ],
-    wholeBar(4, ChordQuality.major),
-    wholeBar(2, ChordQuality.minor),
-    wholeBar(7, ChordQuality.major),
-    wholeBar(0, ChordQuality.major),
+    wholeBar(NoteLetter.e, ChordQuality.major),
+    wholeBar(NoteLetter.d, ChordQuality.minor),
+    wholeBar(NoteLetter.g, ChordQuality.major),
+    wholeBar(NoteLetter.c, ChordQuality.major),
+  ],
+);
+
+/// Grille d'une seule mesure dont chaque temps porte un accord de [chords].
+ChordChart oneBarChart(List<ChordSymbol> chords) => ChordChart(
+  title: 'Vocabulaire',
+  beatsPerBar: chords.length,
+  bars: [
+    ChordChartBar(
+      cells: [
+        for (final chord in chords) ChordChartCell(chord: chord, beats: 1),
+      ],
+    ),
+  ],
+);
+
+/// Une ligne `|F#maj7 |G/F# |C#m7 |Ebsus4 |` : les noms d'accords les plus
+/// longs, `Fa♯maj7` et `Sol/Fa♯` en notation Do.
+final longestLabelsChart = ChordChart(
+  title: 'Accords altérés',
+  beatsPerBar: 4,
+  bars: [
+    for (final chord in const [
+      ChordSymbol(
+        root: SpelledNote(NoteLetter.f, Accidental.sharp),
+        quality: ChordQuality.majorSeventh,
+      ),
+      ChordSymbol(
+        root: SpelledNote(NoteLetter.g),
+        quality: ChordQuality.major,
+        bass: SpelledNote(NoteLetter.f, Accidental.sharp),
+      ),
+      ChordSymbol(
+        root: SpelledNote(NoteLetter.c, Accidental.sharp),
+        quality: ChordQuality.minorSeventh,
+      ),
+      ChordSymbol(
+        root: SpelledNote(NoteLetter.e, Accidental.flat),
+        quality: ChordQuality.suspendedFourth,
+      ),
+    ])
+      ChordChartBar(cells: [ChordChartCell(chord: chord, beats: 4)]),
   ],
 );
 
@@ -164,6 +209,141 @@ void main() {
       //assert
       expect(find.text('Lam'), findsWidgets);
       expect(find.text('Sol'), findsWidgets);
+    });
+
+    testWidgets('nomme une fondamentale diésée avec ♯ en notation Do', (
+      tester,
+    ) async {
+      //arrange
+      final sharpChart = oneBarChart([
+        const ChordSymbol(
+          root: SpelledNote(NoteLetter.f, Accidental.sharp),
+          quality: ChordQuality.minor,
+        ),
+      ]);
+
+      //act
+      await pumpPlayPage(
+        tester,
+        loadResult: Right(sharpChart),
+        language: NoteLanguage.fr,
+      );
+
+      //assert
+      expect(find.text('Fa♯m'), findsOneWidget);
+    });
+
+    testWidgets('nomme une fondamentale bémolisée avec ♭ en notation Do', (
+      tester,
+    ) async {
+      //arrange
+      final flatChart = oneBarChart([
+        const ChordSymbol(
+          root: SpelledNote(NoteLetter.b, Accidental.flat),
+          quality: ChordQuality.major,
+        ),
+      ]);
+
+      //act
+      await pumpPlayPage(
+        tester,
+        loadResult: Right(flatChart),
+        language: NoteLanguage.fr,
+      );
+
+      //assert
+      expect(find.text('Si♭'), findsOneWidget);
+    });
+
+    testWidgets('nomme les fondamentales altérées en notation C', (
+      tester,
+    ) async {
+      //arrange
+      final alteredChart = oneBarChart([
+        const ChordSymbol(
+          root: SpelledNote(NoteLetter.f, Accidental.sharp),
+          quality: ChordQuality.minor,
+        ),
+        const ChordSymbol(
+          root: SpelledNote(NoteLetter.b, Accidental.flat),
+          quality: ChordQuality.major,
+        ),
+      ]);
+
+      //act
+      await pumpPlayPage(tester, loadResult: Right(alteredChart));
+
+      //assert
+      expect(find.text('F♯m'), findsOneWidget);
+      expect(find.text('B♭'), findsOneWidget);
+    });
+
+    testWidgets('nomme un accord majeur septième en notation Do', (
+      tester,
+    ) async {
+      //arrange
+      final majorSeventhChart = oneBarChart([
+        const ChordSymbol(
+          root: SpelledNote(NoteLetter.f),
+          quality: ChordQuality.majorSeventh,
+        ),
+      ]);
+
+      //act
+      await pumpPlayPage(
+        tester,
+        loadResult: Right(majorSeventhChart),
+        language: NoteLanguage.fr,
+      );
+
+      //assert
+      expect(find.text('Famaj7'), findsOneWidget);
+    });
+
+    testWidgets('nomme un accord à basse imposée en notation Do', (
+      tester,
+    ) async {
+      //arrange
+      final slashChart = oneBarChart([
+        const ChordSymbol(
+          root: SpelledNote(NoteLetter.c),
+          quality: ChordQuality.major,
+          bass: SpelledNote(NoteLetter.e),
+        ),
+      ]);
+
+      //act
+      await pumpPlayPage(
+        tester,
+        loadResult: Right(slashChart),
+        language: NoteLanguage.fr,
+      );
+
+      //assert
+      expect(find.text('Do/Mi'), findsOneWidget);
+    });
+
+    testWidgets('nomme un accord à renversement imposé en notation Do', (
+      tester,
+    ) async {
+      //arrange
+      final inversionChart = oneBarChart([
+        const ChordSymbol(
+          root: SpelledNote(NoteLetter.c),
+          quality: ChordQuality.major,
+          inversion: 2,
+        ),
+      ]);
+
+      //act
+      await pumpPlayPage(
+        tester,
+        loadResult: Right(inversionChart),
+        language: NoteLanguage.fr,
+      );
+
+      //assert
+      expect(find.text('Do(2)'), findsOneWidget);
     });
 
     testWidgets('surligne la première case avant toute frappe', (tester) async {
@@ -276,6 +456,49 @@ void main() {
       overrides: () => playOverrides(language: NoteLanguage.fr),
       arrange: (tester) => tester.pumpAndSettle(),
     );
+
+    testNoOverflow(
+      'affiche les accords altérés les plus longs',
+      () => const ChordChartPlayPage(bundledChordChart: bundledChordChart),
+      overrides: () => playOverrides(
+        loadResult: Right(longestLabelsChart),
+        language: NoteLanguage.fr,
+      ),
+      arrange: (tester) => tester.pumpAndSettle(),
+    );
+
+    // Le portrait donne les cases les plus étroites : sans réduction, le nom
+    // y passe à la ligne sans lever d'exception, ce que testNoOverflow ne voit
+    // pas.
+    testWidgets('réduit les accords altérés les plus longs sans les couper, '
+        'sur un Galaxy Note 10 en portrait, police agrandie à 130 %', (
+      tester,
+    ) async {
+      //arrange
+      await pumpOnScreen(
+        tester,
+        const ChordChartPlayPage(bundledChordChart: bundledChordChart),
+        overrides: playOverrides(
+          loadResult: Right(longestLabelsChart),
+          language: NoteLanguage.fr,
+        ),
+      );
+
+      //act
+      await tester.pumpAndSettle();
+
+      //assert
+      for (final label in ['Fa♯maj7', 'Sol/Fa♯', 'Do♯m7', 'Mi♭sus4']) {
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.text(label),
+        );
+        expect(
+          paragraph.size.width,
+          moreOrLessEquals(paragraph.getMaxIntrinsicWidth(double.infinity)),
+          reason: '« $label » doit tenir sur une seule ligne',
+        );
+      }
+    });
 
     testNoOverflow(
       'affiche la grille sans source d\'entrée',
