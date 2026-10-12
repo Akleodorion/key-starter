@@ -15,6 +15,8 @@ import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_bar
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_cell.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_quality.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_symbol.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/note_letter.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/spelled_note.dart';
 import 'package:key_starter/features/chord_chart/domain/repositories/chord_chart_repository.dart';
 import 'package:key_starter/features/chord_chart/domain/usecases/list_chord_charts_usecase.dart';
 import 'package:key_starter/features/chord_chart/domain/usecases/load_chord_chart_usecase.dart';
@@ -38,15 +40,14 @@ const bundledChordChart = BundledChordChart(
   assetPath: 'assets/grids/douze_mesures.txt',
 );
 
-ChordChartBar wholeBar(int rootPitchClass, ChordQuality quality) =>
-    ChordChartBar(
-      cells: [
-        ChordChartCell(
-          chord: ChordSymbol(rootPitchClass: rootPitchClass, quality: quality),
-          beats: 4,
-        ),
-      ],
-    );
+ChordChartBar wholeBar(NoteLetter root, ChordQuality quality) => ChordChartBar(
+  cells: [
+    ChordChartCell(
+      chord: ChordSymbol(root: SpelledNote(root), quality: quality),
+      beats: 4,
+    ),
+  ],
+);
 
 /// Trois lignes de quatre mesures ; Mi majeur n'apparaît qu'en mesure 9,
 /// première de la troisième ligne.
@@ -55,15 +56,15 @@ final chart = ChordChart(
   beatsPerBar: 4,
   bars: [
     for (var line = 0; line < 2; line++) ...[
-      wholeBar(0, ChordQuality.major),
-      wholeBar(7, ChordQuality.major),
-      wholeBar(9, ChordQuality.minor),
-      wholeBar(5, ChordQuality.major),
+      wholeBar(NoteLetter.c, ChordQuality.major),
+      wholeBar(NoteLetter.g, ChordQuality.major),
+      wholeBar(NoteLetter.a, ChordQuality.minor),
+      wholeBar(NoteLetter.f, ChordQuality.major),
     ],
-    wholeBar(4, ChordQuality.major),
-    wholeBar(2, ChordQuality.minor),
-    wholeBar(7, ChordQuality.major),
-    wholeBar(0, ChordQuality.major),
+    wholeBar(NoteLetter.e, ChordQuality.major),
+    wholeBar(NoteLetter.d, ChordQuality.minor),
+    wholeBar(NoteLetter.g, ChordQuality.major),
+    wholeBar(NoteLetter.c, ChordQuality.major),
   ],
 );
 

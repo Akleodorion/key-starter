@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_quality.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_symbol.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/note_letter.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/spelled_note.dart';
 import 'package:key_starter/features/chord_chart/presentation/judging/chord_attempt_tracker.dart';
 
 const c2 = 36;
@@ -13,7 +15,10 @@ const e4 = 64;
 const g4 = 67;
 const c5 = 72;
 
-const cMajor = ChordSymbol(rootPitchClass: 0, quality: ChordQuality.major);
+const cMajor = ChordSymbol(
+  root: SpelledNote(NoteLetter.c),
+  quality: ChordQuality.major,
+);
 
 ChordAttemptOutcome pressAll(ChordAttemptTracker sut, List<int> midiNumbers) {
   ChordAttemptOutcome outcome = const ChordAttemptPending();

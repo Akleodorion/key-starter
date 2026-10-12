@@ -1,0 +1,4 @@
+titre: Vocabulaire
+mesure: 4
+|C/E |Dm7 |G7 |Cmaj7 |
+|F#m |Bb |Csus4 |C(2) |

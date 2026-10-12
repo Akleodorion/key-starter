@@ -9,6 +9,8 @@ import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_bar
 import 'package:key_starter/features/chord_chart/domain/entities/chord_chart_cell.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_quality.dart';
 import 'package:key_starter/features/chord_chart/domain/entities/chord_symbol.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/note_letter.dart';
+import 'package:key_starter/features/chord_chart/domain/entities/spelled_note.dart';
 import 'package:key_starter/features/chord_chart/presentation/providers/chord_chart_play_notifier.dart';
 import 'package:key_starter/features/chord_chart/presentation/providers/chord_chart_play_state.dart';
 
@@ -22,13 +24,10 @@ const e4 = 64;
 const g4 = 67;
 const c5 = 72;
 
-ChordChartBar wholeBar(int rootPitchClass) => ChordChartBar(
+ChordChartBar wholeBar(NoteLetter root) => ChordChartBar(
   cells: [
     ChordChartCell(
-      chord: ChordSymbol(
-        rootPitchClass: rootPitchClass,
-        quality: ChordQuality.major,
-      ),
+      chord: ChordSymbol(root: SpelledNote(root), quality: ChordQuality.major),
       beats: 4,
     ),
   ],
@@ -38,7 +37,7 @@ ChordChartBar wholeBar(int rootPitchClass) => ChordChartBar(
 final chart = ChordChart(
   title: 'Essai',
   beatsPerBar: 4,
-  bars: [wholeBar(0), wholeBar(5)],
+  bars: [wholeBar(NoteLetter.c), wholeBar(NoteLetter.f)],
 );
 
 void main() {
