@@ -1,0 +1,4 @@
+titre: Do Sol Lam Fa
+mesure: 4
+|C |G |Am |F |
+|C |G |F |C |

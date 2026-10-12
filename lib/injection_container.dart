@@ -1,5 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:key_starter/core/datasources/app_settings_local_datasource.dart';
+import 'package:key_starter/features/chord_chart/data/datasources/chord_chart_asset_datasource.dart';
+import 'package:key_starter/features/chord_chart/data/repositories/chord_chart_repository_impl.dart';
+import 'package:key_starter/features/chord_chart/domain/repositories/chord_chart_repository.dart';
+import 'package:key_starter/features/chord_chart/domain/usecases/list_chord_charts_usecase.dart';
+import 'package:key_starter/features/chord_chart/domain/usecases/load_chord_chart_usecase.dart';
 import 'package:key_starter/features/session/data/datasources/session_local_datasource.dart';
 import 'package:key_starter/features/session/data/repositories/session_repository_impl.dart';
 import 'package:key_starter/features/session/domain/repositories/session_repository.dart';
@@ -44,4 +49,14 @@ Future<void> initDependencies() async {
   );
   sl.registerFactory(() => ListSongsUseCase(repository: sl()));
   sl.registerFactory(() => LoadSongUseCase(repository: sl()));
+
+  // Grilles d'accords
+  sl.registerLazySingleton<ChordChartAssetDataSource>(
+    () => ChordChartAssetDataSourceImpl(),
+  );
+  sl.registerLazySingleton<ChordChartRepository>(
+    () => ChordChartRepositoryImpl(dataSource: sl()),
+  );
+  sl.registerFactory(() => ListChordChartsUseCase(repository: sl()));
+  sl.registerFactory(() => LoadChordChartUseCase(repository: sl()));
 }

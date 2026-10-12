@@ -42,3 +42,21 @@ class SongFileFailure extends Failure {
   @override
   List<Object?> get props => [];
 }
+
+/// La grille contient un élément pas encore pris en charge ; [reason] est
+/// affichable à l'utilisateur.
+class UnsupportedChordChartFailure extends Failure {
+  final String reason;
+
+  const UnsupportedChordChartFailure(this.reason);
+
+  @override
+  List<Object?> get props => [reason];
+}
+
+class ChordChartFileFailure extends Failure {
+  const ChordChartFileFailure();
+
+  @override
+  List<Object?> get props => [];
+}
