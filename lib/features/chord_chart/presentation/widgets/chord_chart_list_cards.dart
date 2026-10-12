@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:key_starter/core/widgets/midi_only_entry_card.dart';
 import 'package:key_starter/features/chord_chart/presentation/models/chord_chart_card_entry.dart';
+import 'package:key_starter/features/chord_chart/presentation/pages/chord_chart_play_page.dart';
 import 'package:key_starter/features/chord_chart/presentation/providers/chord_chart_providers.dart';
 import 'package:key_starter/features/chord_chart/presentation/widgets/chord_chart_load_error_view.dart';
 import 'package:key_starter/features/chord_chart/presentation/widgets/chord_chart_loading_view.dart';
 
 const _listErrorMessage = 'Impossible de lister les grilles.';
 
-/// Une carte par grille livrée, dans l'ordre des titres.
+/// Une carte par grille livrée, dans l'ordre des titres ; chacune ouvre le
+/// jeu de la grille.
 class ChordChartListCards extends ConsumerWidget {
   const ChordChartListCards({super.key});
 
@@ -22,7 +24,13 @@ class ChordChartListCards extends ConsumerWidget {
             for (final bundledChordChart in charts) ...[
               MidiOnlyEntryCard(
                 entry: ChordChartCardEntry(bundledChordChart),
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ChordChartPlayPage(
+                      bundledChordChart: bundledChordChart,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
             ],
