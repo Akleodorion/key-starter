@@ -7,7 +7,7 @@ import 'package:key_starter/features/chord_chart/domain/entities/chord_symbol.da
 
 /// Grille lue depuis son fichier texte.
 class ChordChartModel extends ChordChart {
-  static const _supportedBeatsPerBar = 4;
+  static const _supportedBeatsPerBar = {3, 4};
   static const _rootPitchClasses = {
     'C': 0,
     'D': 2,
@@ -17,6 +17,7 @@ class ChordChartModel extends ChordChart {
     'A': 9,
     'B': 11,
   };
+  static const _holdSymbol = '.';
   static final _chordPattern = RegExp(r'^([A-G])(m?)$');
 
   const ChordChartModel({
@@ -34,7 +35,7 @@ class ChordChartModel extends ChordChart {
   }) {
     String? title;
     int? beatsPerBar;
-    final barChords = <ChordSymbol>[];
+    final barTexts = <String>[];
     for (final rawLine in text.split('\n')) {
       final line = rawLine.trim();
       if (line.isEmpty) continue;
@@ -45,7 +46,7 @@ class ChordChartModel extends ChordChart {
       } else if (beatsValue != null) {
         beatsPerBar = _readBeatsPerBar(beatsValue);
       } else if (line.startsWith('|')) {
-        barChords.addAll(_readBarLine(line));
+        barTexts.addAll(_splitBarLine(line));
       } else {
         throw UnsupportedChordChartException('Ligne illisible : « $line ».');
       }
@@ -55,7 +56,7 @@ class ChordChartModel extends ChordChart {
         'La grille doit indiquer sa mesure (« mesure: 4 »).',
       );
     }
-    if (barChords.isEmpty) {
+    if (barTexts.isEmpty) {
       throw const UnsupportedChordChartException(
         'La grille ne contient aucune mesure.',
       );
@@ -63,12 +64,7 @@ class ChordChartModel extends ChordChart {
     return ChordChartModel(
       title: title ?? fallbackTitle,
       beatsPerBar: beatsPerBar,
-      bars: [
-        for (final chord in barChords)
-          ChordChartBar(
-            cells: [ChordChartCell(chord: chord, beats: beatsPerBar)],
-          ),
-      ],
+      bars: [for (final bar in barTexts) _readBar(bar, beatsPerBar)],
     );
   }
 
@@ -85,29 +81,74 @@ class ChordChartModel extends ChordChart {
       RegExp('^$name\\s*:(.*)\$').firstMatch(line)?.group(1)!.trim();
 
   static int _readBeatsPerBar(String value) {
-    if (int.tryParse(value) != _supportedBeatsPerBar) {
+    final beatsPerBar = int.tryParse(value);
+    if (beatsPerBar == null || !_supportedBeatsPerBar.contains(beatsPerBar)) {
       throw UnsupportedChordChartException(
-        'Seules les mesures à 4 temps sont prises en charge '
+        'Seules les mesures à 3 ou 4 temps sont prises en charge '
         '(« mesure: $value »).',
       );
     }
-    return _supportedBeatsPerBar;
+    return beatsPerBar;
   }
 
-  /// Un accord par mesure de la ligne `|C |G |Am |F |`.
-  static List<ChordSymbol> _readBarLine(String line) => [
+  /// Texte de chaque mesure de la ligne `|C |G |Am |F |`.
+  static List<String> _splitBarLine(String line) => [
     for (final bar in line.split('|').map((bar) => bar.trim()))
-      if (bar.isNotEmpty) _readBar(bar),
+      if (bar.isNotEmpty) bar,
   ];
 
-  static ChordSymbol _readBar(String bar) {
+  /// 1 accord = toute la mesure ; 2 accords = moitié-moitié ; sinon un jeton
+  /// par temps, `.` prolongeant l'accord précédent.
+  static ChordChartBar _readBar(String bar, int beatsPerBar) {
     final symbols = bar.split(RegExp(r'\s+'));
-    if (symbols.length > 1) {
+    if (symbols.first == _holdSymbol) {
       throw UnsupportedChordChartException(
-        'Un seul accord par mesure pour l\'instant (« |$bar| »).',
+        'Une mesure ne peut pas commencer par « . » : il prolonge '
+        'l\'accord précédent de la même mesure (« |$bar| »).',
       );
     }
-    return _readChord(symbols.single);
+    if (symbols.length == 1) {
+      return ChordChartBar(
+        cells: [
+          ChordChartCell(chord: _readChord(symbols.single), beats: beatsPerBar),
+        ],
+      );
+    }
+    if (symbols.length == 2 && !symbols.contains(_holdSymbol)) {
+      if (beatsPerBar.isOdd) {
+        final [first, second] = symbols;
+        throw UnsupportedChordChartException(
+          'Deux accords ne se partagent pas une mesure à $beatsPerBar temps : '
+          '« |$first . $second| » ou « |$first $second .| » '
+          'au lieu de « |$bar| ».',
+        );
+      }
+      return ChordChartBar(
+        cells: [
+          for (final symbol in symbols)
+            ChordChartCell(chord: _readChord(symbol), beats: beatsPerBar ~/ 2),
+        ],
+      );
+    }
+    if (symbols.length != beatsPerBar) {
+      throw UnsupportedChordChartException(
+        'La mesure « |$bar| » compte ${symbols.length} temps '
+        'au lieu de $beatsPerBar : un accord ou un « . » par temps, '
+        'le « . » prolongeant l\'accord précédent.',
+      );
+    }
+    final cells = <ChordChartCell>[];
+    for (final symbol in symbols) {
+      if (symbol == _holdSymbol) {
+        final previous = cells.removeLast();
+        cells.add(
+          ChordChartCell(chord: previous.chord, beats: previous.beats + 1),
+        );
+      } else {
+        cells.add(ChordChartCell(chord: _readChord(symbol), beats: 1));
+      }
+    }
+    return ChordChartBar(cells: cells);
   }
 
   static ChordSymbol _readChord(String symbol) {
