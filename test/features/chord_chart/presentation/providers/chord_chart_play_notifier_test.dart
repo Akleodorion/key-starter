@@ -15,8 +15,11 @@ import 'package:key_starter/features/chord_chart/presentation/providers/chord_ch
 import '../../../../core/input/fake_input_source.dart';
 
 const f3 = 53;
+const g3 = 55;
 const a3 = 57;
+const b3 = 59;
 const c4 = 60;
+const c4Sharp = 61;
 const d4 = 62;
 const e4 = 64;
 const g4 = 67;
@@ -41,25 +44,55 @@ final chart = ChordChart(
   bars: [wholeBar(0), wholeBar(5)],
 );
 
+/// `|Am G|` : une seule mesure, La mineur puis Sol majeur sur deux temps
+/// chacun.
+final twoChordBarChart = ChordChart(
+  title: 'Deux accords',
+  beatsPerBar: 4,
+  bars: [
+    ChordChartBar(
+      cells: [
+        ChordChartCell(
+          chord: ChordSymbol(rootPitchClass: 9, quality: ChordQuality.minor),
+          beats: 2,
+        ),
+        ChordChartCell(
+          chord: ChordSymbol(rootPitchClass: 7, quality: ChordQuality.major),
+          beats: 2,
+        ),
+      ],
+    ),
+  ],
+);
+
+/// `|A |A |` : La majeur sur deux mesures de suite.
+final repeatedChordChart = ChordChart(
+  title: 'Accord répété',
+  beatsPerBar: 4,
+  bars: [wholeBar(9), wholeBar(9)],
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late FakeInputSource inputSource;
   late ProviderContainer container;
+  late ChordChart playedChart;
 
   // Appelé dans fakeAsync : le notifier doit naître dans la zone simulée
   // pour que ses timers suivent l'horloge du test.
-  void startChart() {
+  void startChart([ChordChart? chartToPlay]) {
+    playedChart = chartToPlay ?? chart;
     inputSource = FakeInputSource();
     container = ProviderContainer(
       overrides: [inputSourceProvider.overrideWithValue(inputSource)],
     );
     addTearDown(container.dispose);
-    container.listen(chordChartPlayProvider(chart), (_, _) {});
+    container.listen(chordChartPlayProvider(playedChart), (_, _) {});
   }
 
   ChordChartPlayState readState() =>
-      container.read(chordChartPlayProvider(chart));
+      container.read(chordChartPlayProvider(playedChart));
 
   ChordChartPlayRunning readRunning() => readState() as ChordChartPlayRunning;
 
@@ -190,6 +223,72 @@ void main() {
           expect(sut.cellResults, {0: true, 1: true});
         });
       });
+    });
+
+    group('plusieurs cases par mesure', () {
+      test('|Am G| demande une frappe par case, dans la même mesure', () {
+        fakeAsync((async) {
+          //arrange
+          startChart(twoChordBarChart);
+          playAndRelease([a3, c4, e4]);
+          async.elapse(noteAdvanceDelay);
+          final afterFirstStrike = readRunning();
+
+          //act
+          playAndRelease([g3, b3, d4]);
+          final sut = readRunning();
+
+          //assert
+          expect(afterFirstStrike.currentCellIndex, 1);
+          expect(afterFirstStrike.cellState, NoteState.idle);
+          expect(sut.currentCellIndex, 1);
+          expect(sut.cellState, NoteState.correct);
+          expect(sut.cellResults, {0: true, 1: true});
+        });
+      });
+
+      test(
+        '|A |A | ne valide pas la seconde case avec l\'accord encore tenu',
+        () {
+          fakeAsync((async) {
+            //arrange
+            startChart(repeatedChordChart);
+            [a3, c4Sharp, e4].forEach(inputSource.play);
+            async.elapse(noteAdvanceDelay);
+
+            //act
+            [a3, c4Sharp, e4].forEach(inputSource.release);
+            final sut = readRunning();
+
+            //assert
+            expect(sut.currentCellIndex, 1);
+            expect(sut.cellState, NoteState.idle);
+            expect(sut.cellResults, {0: true});
+          });
+        },
+      );
+
+      test(
+        '|A |A | valide la seconde case une fois l\'accord relâché puis rejoué',
+        () {
+          fakeAsync((async) {
+            //arrange
+            startChart(repeatedChordChart);
+            [a3, c4Sharp, e4].forEach(inputSource.play);
+            async.elapse(noteAdvanceDelay);
+            [a3, c4Sharp, e4].forEach(inputSource.release);
+
+            //act
+            [a3, c4Sharp, e4].forEach(inputSource.play);
+            final sut = readRunning();
+
+            //assert
+            expect(sut.currentCellIndex, 1);
+            expect(sut.cellState, NoteState.correct);
+            expect(sut.cellResults, {0: true, 1: true});
+          });
+        },
+      );
     });
 
     group('reprise', () {
